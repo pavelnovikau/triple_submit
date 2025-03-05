@@ -50,5 +50,9 @@
   "upgrade_premium": {
     "message": "Auf Premium upgraden",
     "description": "Label for premium upgrade banner"
+  },
+  "settings_note": {
+    "message": "* Zusätzliche Einstellungen in den erweiterten Optionen verfügbar",
+    "description": "Note about additional settings in advanced options"
   }
 } 

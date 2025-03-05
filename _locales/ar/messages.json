@@ -50,5 +50,9 @@
   "upgrade_premium": {
     "message": "الترقية إلى النسخة المميزة",
     "description": "Label for premium upgrade banner"
+  },
+  "settings_note": {
+    "message": "* إعدادات إضافية متوفرة في الخيارات المتقدمة",
+    "description": "Note about additional settings in advanced options"
   }
 } 

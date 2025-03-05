@@ -5,14 +5,17 @@ let enterPressCount = 0;
 let lastEnterPressTime = 0;
 let domainSettings = null;
 let initializationAttempts = 0;
-const MAX_INIT_ATTEMPTS = 3;
+const MAX_INIT_ATTEMPTS = 5;
 
 // Detect browser type
 function detectBrowser() {
   const userAgent = navigator.userAgent;
   
-  // Проверка Arc браузера (основан на Chromium)
-  if (userAgent.includes('Chrome') && userAgent.includes('Arc/')) {
+  // Более полная проверка для Arc браузера
+  if ((userAgent.includes('Chrome') && userAgent.includes('Arc/')) || 
+      document.documentElement.classList.contains('arc-window') ||
+      typeof window.arc !== 'undefined') {
+    console.log('Triple Submit: Arc browser detected');
     return 'arc';
   }
   
@@ -29,15 +32,24 @@ console.log('Triple Submit: Running in browser type:', browserType);
 
 // Get settings from background script
 function getSettings() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     try {
+      // Проверка, доступен ли Chrome API
+      if (typeof chrome === 'undefined' || !chrome.runtime) {
+        console.error('Triple Submit: Chrome runtime API not available');
+        useDefaultSettings(resolve);
+        return;
+      }
+
       chrome.runtime.sendMessage({ action: 'checkDomain' }, (response) => {
+        // Проверка на ошибку runtime
         if (chrome.runtime.lastError) {
           console.error('Triple Submit: Error getting settings:', chrome.runtime.lastError);
           useDefaultSettings(resolve);
           return;
         }
         
+        // Проверка на валидность ответа
         if (response && response.domainSettings) {
           domainSettings = response.domainSettings;
           console.log('Triple Submit: Received settings:', domainSettings);
@@ -77,7 +89,7 @@ function useDefaultSettings(resolve) {
 // Initialize settings with retry mechanism
 function initializeWithRetry() {
   initializationAttempts++;
-  console.log(`Triple Submit: Initialization attempt ${initializationAttempts}`);
+  console.log(`Triple Submit: Initialization attempt ${initializationAttempts} for ${browserType} browser`);
   
   getSettings()
     .then(initKeyListeners)
@@ -85,8 +97,10 @@ function initializeWithRetry() {
       console.error('Triple Submit: Failed to initialize:', error);
       
       if (initializationAttempts < MAX_INIT_ATTEMPTS) {
-        // Retry initialization after delay
-        setTimeout(initializeWithRetry, 1000);
+        // Retry initialization after delay with exponential backoff
+        const delay = Math.min(1000 * Math.pow(1.5, initializationAttempts - 1), 10000);
+        console.log(`Triple Submit: Retrying in ${delay}ms...`);
+        setTimeout(initializeWithRetry, delay);
       } else {
         // Fall back to default settings after max attempts
         console.error('Triple Submit: Max initialization attempts reached, using defaults');
@@ -101,8 +115,13 @@ function initializeWithRetry() {
     });
 }
 
-// Start initialization
-initializeWithRetry();
+// Start initialization with delay for Arc browser
+if (browserType === 'arc') {
+  console.log('Triple Submit: Delaying initialization for Arc browser');
+  setTimeout(initializeWithRetry, 500);
+} else {
+  initializeWithRetry();
+}
 
 // Handle key events
 function initKeyListeners(settings) {
@@ -125,96 +144,119 @@ function initKeyListeners(settings) {
 
 // Handle key down events
 function handleKeyDown(event) {
-  // Only handle if the extension is enabled for this domain
+  // Проверяем, что настройки инициализированы
   if (!domainSettings || !domainSettings.isEnabled) {
+    console.log('Triple Submit: Event ignored, extension disabled or not initialized');
     return;
   }
 
   const isEnterKey = event.key === 'Enter';
   const isShiftEnterKey = event.key === 'Enter' && event.shiftKey;
   
-  // Normal mode: No interference with keyboard behavior
-  if (domainSettings.mode === 'normal') {
-    // Do nothing, allow all keys to work as normal
-    return;
-  }
-  // Alternative mode: Require multiple Enter, convert Shift+Enter to single Enter
-  else if (domainSettings.mode === 'alternative') {
-    if (isShiftEnterKey) {
-      try {
-        // Convert Shift+Enter to regular Enter
-        let newEvent;
-        
-        // Специальный код для Arc браузера
-        if (browserType === 'arc') {
-          // Используем более простой подход для Arc
-          newEvent = new KeyboardEvent('keydown', { 
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true
-          });
-        } else {
-          // Стандартный подход для других браузеров
-          newEvent = new KeyboardEvent('keydown', { 
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true,
-            cancelable: true,
-            composed: true,
-            shiftKey: false // Remove the shift key modifier
-          });
-        }
-        
-        // Prevent original event
-        event.preventDefault();
-        event.stopPropagation();
-        
-        // Dispatch new event without shift key
-        event.target.dispatchEvent(newEvent);
-      } catch (error) {
-        console.error('Triple Submit: Error handling Shift+Enter:', error);
-        // Позволяем оригинальному событию пройти в случае ошибки
-      }
+  try {
+    // Normal mode: No interference with keyboard behavior
+    if (domainSettings.mode === 'normal') {
+      // Do nothing, allow all keys to work as normal
       return;
     }
-    else if (isEnterKey && !event.shiftKey) {
-      // Handle regular Enter key - require multiple presses
-      const currentTime = Date.now();
-      
-      // Check if this is a new sequence or continuing an existing one
-      if (currentTime - lastEnterPressTime > domainSettings.timeWindow) {
-        // Reset the counter for a new sequence
-        enterPressCount = 1;
-      } else {
-        // Increment the counter for continuing sequence
-        enterPressCount++;
-      }
-      
-      // Update the last press time
-      lastEnterPressTime = currentTime;
-      
-      // Trigger visual feedback if enabled
-      if (domainSettings.visualFeedback) {
-        triggerVisualFeedback(enterPressCount, domainSettings.pressCount);
-      }
-      
-      // If we haven't reached the required count, prevent the Enter key
-      if (enterPressCount < domainSettings.pressCount) {
+    // Alternative mode: Require multiple Enter, convert Shift+Enter to single Enter
+    else if (domainSettings.mode === 'alternative') {
+      if (isShiftEnterKey) {
         try {
-          event.preventDefault();
-          event.stopPropagation();
+          // Convert Shift+Enter to regular Enter
+          let newEvent;
+          
+          // Специальный код для Arc браузера
+          if (browserType === 'arc') {
+            // Более простой подход для Arc, без лишних свойств
+            newEvent = new KeyboardEvent('keydown', { 
+              key: 'Enter',
+              code: 'Enter',
+              keyCode: 13,
+              bubbles: true
+            });
+            
+            // Prevent original event
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // В Arc просто запускаем стандартное поведение Enter
+            if (event.target && typeof event.target.form !== 'undefined' && event.target.form) {
+              console.log('Triple Submit: Arc - Submitting form directly');
+              event.target.form.submit();
+            } else {
+              console.log('Triple Submit: Arc - Dispatching simple Enter event');
+              event.target.dispatchEvent(newEvent);
+            }
+          } else {
+            // Стандартный подход для других браузеров
+            newEvent = new KeyboardEvent('keydown', { 
+              key: 'Enter',
+              code: 'Enter',
+              keyCode: 13,
+              which: 13,
+              bubbles: true,
+              cancelable: true,
+              composed: true,
+              shiftKey: false // Remove the shift key modifier
+            });
+            
+            // Prevent original event
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Dispatch new event without shift key
+            event.target.dispatchEvent(newEvent);
+          }
         } catch (error) {
-          console.error('Triple Submit: Error preventing Enter key:', error);
+          console.error('Triple Submit: Error handling Shift+Enter:', error);
+          // В случае ошибки, не блокируем оригинальное событие
         }
-      } else {
-        // Reset counter after successful submission
-        enterPressCount = 0;
+        return;
+      }
+      else if (isEnterKey && !event.shiftKey) {
+        // Handle regular Enter key - require multiple presses
+        const currentTime = Date.now();
+        
+        // Check if this is a new sequence or continuing an existing one
+        if (currentTime - lastEnterPressTime > domainSettings.timeWindow) {
+          // Reset the counter for a new sequence
+          enterPressCount = 1;
+        } else {
+          // Increment the counter for continuing sequence
+          enterPressCount++;
+        }
+        
+        // Update the last press time
+        lastEnterPressTime = currentTime;
+        
+        // Trigger visual feedback if enabled
+        if (domainSettings.visualFeedback) {
+          triggerVisualFeedback(enterPressCount, domainSettings.pressCount);
+        }
+        
+        // Log current press count
+        console.log(`Triple Submit: Enter press ${enterPressCount}/${domainSettings.pressCount}`);
+        
+        // Check if we've reached the required number of presses
+        if (enterPressCount >= domainSettings.pressCount) {
+          console.log('Triple Submit: Required press count reached, allowing submission');
+          // Reset counter after submission
+          enterPressCount = 0;
+          return; // Allow the event to proceed
+        }
+        
+        // Haven't reached required count, prevent submission
+        console.log('Triple Submit: Blocking submission, more presses needed');
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
       }
     }
+  } catch (error) {
+    console.error('Triple Submit: Error in handleKeyDown:', error);
+    // В случае ошибки, разрешаем стандартное поведение клавиш
+    return true;
   }
 }
 

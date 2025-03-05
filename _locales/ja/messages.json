@@ -50,5 +50,9 @@
   "upgrade_premium": {
     "message": "プレミアムにアップグレード",
     "description": "Label for premium upgrade banner"
+  },
+  "settings_note": {
+    "message": "* 追加設定は詳細設定で利用可能です",
+    "description": "Note about additional settings in advanced options"
   }
 } 

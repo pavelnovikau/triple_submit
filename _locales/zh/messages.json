@@ -50,5 +50,9 @@
   "upgrade_premium": {
     "message": "升级到高级版",
     "description": "Label for premium upgrade banner"
+  },
+  "settings_note": {
+    "message": "* 高级选项中提供更多设置",
+    "description": "Note about additional settings in advanced options"
   }
 } 
