@@ -12,10 +12,15 @@ Triple Submit is a Chrome Extension designed to prevent accidental form submissi
 - **Dark/Light Themes**: Customize the extension's appearance
 - **Multi-Language Support**: Available in English, Spanish, Chinese, Arabic, Portuguese, French, German, Japanese, Italian, and Russian
 - **Browser Compatibility**: Works with Chrome, Edge, and Arc browsers
+- **Enhanced Text Entry**: In alternative mode, single Enter inserts line breaks in text fields instead of submitting forms
 
 ### Operation Modes
 - **Normal Mode**: Counts consecutive Enter key presses and only allows submission when the required number is reached. Best for most websites and compatible with standard forms.
-- **Alternative Mode**: Uses a different technique to detect and prevent form submissions, blocking standard Enter key submissions until the required number is reached. Better for complex web applications and recommended for Shift+Enter key combinations.
+- **Alternative Mode**: Uses a different technique to detect and prevent form submissions:
+  - Multiple Enter key presses (reaching the required count) submit the form
+  - Single Enter key press inserts a line break in text fields
+  - Shift+Enter always acts as a single submission shortcut
+  - Better for complex web applications and text-heavy interfaces
 
 ## Installation
 
@@ -37,7 +42,8 @@ Triple Submit is a Chrome Extension designed to prevent accidental form submissi
 1. Once installed, the extension is active by default
 2. Press Enter multiple times (default: 3) to submit a form
 3. Use Shift+Enter as a regular Enter key (single press submission)
-4. Visual feedback will appear showing your progress toward the required number of presses
+4. In Alternative mode, single Enter keypress inserts line breaks in text areas
+5. Visual feedback will appear showing your progress toward the required number of presses
 
 ### Configuration
 1. Click on the Triple Submit icon in your browser toolbar to access quick settings:
@@ -123,6 +129,7 @@ triple_submit/
 3. For testing changes to content scripts, you may need to reload the extension and refresh the page
 
 ### Recent Updates
+- **v1.5.0**: Enhanced Alternative mode to support line breaks with single Enter press and form submission with multiple presses
 - **v1.4.0**: Improved Arc browser compatibility with optimized key handling and better retry logic
 - **v1.3.0**: Added detailed mode descriptions, improved theme button UX, and added compatibility for Arc browser
 - **v1.2.0**: Added multi-language support with 10 languages

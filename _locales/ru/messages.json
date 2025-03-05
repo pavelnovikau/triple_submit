@@ -32,7 +32,7 @@
     "description": "Label for normal mode"
   },
   "mode_alternative": {
-    "message": "Защищенный (многократный ввод)",
+    "message": "Расширенный (перенос строк + многократные нажатия)",
     "description": "Label for alternative mode"
   },
   "enter_presses": {

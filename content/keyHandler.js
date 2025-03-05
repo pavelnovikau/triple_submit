@@ -246,10 +246,46 @@ function handleKeyDown(event) {
           return; // Allow the event to proceed
         }
         
-        // Haven't reached required count, prevent submission
-        console.log('Triple Submit: Blocking submission, more presses needed');
+        // Haven't reached required count, prevent default submission
+        console.log('Triple Submit: Blocking submission, inserting line break instead');
         event.preventDefault();
         event.stopPropagation();
+        
+        // Вставляем перевод строки вместо отправки формы
+        try {
+          // Определяем целевой элемент для вставки переноса строки
+          const targetElement = event.target;
+          
+          // Проверяем, что это текстовое поле или элемент с contenteditable
+          const isTextField = targetElement.tagName === 'TEXTAREA' || 
+                             (targetElement.tagName === 'INPUT' && targetElement.type === 'text') ||
+                             targetElement.isContentEditable;
+                             
+          if (isTextField) {
+            // Для текстовых полей и редактируемых элементов вставляем перенос строки
+            if (targetElement.isContentEditable) {
+              // Для contenteditable элементов
+              document.execCommand('insertLineBreak');
+              console.log('Triple Submit: Inserted line break in contenteditable element');
+            } else if (targetElement.tagName === 'TEXTAREA' || (targetElement.tagName === 'INPUT' && targetElement.type === 'text')) {
+              // Для textarea и input элементов вставляем символ новой строки
+              const start = targetElement.selectionStart;
+              const end = targetElement.selectionEnd;
+              const value = targetElement.value;
+              
+              targetElement.value = value.substring(0, start) + '\n' + value.substring(end);
+              
+              // Устанавливаем курсор после вставленного символа новой строки
+              targetElement.selectionStart = targetElement.selectionEnd = start + 1;
+              console.log('Triple Submit: Inserted line break in input/textarea element');
+            }
+          } else {
+            console.log('Triple Submit: Target element is not a text field, cannot insert line break');
+          }
+        } catch (error) {
+          console.error('Triple Submit: Error inserting line break:', error);
+        }
+        
         return false;
       }
     }

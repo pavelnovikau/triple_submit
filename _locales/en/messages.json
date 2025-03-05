@@ -32,7 +32,7 @@
     "description": "Label for normal mode"
   },
   "mode_alternative": {
-    "message": "Protected (multiple presses)",
+    "message": "Enhanced (line breaks + multiple presses)",
     "description": "Label for alternative mode"
   },
   "enter_presses": {
