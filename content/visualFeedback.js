@@ -120,7 +120,8 @@ function updateFeedback(currentCount, requiredCount, isComplete) {
 
 // Listen for feedback events from keyHandler.js
 document.addEventListener('tripleSubmitFeedback', (event) => {
-  const { currentCount, requiredCount, isComplete } = event.detail;
+  const { currentCount, requiredCount } = event.detail;
+  const isComplete = currentCount >= requiredCount;
   updateFeedback(currentCount, requiredCount, isComplete);
 });
 

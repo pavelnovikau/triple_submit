@@ -7,19 +7,19 @@
     "message": "Prevents accidental form submissions by requiring multiple Enter key presses",
     "description": "Extension description"
   },
-  "language_label": {
+  "languageLabel": {
     "message": "Language:",
     "description": "Label for language selection"
   },
-  "enable_extension": {
+  "enableExtensionLabel": {
     "message": "Enable Triple Submit",
     "description": "Label for enabling the extension"
   },
-  "current_site": {
+  "currentSiteLabel": {
     "message": "Current site:",
     "description": "Label for current website"
   },
-  "enable_for_site": {
+  "enableForSiteLabel": {
     "message": "Enable for this site",
     "description": "Label for enabling extension on current site"
   },
@@ -43,19 +43,23 @@
     "message": "Protection against accidental form submission requiring multiple Enter presses.",
     "description": "Description for alternative mode"
   },
-  "enter_presses_label": {
+  "enterPressesLabel": {
     "message": "Enter presses:",
     "description": "Label for Enter key press count"
   },
-  "visual_feedback_label": {
+  "visualFeedbackLabel": {
     "message": "Visual feedback:",
     "description": "Label for visual feedback toggle"
+  },
+  "delayLabel": {
+    "message": "Delay (ms):",
+    "description": "Label for delay slider"
   },
   "advanced_options": {
     "message": "Advanced settings",
     "description": "Label for advanced options button"
   },
-  "upgrade_premium": {
+  "premiumLabel": {
     "message": "Upgrade to Premium",
     "description": "Label for premium upgrade banner"
   },
@@ -63,28 +67,28 @@
     "message": "Premium activated",
     "description": "Text for activated Premium status"
   },
-  "usage_remaining_label": {
-    "message": "Free uses remaining:",
+  "usageLabel": {
+    "message": "Free submissions left:",
     "description": "Text for remaining free uses"
   },
-  "usage_limit_title": {
-    "message": "Usage limit reached",
+  "limitReachedTitle": {
+    "message": "Usage Limit Reached",
     "description": "Title for usage limit modal"
   },
-  "usage_limit_message": {
-    "message": "You have used the free version of Triple Submit 10 times.",
+  "usageLimitText": {
+    "message": "You have used the free version of Triple Submit 20 times.",
     "description": "Message about reaching usage limit"
   },
-  "upgrade_message": {
+  "upgradeText": {
     "message": "To continue using, please upgrade to the Premium version.",
     "description": "Message about need to upgrade"
   },
-  "price_period": {
-    "message": "one time",
+  "perMonth": {
+    "message": "/ month",
     "description": "Payment period"
   },
-  "pay_button": {
-    "message": "Pay now",
+  "payNowButton": {
+    "message": "Pay Now",
     "description": "Text for payment button"
   },
   "processing_payment": {

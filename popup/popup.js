@@ -1,7 +1,23 @@
-// Popup.js - основной скрипт для управления popup в Triple Submit
+// Popup.js - main script for managing popup in Triple Submit
+
+// Logger module for better debugging
+const Logger = {
+  debug: function(message, data) {
+    console.debug(`[Triple Submit] ${message}`, data || '');
+  },
+  info: function(message, data) {
+    console.info(`[Triple Submit] ${message}`, data || '');
+  },
+  warn: function(message, data) {
+    console.warn(`[Triple Submit] ${message}`, data || '');
+  },
+  error: function(message, data) {
+    console.error(`[Triple Submit] ERROR: ${message}`, data || '');
+  }
+};
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Основные UI элементы
+  // Main UI elements
   const extensionToggle = document.getElementById('extension-toggle');
   const domainToggle = document.getElementById('domain-toggle');
   const currentDomainText = document.getElementById('current-domain-text');
@@ -16,22 +32,24 @@ document.addEventListener('DOMContentLoaded', function() {
   const payButton = document.getElementById('pay-button');
   const delaySlider = document.getElementById('delay-slider');
   const delayValue = document.getElementById('delay-value');
+  const languageSelect = document.getElementById('language-select');
   
-  // Текущие настройки и состояние
+  // Current settings and state
   let currentDomain = '';
   let currentSettings = {
     enabled: true,
     domainEnabled: false,
     pressCount: 3,
     showFeedback: true,
-    delay: 200
+    delay: 200,
+    language: 'en'
   };
   
   let isPremium = false;
   let usageCount = 20;
   
   /**
-   * Получение текущего домена вкладки
+   * Get current tab domain
    */
   async function getCurrentTabDomain() {
     return new Promise(async (resolve) => {
@@ -42,107 +60,134 @@ document.addEventListener('DOMContentLoaded', function() {
           currentDomain = url.hostname;
           resolve(currentDomain);
         } else {
-          console.error('Triple Submit: Error getting active tab');
+          Logger.error('Error getting active tab');
           resolve('');
         }
       } catch (error) {
-        console.error('Triple Submit: Error getting domain:', error);
+        Logger.error('Error getting domain:', error);
         resolve('');
       }
     });
   }
   
   /**
-   * Инициализация popup
+   * Initialize popup
    */
   async function initPopup() {
     try {
-      // Получаем текущий домен
+      // Get current domain
       await getCurrentTabDomain();
       
-      // Отображаем текущий домен
+      // Display current domain
       if (currentDomainText) {
         currentDomainText.textContent = currentDomain || 'unknown';
       }
       
-      // Получаем общие настройки
-      const data = await chrome.storage.sync.get('settings');
+      // Get general settings
+      const data = await chrome.storage.sync.get(['settings', 'language']);
       if (data && data.settings) {
         currentSettings = { ...currentSettings, ...data.settings };
       }
       
-      // Получаем статус Premium и использования
+      // Get language setting
+      if (data && data.language) {
+        currentSettings.language = data.language;
+      } else {
+        // If no language set, use browser language or default to English
+        const browserLang = chrome.i18n.getUILanguage() || 'en';
+        const supportedLangs = ['en', 'ru', 'es', 'de', 'fr', 'it', 'ja', 'zh', 'pt', 'ar'];
+        const langCode = browserLang.split('-')[0]; // Get primary language code (en-US -> en)
+        
+        if (supportedLangs.includes(langCode)) {
+          currentSettings.language = langCode;
+        } else {
+          currentSettings.language = 'en'; // Default to English
+        }
+        
+        // Save the language setting
+        await chrome.storage.sync.set({ language: currentSettings.language });
+      }
+      
+      // Get Premium status and usage
       const usageData = await chrome.storage.sync.get(['isPremium', 'usageCount']);
       if (usageData) {
         isPremium = usageData.isPremium || false;
         usageCount = (usageData.usageCount !== undefined) ? usageData.usageCount : 20;
       }
       
-      // Проверяем статус домена
+      // Check domain status
       if (currentDomain) {
         const domainData = await chrome.storage.sync.get(['domains']);
         if (domainData && domainData.domains) {
-          // По умолчанию домен выключен
+          // Domain is disabled by default
           currentSettings.domainEnabled = false;
           
-          // Проверяем, есть ли домен в списке включенных
+          // Check if domain is in enabled list
           if (domainData.domains[currentDomain]) {
             currentSettings.domainEnabled = true;
           }
         }
       }
       
-      // Обновляем UI
+      // Update UI
       updateUI();
       
+      // Set up language
+      updateLanguage(currentSettings.language);
+      
     } catch (error) {
-      console.error('Triple Submit: Error initializing popup:', error);
+      Logger.error('Error initializing popup:', error);
     }
   }
   
   /**
-   * Обновление UI на основе текущих настроек
+   * Update UI based on current settings
    */
   function updateUI() {
-    // Обновляем основные переключатели
+    // Update main toggles
     extensionToggle.checked = currentSettings.enabled;
     domainToggle.checked = currentSettings.domainEnabled;
     feedbackToggle.checked = currentSettings.showFeedback;
     
-    // Обновляем счетчик нажатий
+    // Update press count
     pressCountEl.textContent = currentSettings.pressCount;
     
-    // Обновляем значение слайдера задержки
+    // Update delay slider
     delaySlider.value = currentSettings.delay;
     delayValue.textContent = currentSettings.delay;
     
-    // Обновляем счетчик использования
+    // Update language selector
+    if (languageSelect) {
+      languageSelect.value = currentSettings.language;
+    }
+    
+    // Update usage counter
     if (isPremium) {
       usageCountEl.textContent = "∞";
       usageCountEl.style.color = "var(--accent-color)";
     } else {
       usageCountEl.textContent = (20 - usageCount);
       
-      // Если осталось мало использований, меняем цвет
+      // If few uses left, change color
       if (usageCount >= 15) {
         usageCountEl.style.color = "#ff3b30";
       }
     }
     
-    // Обновляем доступность UI в зависимости от статуса включения
+    // Update UI availability based on status
     updateUIAvailability();
   }
   
   /**
-   * Обновление доступности элементов UI
+   * Update UI elements availability
    */
   function updateUIAvailability() {
     const domainControlsDisabled = !currentSettings.enabled;
     
-    // Отключаем/включаем контролы домена
+    // Enable/disable domain controls
     domainToggle.disabled = domainControlsDisabled;
     
-    // Применяем визуальный стиль для отключенных элементов
+    // Apply visual style for disabled elements
     document.querySelectorAll('.domain-control, .domain-toggle').forEach(el => {
       if (domainControlsDisabled) {
         el.classList.add('disabled');
@@ -151,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Обновляем доступность настроек в зависимости от включения домена
+    // Update settings availability based on domain enabled
     const settingsDisabled = !currentSettings.enabled || !currentSettings.domainEnabled;
     
     decreaseCountBtn.disabled = settingsDisabled;
@@ -159,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
     feedbackToggle.disabled = settingsDisabled;
     delaySlider.disabled = settingsDisabled;
     
-    // Применяем визуальный стиль для отключенных элементов
+    // Apply visual style for disabled elements
     document.querySelectorAll('.settings-preview').forEach(el => {
       if (settingsDisabled) {
         el.classList.add('disabled');
@@ -170,14 +215,88 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   /**
-   * Сохранение настроек
+   * Updates the interface language
+   */
+  function updateLanguage(langCode) {
+    // Set HTML lang attribute for RTL languages
+    document.documentElement.lang = langCode;
+    
+    // Special handling for RTL languages like Arabic
+    if (langCode === 'ar') {
+      document.documentElement.dir = 'rtl';
+    } else {
+      document.documentElement.dir = 'ltr';
+    }
+    
+    // Update text content based on selected language
+    try {
+      chrome.i18n.getAcceptLanguages(function(languages) {
+        Logger.info(`Browser languages: ${languages.join(', ')}`);
+      });
+      
+      // Use i18n API to get localized strings
+      const elements = {
+        'language-label': chrome.i18n.getMessage('languageLabel') || 'Language:',
+        'premium-label': chrome.i18n.getMessage('premiumLabel') || 'Upgrade to Premium',
+        'usage-label': chrome.i18n.getMessage('usageLabel') || 'Free submissions left:',
+        'enable-extension-label': chrome.i18n.getMessage('enableExtensionLabel') || 'Enable Triple Submit',
+        'current-site-label': chrome.i18n.getMessage('currentSiteLabel') || 'Current site:',
+        'enable-for-site-label': chrome.i18n.getMessage('enableForSiteLabel') || 'Enable for this site',
+        'enter-presses-label': chrome.i18n.getMessage('enterPressesLabel') || 'Enter presses:',
+        'delay-label': chrome.i18n.getMessage('delayLabel') || 'Delay (ms):',
+        'visual-feedback-label': chrome.i18n.getMessage('visualFeedbackLabel') || 'Visual feedback:'
+      };
+      
+      // Update all localized elements
+      for (const [id, text] of Object.entries(elements)) {
+        const element = document.getElementById(id);
+        if (element) {
+          element.textContent = text;
+        }
+      }
+      
+      // Update modal texts
+      const modalTitle = document.querySelector('.modal-content h2');
+      if (modalTitle) {
+        modalTitle.textContent = chrome.i18n.getMessage('limitReachedTitle') || 'Usage Limit Reached';
+      }
+      
+      const modalParagraphs = document.querySelectorAll('.modal-content p');
+      if (modalParagraphs && modalParagraphs.length >= 2) {
+        modalParagraphs[0].textContent = chrome.i18n.getMessage('usageLimitText') || 
+          'You have used the free version of Triple Submit 20 times.';
+        
+        modalParagraphs[1].textContent = chrome.i18n.getMessage('upgradeText') || 
+          'To continue using, please upgrade to the Premium version.';
+      }
+      
+      const periodSpan = document.querySelector('.price-period');
+      if (periodSpan) {
+        periodSpan.textContent = chrome.i18n.getMessage('perMonth') || '/ month';
+      }
+      
+      const payButton = document.getElementById('pay-button');
+      if (payButton) {
+        payButton.textContent = chrome.i18n.getMessage('payNowButton') || 'Pay Now';
+      }
+      
+    } catch (error) {
+      Logger.error('Error updating language:', error);
+    }
+  }
+  
+  /**
+   * Save settings
    */
   async function saveSettings() {
     try {
-      // Сохраняем общие настройки
-      await chrome.storage.sync.set({ settings: currentSettings });
+      // Save general settings
+      await chrome.storage.sync.set({ 
+        settings: currentSettings,
+        language: currentSettings.language 
+      });
       
-      // Сохраняем настройку домена
+      // Save domain setting
       if (currentDomain) {
         const domainData = await chrome.storage.sync.get(['domains']);
         let domains = domainData.domains || {};
@@ -191,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
         await chrome.storage.sync.set({ domains: domains });
       }
       
-      // Уведомляем content scripts об изменениях
+      // Notify content scripts about changes
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         if (tabs[0]) {
           chrome.tabs.sendMessage(tabs[0].id, {
@@ -199,18 +318,18 @@ document.addEventListener('DOMContentLoaded', function() {
             settings: currentSettings,
             domainEnabled: currentSettings.domainEnabled
           }).catch(error => {
-            console.log('Triple Submit: Не удалось отправить уведомление об обновлении настроек:', error);
+            Logger.warn('Could not send settings update notification:', error);
           });
         }
       });
       
     } catch (error) {
-      console.error('Triple Submit: Error saving settings:', error);
+      Logger.error('Error saving settings:', error);
     }
   }
   
   /**
-   * Изменение счетчика нажатий
+   * Update press count
    */
   function updatePressCount(change) {
     const newCount = currentSettings.pressCount + change;
@@ -222,21 +341,21 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   /**
-   * Показать модальное окно Premium
+   * Show Premium modal
    */
   function showPremiumModal() {
     premiumModal.style.display = 'block';
   }
   
   /**
-   * Закрыть модальное окно Premium
+   * Close Premium modal
    */
   function closePremiumModal() {
     premiumModal.style.display = 'none';
   }
   
   /**
-   * Обработчик оплаты Premium
+   * Handle Premium payment
    */
   function handlePayment() {
     window.open('https://example.com/premium-payment', '_blank');
@@ -244,24 +363,24 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   /**
-   * Обработчики событий
+   * Event handlers
    */
   
-  // Toggle для включения/выключения расширения
+  // Toggle for enabling/disabling extension
   extensionToggle.addEventListener('change', function() {
     currentSettings.enabled = this.checked;
     updateUIAvailability();
     saveSettings();
   });
   
-  // Toggle для включения/выключения для текущего домена
+  // Toggle for enabling/disabling for current domain
   domainToggle.addEventListener('change', function() {
     currentSettings.domainEnabled = this.checked;
     updateUIAvailability();
     saveSettings();
   });
   
-  // Управление количеством нажатий
+  // Press count control
   decreaseCountBtn.addEventListener('click', function() {
     updatePressCount(-1);
   });
@@ -270,13 +389,13 @@ document.addEventListener('DOMContentLoaded', function() {
     updatePressCount(1);
   });
   
-  // Toggle для визуального отклика
+  // Toggle for visual feedback
   feedbackToggle.addEventListener('change', function() {
     currentSettings.showFeedback = this.checked;
     saveSettings();
   });
   
-  // Слайдер задержки
+  // Delay slider
   delaySlider.addEventListener('input', function() {
     const value = parseInt(this.value);
     delayValue.textContent = value;
@@ -287,7 +406,16 @@ document.addEventListener('DOMContentLoaded', function() {
     saveSettings();
   });
   
-  // Обработчики для Premium модального окна
+  // Language selector
+  languageSelect.addEventListener('change', function() {
+    const selectedLang = this.value;
+    Logger.info(`Language changed to: ${selectedLang}`);
+    currentSettings.language = selectedLang;
+    updateLanguage(selectedLang);
+    saveSettings();
+  });
+  
+  // Premium modal handlers
   premiumBanner.addEventListener('click', function() {
     showPremiumModal();
   });
@@ -300,13 +428,13 @@ document.addEventListener('DOMContentLoaded', function() {
     handlePayment();
   });
   
-  // Закрыть модальное окно при клике вне его содержимого
+  // Close modal when clicking outside content
   window.addEventListener('click', function(event) {
     if (event.target === premiumModal) {
       closePremiumModal();
     }
   });
   
-  // Инициализация popup
+  // Initialize popup
   initPopup();
 }); 

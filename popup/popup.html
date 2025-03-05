@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,19 +12,35 @@
       <h1>Triple Submit</h1>
     </header>
     
+    <section class="language-selector">
+      <span id="language-label">Language:</span>
+      <select id="language-select">
+        <option value="en" selected>English</option>
+        <option value="es">Español</option>
+        <option value="zh">中文</option>
+        <option value="ru">Русский</option>
+        <option value="ar">العربية</option>
+        <option value="pt">Português</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="ja">日本語</option>
+        <option value="it">Italiano</option>
+      </select>
+    </section>
+    
     <section class="premium-section">
       <div class="premium-banner">
-        <span id="premium-label">Обновиться до Premium</span>
+        <span id="premium-label">Upgrade to Premium</span>
         <span class="crown-icon">👑</span>
       </div>
       <div class="usage-counter">
-        <span id="usage-label">Осталось бесплатных нажатий:</span>
+        <span id="usage-label">Free submissions left:</span>
         <span id="usage-count" class="usage-count">20</span>
       </div>
     </section>
     
     <section class="main-toggle">
-      <span id="enable-extension-label">Включить Triple Submit</span>
+      <span id="enable-extension-label">Enable Triple Submit</span>
       <label class="switch">
         <input type="checkbox" id="extension-toggle" checked>
         <span class="slider round"></span>
@@ -33,12 +49,12 @@
     
     <section class="domain-control">
       <div class="current-domain">
-        <span id="current-site-label">Текущий сайт:</span>
+        <span id="current-site-label">Current site:</span>
         <span id="current-domain-text">example.com</span>
       </div>
       
       <div class="domain-toggle">
-        <span id="enable-for-site-label">Включить для этого сайта</span>
+        <span id="enable-for-site-label">Enable for this site</span>
         <label class="switch">
           <input type="checkbox" id="domain-toggle">
           <span class="slider round"></span>
@@ -48,7 +64,7 @@
     
     <section class="settings-preview">      
       <div class="setting-item">
-        <span id="enter-presses-label">Нажатия Enter:</span>
+        <span id="enter-presses-label">Enter presses:</span>
         <div class="count-control">
           <button id="decrease-count">-</button>
           <span id="press-count">3</span>
@@ -57,7 +73,7 @@
       </div>
       
       <div class="setting-item">
-        <span id="delay-label">Задержка (мс):</span>
+        <span id="delay-label">Delay (ms):</span>
         <div class="slider-container">
           <input type="range" min="200" max="1000" value="200" class="delay-slider" id="delay-slider">
           <span id="delay-value">200</span>
@@ -65,7 +81,7 @@
       </div>
       
       <div class="setting-item">
-        <span id="visual-feedback-label">Визуальный отклик:</span>
+        <span id="visual-feedback-label">Visual feedback:</span>
         <label class="switch">
           <input type="checkbox" id="feedback-toggle" checked>
           <span class="slider round"></span>
@@ -74,21 +90,21 @@
     </section>
   </div>
   
-  <!-- Модальное окно для Premium -->
+  <!-- Premium modal -->
   <div id="premium-modal" class="modal">
     <div class="modal-content">
       <span class="close-modal">&times;</span>
-      <h2>Лимит использования достигнут</h2>
-      <p>Вы использовали бесплатную версию Triple Submit 20 раз.</p>
-      <p>Для продолжения использования, пожалуйста, обновитесь до Premium версии.</p>
+      <h2>Usage Limit Reached</h2>
+      <p>You have used the free version of Triple Submit 20 times.</p>
+      <p>To continue using, please upgrade to the Premium version.</p>
       <div class="price-container">
         <div class="price">
           <span class="currency">$</span>
           <span class="amount">2.99</span>
         </div>
-        <span class="price-period">/ месяц</span>
+        <span class="price-period">/ month</span>
       </div>
-      <button id="pay-button" class="pay-button">Оплатить сейчас</button>
+      <button id="pay-button" class="pay-button">Pay Now</button>
     </div>
   </div>
   

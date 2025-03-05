@@ -1,91 +1,101 @@
-# Triple Submit - Chrome Extension
+# Triple Submit Chrome Extension
 
-Triple Submit - это расширение для Chrome, предназначенное для предотвращения случайной отправки форм, требуя нескольких нажатий клавиши Enter перед фактической отправкой. Также оно позволяет использовать Shift+Enter для обычного поведения клавиши Enter.
+A browser extension that prevents accidental form submissions by requiring multiple Enter key presses.
 
-## Основные возможности
+## Overview
 
-### Ключевая функциональность
-- **Множественное нажатие Enter**: Требует настраиваемого количества нажатий клавиши Enter (по умолчанию: 3) для отправки формы
-- **Перезаписывание клавиш**: Shift+Enter действует как обычная клавиша Enter (мгновенная отправка)
-- **Активация по доменам**: Расширение отключено для всех сайтов по умолчанию, вы можете включить его для конкретных доменов
-- **Визуальная обратная связь**: Показывает индикатор прогресса к требуемому количеству нажатий
-- **Совместимость с браузерами**: Работает с Chrome, Edge и Arc браузерами
-- **Расширенный режим ввода текста**: Одиночное нажатие Enter вставляет перенос строки в текстовых полях вместо отправки формы
+Triple Submit is a Chrome extension designed to safeguard against accidental form submissions. It requires users to press the Enter key multiple times (configurable, default is 3) before a form is submitted, helping to prevent premature submission of important data.
 
-### Как работает расширение
-- Несколько нажатий клавиши Enter (достижение требуемого количества) отправляют форму
-- Одиночное нажатие Enter вставляет перенос строки в текстовых полях
-- Shift+Enter всегда работает как клавиша быстрой отправки
+## Key Features
 
-## Установка
+- **Multiple Enter Key Requirement**: Forms are only submitted after pressing Enter multiple times (default: 3)
+- **Per-Site Control**: Enable or disable the extension for specific websites
+- **Visual Feedback**: Optional visual indicator showing progress toward form submission
+- **Configurable Delay**: Adjust the maximum time between Enter presses (200-1000ms)
+- **Multilingual Support**: Available in 10 languages: English, Spanish, Russian, Chinese, Arabic, Portuguese, French, German, Japanese, and Italian
+- **Premium Functionality**: 20 free submissions, then $2.99/month subscription
 
-### Из Chrome Web Store (Скоро)
-1. Посетите Chrome Web Store (ссылка будет добавлена)
-2. Нажмите "Добавить в Chrome"
-3. Подтвердите установку при запросе
+## Installation
 
-### Ручная установка (Режим разработчика)
-1. Скачайте или клонируйте этот репозиторий
-2. Откройте Chrome и перейдите на `chrome://extensions/`
-3. Включите "Режим разработчика" в правом верхнем углу
-4. Нажмите "Загрузить распакованное расширение" и выберите директорию с расширением
-5. Расширение установлено и готово к использованию
+1. Download the extension from the Chrome Web Store
+2. Click "Add to Chrome" and confirm the installation
+3. The extension icon will appear in your browser toolbar
+4. Click the icon to configure settings for the current website
 
-## Использование
+## Usage
 
-### Базовое использование
-1. После установки расширение активно, но отключено для всех сайтов по умолчанию
-2. Включите расширение для конкретных сайтов через меню расширения
-3. Нажмите Enter несколько раз (по умолчанию: 3) для отправки формы
-4. Используйте Shift+Enter как обычную клавишу Enter (одиночное нажатие для отправки)
-5. Одиночное нажатие Enter вставляет переносы строк в текстовых полях
-6. Визуальная обратная связь покажет прогресс к требуемому количеству нажатий
+### Basic Operation
 
-### Настройка
-1. Нажмите на иконку Triple Submit в панели инструментов браузера для доступа к настройкам:
-   - Включить/отключить расширение глобально
-   - Включить/отключить для текущего сайта
-   - Настроить требуемое количество нажатий
-   - Настроить задержку между нажатиями (200-1000 мс)
-   - Включить/выключить визуальную обратную связь
+1. Browse to any website with a form
+2. Enable the extension for that site in the popup
+3. When you press Enter in a form:
+   - For the first N-1 presses: A newline character is inserted (in text areas)
+   - On the Nth press: The form is submitted normally
 
-## Премиум возможности
-- Бесплатно: 20 отправок форм
-- Премиум: Неограниченное количество отправок за $2.99/месяц
+### Configuration Options
 
-## Структура проекта
+- **Enable Triple Submit**: Master switch to enable/disable the extension
+- **Enable for this site**: Control whether the extension works on the current website
+- **Enter presses**: Set how many Enter presses are required (2-5)
+- **Delay**: Adjust the maximum time between presses (200-1000ms)
+- **Visual feedback**: Enable/disable on-screen indicators showing submit progress
+- **Language**: Choose from 10 available languages
+
+## Premium Features
+
+After 20 free submissions, you'll need to upgrade to Premium to continue using the extension:
+
+- **Unlimited submissions**: No more usage restrictions
+- **Priority support**: Get faster responses to your questions
+- **Early access**: Be the first to try new features
+- **Cost**: $2.99 per month
+
+## Project Structure
+
 ```
 triple_submit/
-├── manifest.json         # Манифест расширения
-├── icons/                # Иконки расширения
-├── popup/                # Интерфейс всплывающего окна
+├── manifest.json           # Extension configuration
+├── _locales/               # Localization files
+│   ├── en/                 # English
+│   ├── es/                 # Spanish
+│   ├── ru/                 # Russian
+│   └── ...                 # Other languages
+├── icons/                  # Extension icons
+├── popup/                  # Popup UI
 │   ├── popup.html
 │   ├── popup.css
 │   └── popup.js
-├── background/           # Фоновые скрипты
+├── background/             # Background scripts
 │   └── background.js
-├── content/              # Контентные скрипты
-│   ├── keyHandler.js     # Логика обработки нажатий клавиш
-│   ├── visualFeedback.js # Компоненты визуальной обратной связи
-│   └── lib/              # Вспомогательные библиотеки
-│       └── storage.js    # Управление хранилищем
-└── common/               # Общие файлы
-    └── config.js         # Конфигурация
+├── content/                # Content scripts
+│   ├── keyHandler.js
+│   └── visualFeedback.js
+└── common/                 # Shared code
 ```
 
-## Последние обновления
-- **v2.0.0**: Значительное упрощение интерфейса, оставлен только расширенный режим, добавлен слайдер задержки, обновлена логика paywall
-- **v1.0.0**: Первоначальный релиз
+## Recent Updates
 
-## Политика конфиденциальности
-Triple Submit не собирает и не хранит никаких персональных данных. Все настройки хранятся локально на вашем устройстве. Расширение не отслеживает вашу историю браузера или отправки форм.
+- **v1.2.0**: Added language selector with 10 languages
+- **v1.1.0**: Simplified interface, added delay slider (200-1000ms), updated color scheme (gray steel with bright orange accent), improved paywall logic (20 free submissions, $2.99/month)
+- **v1.0.0**: Initial release
 
-## Лицензия
-Этот проект лицензирован под лицензией MIT - см. файл LICENSE для подробностей.
+## Privacy Policy
 
-## Поддержка
-Если вы столкнулись с проблемами или у вас есть предложения по улучшению, пожалуйста, создайте issue в GitHub репозитории.
+Triple Submit respects your privacy and does not collect any personal information. The extension only stores:
 
----
+- Your settings and preferences
+- Domain-specific configurations
+- Usage count for free tier limitations
 
-© 2023 Triple Submit 
+All data is stored locally in your browser using Chrome's storage API and is not transmitted to external servers.
+
+## Support
+
+For issues, feature requests, or questions:
+
+- Create an issue on our [GitHub repository](https://github.com/username/triple_submit)
+- Email us at support@triplesubmit.example.com
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
