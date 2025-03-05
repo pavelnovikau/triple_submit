@@ -10,27 +10,7 @@
   <div class="container">
     <header>
       <h1>Triple Submit</h1>
-      <div class="theme-toggle">
-        <button id="light-theme-button" class="theme-button" title="Светлая тема">☀️</button>
-        <button id="dark-theme-button" class="theme-button" title="Темная тема">🌙</button>
-      </div>
     </header>
-    
-    <section class="language-selector">
-      <span id="language-label">Язык:</span>
-      <select id="language-select">
-        <option value="en">English</option>
-        <option value="es">Español</option>
-        <option value="zh">中文</option>
-        <option value="ru" selected>Русский</option>
-        <option value="ar">العربية</option>
-        <option value="pt">Português</option>
-        <option value="fr">Français</option>
-        <option value="de">Deutsch</option>
-        <option value="ja">日本語</option>
-        <option value="it">Italiano</option>
-      </select>
-    </section>
     
     <section class="premium-section">
       <div class="premium-banner">
@@ -39,7 +19,7 @@
       </div>
       <div class="usage-counter">
         <span id="usage-label">Осталось бесплатных нажатий:</span>
-        <span id="usage-count" class="usage-count">10</span>
+        <span id="usage-count" class="usage-count">20</span>
       </div>
     </section>
     
@@ -60,31 +40,27 @@
       <div class="domain-toggle">
         <span id="enable-for-site-label">Включить для этого сайта</span>
         <label class="switch">
-          <input type="checkbox" id="domain-toggle" checked>
+          <input type="checkbox" id="domain-toggle">
           <span class="slider round"></span>
         </label>
       </div>
     </section>
     
-    <section class="settings-preview">
-      <div class="setting-item mode-setting-item">
-        <span id="mode-label">Режим:</span>
-        <select id="mode-select" class="mode-select">
-          <option value="normal" id="mode-normal">Обычный</option>
-          <option value="alternative" id="mode-alternative">Расширенный</option>
-        </select>
-      </div>
-      
-      <div class="mode-description">
-        <span id="mode-description"></span>
-      </div>
-      
+    <section class="settings-preview">      
       <div class="setting-item">
         <span id="enter-presses-label">Нажатия Enter:</span>
         <div class="count-control">
           <button id="decrease-count">-</button>
           <span id="press-count">3</span>
           <button id="increase-count">+</button>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <span id="delay-label">Задержка (мс):</span>
+        <div class="slider-container">
+          <input type="range" min="200" max="1000" value="200" class="delay-slider" id="delay-slider">
+          <span id="delay-value">200</span>
         </div>
       </div>
       
@@ -96,10 +72,6 @@
         </label>
       </div>
     </section>
-    
-    <footer>
-      <button id="options-button">Расширенные настройки</button>
-    </footer>
   </div>
   
   <!-- Модальное окно для Premium -->
@@ -107,14 +79,14 @@
     <div class="modal-content">
       <span class="close-modal">&times;</span>
       <h2>Лимит использования достигнут</h2>
-      <p>Вы использовали бесплатную версию Triple Submit 10 раз.</p>
+      <p>Вы использовали бесплатную версию Triple Submit 20 раз.</p>
       <p>Для продолжения использования, пожалуйста, обновитесь до Premium версии.</p>
       <div class="price-container">
         <div class="price">
           <span class="currency">$</span>
-          <span class="amount">4.99</span>
+          <span class="amount">2.99</span>
         </div>
-        <span class="price-period">один раз</span>
+        <span class="price-period">/ месяц</span>
       </div>
       <button id="pay-button" class="pay-button">Оплатить сейчас</button>
     </div>

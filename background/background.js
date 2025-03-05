@@ -2,12 +2,8 @@
 const DEFAULT_SETTINGS = {
   enabled: true,
   pressCount: 3,
-  visualFeedback: true,
-  mode: 'normal', // 'normal' or 'alternative'
-  timeWindow: 200, // ms
-  blacklist: [],
-  whitelist: [],
-  blacklistMode: true,
+  showFeedback: true,
+  delay: 200, // ms
   isPremium: false // Premium status
 };
 
@@ -18,151 +14,405 @@ const DEFAULT_USAGE_DATA = {
 };
 
 // Initialize extension settings
-chrome.runtime.onInstalled.addListener(async (details) => {
+chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     // Set default settings on first install
-    await chrome.storage.sync.set({ settings: DEFAULT_SETTINGS });
-    
-    // Set default usage data
-    await chrome.storage.local.set({ usageData: DEFAULT_USAGE_DATA });
-    
-    console.log('Extension installed. Default settings applied.');
+    chrome.storage.sync.set({ settings: DEFAULT_SETTINGS }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Error setting default settings:', chrome.runtime.lastError);
+        return;
+      }
+      
+      // Set default usage data
+      chrome.storage.local.set({ usageData: DEFAULT_USAGE_DATA }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('Error setting default usage data:', chrome.runtime.lastError);
+          return;
+        }
+        
+        // Создаем пустой объект для доменов
+        chrome.storage.sync.set({ domains: {} }, () => {
+          if (chrome.runtime.lastError) {
+            console.error('Error setting default domains:', chrome.runtime.lastError);
+            return;
+          }
+          
+          console.log('Extension installed. Default settings applied.');
+        });
+      });
+    });
   } else if (details.reason === 'update') {
     // При обновлении расширения можно обновить некоторые настройки
-    const data = await chrome.storage.sync.get('settings');
-    if (data.settings) {
-      // Обновляем только те настройки, которые отсутствуют
-      const updatedSettings = { ...DEFAULT_SETTINGS, ...data.settings };
-      await chrome.storage.sync.set({ settings: updatedSettings });
-    }
-    console.log('Extension updated. Settings preserved and extended.');
+    chrome.storage.sync.get('settings', (data) => {
+      if (chrome.runtime.lastError) {
+        console.error('Error getting settings during update:', chrome.runtime.lastError);
+        return;
+      }
+      
+      if (data.settings) {
+        // Обновляем только те настройки, которые отсутствуют
+        const updatedSettings = { ...DEFAULT_SETTINGS, ...data.settings };
+        chrome.storage.sync.set({ settings: updatedSettings }, () => {
+          if (chrome.runtime.lastError) {
+            console.error('Error updating settings during update:', chrome.runtime.lastError);
+            return;
+          }
+          
+          console.log('Extension updated. Settings preserved and extended.');
+        });
+      } else {
+        // Если настройки отсутствуют, устанавливаем значения по умолчанию
+        chrome.storage.sync.set({ settings: DEFAULT_SETTINGS }, () => {
+          if (chrome.runtime.lastError) {
+            console.error('Error setting default settings during update:', chrome.runtime.lastError);
+            return;
+          }
+          
+          console.log('Extension updated. Default settings applied.');
+        });
+      }
+      
+      // Проверяем наличие объекта domains
+      chrome.storage.sync.get('domains', (domainsData) => {
+        if (!domainsData.domains) {
+          chrome.storage.sync.set({ domains: {} }, () => {
+            if (chrome.runtime.lastError) {
+              console.error('Error setting default domains during update:', chrome.runtime.lastError);
+              return;
+            }
+            console.log('Created empty domains object during update.');
+          });
+        }
+      });
+    });
   }
 });
 
-// Function to increment usage count
-async function incrementUsageCount() {
+// Функция для увеличения счетчика использования
+function incrementUsageCount(usageData, callback) {
   try {
-    // Получаем текущие настройки
-    const settingsData = await chrome.storage.sync.get('settings');
-    const settings = settingsData.settings || DEFAULT_SETTINGS;
-    
-    // Если пользователь Premium, не увеличиваем счетчик
-    if (settings.isPremium) {
-      return { usageData: { count: 0, lastUpdated: new Date().toISOString() } };
-    }
-    
-    // Получаем текущие данные об использовании
-    const usageData = await chrome.storage.local.get('usageData');
-    let currentUsage = usageData.usageData || DEFAULT_USAGE_DATA;
-    
-    // Увеличиваем счетчик
-    currentUsage.count += 1;
-    currentUsage.lastUpdated = new Date().toISOString();
-    
-    // Сохраняем обновленные данные
-    await chrome.storage.local.set({ usageData: currentUsage });
-    
-    return { usageData: currentUsage };
+    // Проверяем статус Premium
+    chrome.storage.sync.get('isPremium', (premiumData) => {
+      if (premiumData.isPremium) {
+        if (callback) callback({ usageData: { count: 0, isPremium: true } });
+        return;
+      }
+      
+      // Используем переданные данные или значения по умолчанию
+      let currentUsage = usageData || DEFAULT_USAGE_DATA;
+      
+      // Увеличиваем счетчик
+      currentUsage.count += 1;
+      currentUsage.lastUpdated = new Date().toISOString();
+      
+      // Сохраняем обновленные данные
+      chrome.storage.local.set({ usageData: currentUsage }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('Error saving usage data:', chrome.runtime.lastError);
+          if (callback) callback({ error: chrome.runtime.lastError.message });
+        } else {
+          console.log('Usage count updated:', currentUsage.count);
+          if (callback) callback({ usageData: currentUsage });
+        }
+      });
+    });
   } catch (error) {
     console.error('Error incrementing usage count:', error);
-    return { error: 'Failed to increment usage count' };
+    if (callback) callback({ error: error.message });
   }
 }
 
-// Listen for messages from content scripts or popup
+// Обработчик сообщений от content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  (async () => {
-    try {
-      if (message.action === 'getSettings') {
-        // Получаем настройки
-        const data = await chrome.storage.sync.get('settings');
-        const settings = data.settings || DEFAULT_SETTINGS;
-        sendResponse({ settings });
-      } else if (message.action === 'updateSettings') {
-        // Обновляем настройки
-        const data = await chrome.storage.sync.get('settings');
-        const currentSettings = data.settings || DEFAULT_SETTINGS;
-        const updatedSettings = { ...currentSettings, ...message.updates };
+  try {
+    console.log('Background received message:', message.action);
+    
+    switch (message.action) {
+      case 'getSettings':
+        // Получаем настройки для передачи в content script
+        chrome.storage.sync.get(['settings', 'isPremium'], (data) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error getting settings:', chrome.runtime.lastError);
+            sendResponse({ error: chrome.runtime.lastError.message });
+            return;
+          }
+          
+          // Проверяем и возвращаем настройки
+          const settings = data.settings || DEFAULT_SETTINGS;
+          
+          // Добавляем информацию о Premium статусе
+          settings.isPremium = data.isPremium || false;
+          
+          sendResponse({ settings: settings });
+        });
         
-        await chrome.storage.sync.set({ settings: updatedSettings });
+        // Необходимо вернуть true, чтобы sendResponse работал асинхронно
+        return true;
         
-        // Обновляем иконку, если изменился статус enabled
-        if (message.updates.hasOwnProperty('enabled')) {
-          updateIcon(message.updates.enabled);
-        }
-        
-        sendResponse({ success: true, settings: updatedSettings });
-      } else if (message.action === 'checkDomain') {
-        // Проверяем, находится ли домен в списке
+      case 'checkDomain':
+        // Проверяем, разрешен ли домен
         const domain = message.domain;
-        const data = await chrome.storage.sync.get('settings');
-        const settings = data.settings || DEFAULT_SETTINGS;
-        
-        let isEnabled = true;
-        
-        if (settings.blacklistMode) {
-          // В режиме черного списка: включено, если домен НЕ в черном списке
-          isEnabled = !settings.blacklist.includes(domain);
-        } else {
-          // В режиме белого списка: включено, только если домен в белом списке
-          isEnabled = settings.whitelist.includes(domain);
+        if (!domain) {
+          sendResponse({ error: 'No domain provided' });
+          return;
         }
         
-        sendResponse({ isEnabled });
-      } else if (message.action === 'incrementUsage') {
+        chrome.storage.sync.get(['domains', 'settings'], (data) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error getting domain data:', chrome.runtime.lastError);
+            sendResponse({ error: chrome.runtime.lastError.message });
+            return;
+          }
+          
+          const domains = data.domains || {};
+          const settings = data.settings || DEFAULT_SETTINGS;
+          
+          // По умолчанию домен выключен
+          let isEnabled = false;
+          
+          // Проверяем, включен ли домен в списке доменов
+          if (domains[domain]) {
+            isEnabled = true;
+          }
+          
+          sendResponse({ isEnabled: isEnabled });
+        });
+        
+        // Необходимо вернуть true, чтобы sendResponse работал асинхронно
+        return true;
+        
+      case 'updateSettings':
+        // Обновляем настройки
+        const newSettings = message.settings;
+        if (!newSettings) {
+          sendResponse({ error: 'No settings provided' });
+          return;
+        }
+        
+        chrome.storage.sync.get('settings', (data) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error getting settings for update:', chrome.runtime.lastError);
+            sendResponse({ error: chrome.runtime.lastError.message });
+            return;
+          }
+          
+          // Объединяем существующие настройки с новыми
+          const updatedSettings = { ...(data.settings || DEFAULT_SETTINGS), ...newSettings };
+          
+          chrome.storage.sync.set({ settings: updatedSettings }, () => {
+            if (chrome.runtime.lastError) {
+              console.error('Error updating settings:', chrome.runtime.lastError);
+              sendResponse({ error: chrome.runtime.lastError.message });
+              return;
+            }
+            
+            // Обновляем иконку, если необходимо
+            if (newSettings.enabled !== undefined) {
+              updateIcon(newSettings.enabled);
+            }
+            
+            // Уведомляем все вкладки об обновлении настроек
+            notifyTabsAboutSettingsUpdate();
+            
+            sendResponse({ success: true, settings: updatedSettings });
+          });
+        });
+        
+        // Необходимо вернуть true, чтобы sendResponse работал асинхронно
+        return true;
+        
+      case 'updateDomain':
+        // Обновляем настройки домена
+        const domainToUpdate = message.domain;
+        const enabled = message.enabled;
+        
+        if (!domainToUpdate) {
+          sendResponse({ error: 'No domain provided for update' });
+          return;
+        }
+        
+        chrome.storage.sync.get('domains', (data) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error getting domains for update:', chrome.runtime.lastError);
+            sendResponse({ error: chrome.runtime.lastError.message });
+            return;
+          }
+          
+          let domains = data.domains || {};
+          
+          if (enabled) {
+            domains[domainToUpdate] = true;
+          } else {
+            delete domains[domainToUpdate];
+          }
+          
+          chrome.storage.sync.set({ domains: domains }, () => {
+            if (chrome.runtime.lastError) {
+              console.error('Error updating domain:', chrome.runtime.lastError);
+              sendResponse({ error: chrome.runtime.lastError.message });
+              return;
+            }
+            
+            // Уведомляем вкладки об обновлении настроек
+            notifyTabsAboutSettingsUpdate();
+            
+            sendResponse({ success: true });
+          });
+        });
+        
+        // Необходимо вернуть true, чтобы sendResponse работал асинхронно
+        return true;
+        
+      case 'incrementUsage':
         // Увеличиваем счетчик использования
-        const result = await incrementUsageCount();
-        sendResponse(result);
-      } else if (message.action === 'getUsageData') {
-        // Получаем данные об использовании
-        const usageData = await chrome.storage.local.get('usageData');
-        sendResponse({ usageData: usageData.usageData || DEFAULT_USAGE_DATA });
-      }
-    } catch (error) {
-      console.error('Error processing message:', error);
-      sendResponse({ error: error.message });
+        chrome.storage.local.get('usageData', (data) => {
+          incrementUsageCount(data.usageData, (result) => {
+            sendResponse(result);
+          });
+        });
+        
+        // Необходимо вернуть true, чтобы sendResponse работал асинхронно
+        return true;
+        
+      case 'checkPremiumStatus':
+        // Проверяем статус Premium
+        chrome.storage.sync.get(['isPremium', 'premiumExpiry'], (data) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error checking premium status:', chrome.runtime.lastError);
+            sendResponse({ error: chrome.runtime.lastError.message });
+            return;
+          }
+          
+          let isPremium = data.isPremium || false;
+          
+          // Проверяем срок действия Premium
+          if (isPremium && data.premiumExpiry) {
+            const now = new Date();
+            const expiry = new Date(data.premiumExpiry);
+            
+            if (now > expiry) {
+              // Premium истек
+              isPremium = false;
+              chrome.storage.sync.set({ isPremium: false }, () => {
+                if (chrome.runtime.lastError) {
+                  console.error('Error updating expired premium status:', chrome.runtime.lastError);
+                }
+              });
+            }
+          }
+          
+          sendResponse({ isPremium: isPremium });
+        });
+        
+        // Необходимо вернуть true, чтобы sendResponse работал асинхронно
+        return true;
+        
+      case 'activatePremium':
+        // Активируем Premium (используется при покупке)
+        const months = message.months || 1;
+        
+        // Вычисляем дату истечения
+        const now = new Date();
+        const expiry = new Date(now.setMonth(now.getMonth() + months));
+        
+        chrome.storage.sync.set({ 
+          isPremium: true,
+          premiumExpiry: expiry.toISOString(),
+          premiumActivated: new Date().toISOString()
+        }, () => {
+          if (chrome.runtime.lastError) {
+            console.error('Error activating premium:', chrome.runtime.lastError);
+            sendResponse({ error: chrome.runtime.lastError.message });
+            return;
+          }
+          
+          // Сбрасываем счетчик использования
+          chrome.storage.local.set({ usageData: DEFAULT_USAGE_DATA }, () => {
+            if (chrome.runtime.lastError) {
+              console.error('Error resetting usage data:', chrome.runtime.lastError);
+            }
+          });
+          
+          sendResponse({ success: true, premiumExpiry: expiry.toISOString() });
+        });
+        
+        // Необходимо вернуть true, чтобы sendResponse работал асинхронно
+        return true;
+        
+      default:
+        console.warn('Unknown message action:', message.action);
+        sendResponse({ error: 'Unknown action' });
     }
-  })();
-  
-  return true; // Указываем, что ответ будет асинхронным
+  } catch (error) {
+    console.error('Error handling message:', error);
+    sendResponse({ error: error.message });
+  }
 });
 
-// Update extension icon based on enabled status
-function updateIcon(isEnabled) {
-  const iconPath = isEnabled ? 
-    { 
-      16: 'icons/icon16.png',
-      48: 'icons/icon48.png',
-      128: 'icons/icon128.png'
-    } : 
-    {
-      16: 'icons/icon16_disabled.png',
-      48: 'icons/icon48_disabled.png',
-      128: 'icons/icon128_disabled.png'
-    };
+// Функция для обновления иконки расширения
+function updateIcon(enabled) {
+  const path = enabled ? {
+    16: 'icons/icon16.png',
+    48: 'icons/icon48.png',
+    128: 'icons/icon128.png'
+  } : {
+    16: 'icons/icon16_disabled.png',
+    48: 'icons/icon48_disabled.png',
+    128: 'icons/icon128_disabled.png'
+  };
   
-  chrome.action.setIcon({ path: iconPath });
+  chrome.action.setIcon({ path: path });
+}
+
+// Функция для уведомления вкладок об обновлении настроек
+function notifyTabsAboutSettingsUpdate() {
+  chrome.tabs.query({}, (tabs) => {
+    tabs.forEach((tab) => {
+      if (tab.url && tab.url.startsWith('http')) {
+        chrome.tabs.sendMessage(tab.id, { action: 'settingsUpdated' })
+          .catch((error) => {
+            console.log(`Error sending message to tab ${tab.id}:`, error);
+          });
+      }
+    });
+  });
 }
 
 // Listen for tab updates to update icon
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
-    chrome.storage.local.get('settings', (data) => {
-      const settings = data.settings || DEFAULT_SETTINGS;
-      const { hostname } = new URL(tab.url);
-      
-      let isEnabled = settings.isEnabled;
-      
-      // Check domain rules
-      if (settings.domains.mode === 'whitelist') {
-        isEnabled = isEnabled && settings.domains.whitelist.some(domain => 
-          hostname === domain || hostname.endsWith('.' + domain));
-      } else { // blacklist mode
-        isEnabled = isEnabled && !settings.domains.blacklist.some(domain => 
-          hostname === domain || hostname.endsWith('.' + domain));
-      }
-      
-      updateIcon(isEnabled);
-    });
+    try {
+      // Получаем текущие настройки
+      chrome.storage.sync.get('settings', (data) => {
+        if (chrome.runtime.lastError) {
+          console.error('Error getting settings:', chrome.runtime.lastError);
+          return;
+        }
+        
+        const settings = data.settings || DEFAULT_SETTINGS;
+        const hostname = new URL(tab.url).hostname;
+        
+        // Проверяем правила доменов
+        let isEnabled = settings.enabled;
+        
+        if (settings.domainMode === 'whitelist') {
+          // В режиме белого списка: включено только если домен в списке
+          isEnabled = settings.whitelist.some(whitelistedDomain => 
+            hostname.includes(whitelistedDomain)
+          );
+        } else if (settings.domainMode === 'blacklist') {
+          // В режиме черного списка: выключено если домен в списке
+          const isBlacklisted = settings.blacklist.some(blacklistedDomain => 
+            hostname.includes(blacklistedDomain)
+          );
+          isEnabled = settings.enabled && !isBlacklisted;
+        }
+        
+        // Обновляем иконку
+        updateIcon(isEnabled);
+      });
+    } catch (error) {
+      console.error('Error processing tab update:', error);
+    }
   }
 }); 
