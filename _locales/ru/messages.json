@@ -1,58 +1,94 @@
 {
   "extName": {
     "message": "Triple Submit",
-    "description": "Extension name"
+    "description": "Название расширения"
   },
   "extDescription": {
     "message": "Предотвращает случайные отправки форм, требуя многократного нажатия клавиши Enter",
-    "description": "Extension description"
+    "description": "Описание расширения"
   },
   "language_label": {
     "message": "Язык:",
-    "description": "Label for language selection"
+    "description": "Название выбора языка"
   },
   "enable_extension": {
     "message": "Включить Triple Submit",
-    "description": "Label for enabling the extension"
+    "description": "Текст для включения расширения"
   },
   "current_site": {
     "message": "Текущий сайт:",
-    "description": "Label for current website"
+    "description": "Текст для текущего сайта"
   },
   "enable_for_site": {
     "message": "Включить для этого сайта",
-    "description": "Label for enabling extension on current site"
+    "description": "Текст для включения для сайта"
   },
-  "mode": {
+  "mode_label": {
     "message": "Режим:",
-    "description": "Label for mode selection"
+    "description": "Название выбора режима"
   },
   "mode_normal": {
-    "message": "Обычный (стандартная работа)",
-    "description": "Label for normal mode"
+    "message": "Обычный",
+    "description": "Текст для обычного режима"
   },
   "mode_alternative": {
-    "message": "Расширенный (перенос строк + многократные нажатия)",
-    "description": "Label for alternative mode"
+    "message": "Расширенный",
+    "description": "Текст для альтернативного режима"
   },
-  "enter_presses": {
+  "mode_normal_description": {
+    "message": "Стандартная работа Enter без дополнительных проверок.",
+    "description": "Описание обычного режима"
+  },
+  "mode_alternative_description": {
+    "message": "Защита от случайной отправки формы с вводом Enter несколько раз.",
+    "description": "Описание альтернативного режима"
+  },
+  "enter_presses_label": {
     "message": "Нажатия Enter:",
-    "description": "Label for Enter key press count"
+    "description": "Название для количества нажатий"
   },
-  "visual_feedback": {
+  "visual_feedback_label": {
     "message": "Визуальный отклик:",
-    "description": "Label for visual feedback toggle"
+    "description": "Название для визуального отклика"
   },
   "advanced_options": {
     "message": "Расширенные настройки",
-    "description": "Label for advanced options button"
+    "description": "Текст кнопки расширенных настроек"
   },
   "upgrade_premium": {
     "message": "Обновиться до Premium",
-    "description": "Label for premium upgrade banner"
+    "description": "Текст для обновления до Premium"
   },
-  "settings_note": {
-    "message": "* Дополнительные настройки доступны в расширенных опциях",
-    "description": "Note about additional settings in advanced options"
+  "premium_status": {
+    "message": "Premium активирован",
+    "description": "Текст для активированного Premium"
+  },
+  "usage_remaining_label": {
+    "message": "Осталось бесплатных нажатий:",
+    "description": "Текст для оставшихся бесплатных нажатий"
+  },
+  "usage_limit_title": {
+    "message": "Лимит использования достигнут",
+    "description": "Заголовок окна лимита использования"
+  },
+  "usage_limit_message": {
+    "message": "Вы использовали бесплатную версию Triple Submit 10 раз.",
+    "description": "Сообщение о достижении лимита использования"
+  },
+  "upgrade_message": {
+    "message": "Для продолжения использования, пожалуйста, обновитесь до Premium версии.",
+    "description": "Сообщение о необходимости обновления"
+  },
+  "price_period": {
+    "message": "один раз",
+    "description": "Период оплаты"
+  },
+  "pay_button": {
+    "message": "Оплатить сейчас",
+    "description": "Текст кнопки оплаты"
+  },
+  "processing_payment": {
+    "message": "Обработка платежа...",
+    "description": "Текст во время обработки платежа"
   }
 } 

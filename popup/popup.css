@@ -1,45 +1,59 @@
+/* Импорт шрифта Noto Sans */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&display=swap');
+
 /* Popup styles for Triple Submit extension */
 
 :root {
-  --bg-primary: #f7f4ed;      /* Цвет washi (рисовой бумаги) */
-  --bg-secondary: #eae7df;    /* Светлый кремовый */
-  --text-primary: #33322e;    /* Темный сумиэ (почти черный с оттенком) */
-  --text-secondary: #7c7b78;  /* Средний серый */
-  --accent-color: #a5307c;    /* Умэ (сливовый цвет) */
-  --accent-color-hover: #87255e; /* Более темный умэ */
-  --accent-color-active: #b14b8e; /* Более светлый умэ */
-  --border-color: #d8d3c8;    /* Светлый песочный */
-  --switch-bg: #d8d3c8;       /* Фон переключателя */
-  --switch-active: #a5307c;   /* Активный переключатель (умэ) */
-  --hover-bg: rgba(165, 48, 124, 0.1); /* Прозрачный умэ для ховера */
+  --bg-primary: #fafafa;      /* Белый фон (сирой-иро) */
+  --bg-secondary: #f2f2f2;    /* Светло-серый (усу-гин) */
+  --text-primary: #2c2c2c;    /* Тёмно-серый (сумиэ) */
+  --text-secondary: #6d6d6d;  /* Средний серый (неро-иро) */
+  --accent-color: #f17a3a;    /* Оранжевый (каки-иро) */
+  --accent-color-hover: #e05a1a; /* Тёмнее каки-иро */
+  --accent-color-active: #f9935e; /* Светлее каки-иро */
+  --border-color: #e0e0e0;    /* Светлый серый (кинари-иро) */
+  --switch-bg: #d9d9d9;       /* Серый для фона переключателя */
+  --switch-active: #f17a3a;   /* Каки-иро для активного переключателя */
+  --hover-bg: rgba(241, 122, 58, 0.1); /* Прозрачный каки-иро для фона при наведении */
+  
+  /* Унифицированные размеры шрифтов */
+  --font-size-small: 13px;    /* Маленький размер (подписи, примечания) */
+  --font-size-medium: 15px;   /* Средний размер (основной текст) */
+  --font-size-large: 18px;    /* Большой размер (заголовки) */
 }
 
 .dark-theme {
-  --bg-primary: #2a2d39;      /* Индиго (темно-синий с серым) */
-  --bg-secondary: #363a49;    /* Чуть светлее индиго */
-  --text-primary: #f5f2e9;    /* Почти белый с оттенком washi */
-  --text-secondary: #bfbcb2;  /* Светло-серый с бежевым оттенком */
-  --accent-color: #c7b446;    /* Ямабуки (золотисто-желтый) */
-  --accent-color-hover: #a89734; /* Темный ямабуки */
-  --accent-color-active: #d8c865; /* Светлый ямабуки */
-  --border-color: #4a4e5c;    /* Темно-серый с оттенком индиго */
-  --switch-bg: #4a4e5c;       /* Фон переключателя */
-  --switch-active: #c7b446;   /* Активный переключатель (ямабуки) */
-  --hover-bg: rgba(199, 180, 70, 0.2); /* Прозрачный ямабуки для ховера */
+  --bg-primary: #1c1c1c;      /* Глубокий чёрный (куро) */
+  --bg-secondary: #262626;    /* Тёмно-серый (суми) */
+  --text-primary: #f0f0f0;    /* Почти белый (сирой) */
+  --text-secondary: #b3b3b3;  /* Светло-серый (усу-неро) */
+  --accent-color: #f17a3a;    /* Оранжевый (каки-иро) */
+  --accent-color-hover: #e05a1a; /* Тёмнее каки-иро */
+  --accent-color-active: #f9935e; /* Светлее каки-иро */
+  --border-color: #3d3d3d;    /* Тёмно-серый для границ */
+  --switch-bg: #484848;       /* Средний серый для фона переключателя */
+  --switch-active: #f17a3a;   /* Каки-иро для активного переключателя */
+  --hover-bg: rgba(241, 122, 58, 0.2); /* Прозрачный каки-иро для фона при наведении */
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   width: 320px;
+  min-height: 520px;
   transition: background-color 0.3s, color 0.3s;
+  line-height: 1.5;
+  font-size: var(--font-size-medium);
 }
 
 .container {
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
 }
 
 /* Header Styles */
@@ -48,13 +62,16 @@ header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
 }
 
 h1 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--accent-color);
+  font-size: var(--font-size-large);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
 }
 
 /* Toggle Switch Styles */
@@ -80,9 +97,7 @@ h1 {
   right: 0;
   bottom: 0;
   background-color: var(--switch-bg);
-  -webkit-transition: .3s;
   transition: .3s;
-  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
 .slider.round {
@@ -96,23 +111,19 @@ h1 {
 .slider:before {
   position: absolute;
   content: "";
-  height: 16px;
-  width: 16px;
-  left: 3px;
-  bottom: 3px;
+  height: 14px;
+  width: 14px;
+  left: 4px;
+  bottom: 4px;
   background-color: white;
-  -webkit-transition: .3s;
   transition: .3s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 input:checked + .slider {
-  background-color: var(--switch-active);
+  background-color: var(--accent-color);
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(18px);
-  -ms-transform: translateX(18px);
   transform: translateX(18px);
 }
 
@@ -126,20 +137,19 @@ input:checked + .slider:before {
 .theme-button {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: var(--font-size-medium);
   cursor: pointer;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s ease;
   color: var(--text-secondary);
-  background-color: var(--bg-secondary);
 }
 
-/* Скрываем активную кнопку темы */
+/* Скрываем неактивную кнопку темы */
 :root:not(.dark-theme) #light-theme-button {
   display: none;
 }
@@ -158,7 +168,7 @@ input:checked + .slider:before {
 }
 
 #light-theme-button.active {
-  color: var(--accent-color-active);
+  color: var(--accent-color);
 }
 
 /* Стили для темной темы */
@@ -171,59 +181,63 @@ input:checked + .slider:before {
 }
 
 #dark-theme-button.active {
-  color: var(--accent-color-active);
+  color: var(--accent-color);
 }
 
 /* Section Styles */
 section {
-  padding: 10px;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  padding: 8px 0;
 }
 
+/* Toggle Styles */
 .main-toggle, .domain-toggle {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: var(--font-size-medium);
 }
 
+/* Current Domain Styles */
 .current-domain {
-  margin-bottom: 10px;
+  font-size: var(--font-size-small);
+  margin-bottom: 8px;
 }
 
 #current-domain-text {
   font-weight: 500;
+  color: var(--accent-color);
 }
 
+/* Setting Item Styles */
 .setting-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 10px 0;
-  padding: 5px 0;
-  position: relative;
+  margin-bottom: 14px;
+  font-size: var(--font-size-medium);
 }
 
+/* Count Control Styles */
 .count-control {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .count-control button {
+  background-color: var(--bg-secondary);
+  border: none;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: none;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 16px;
-  font-weight: bold;
+  font-size: var(--font-size-medium);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
+  color: var(--text-primary);
+  transition: background-color 0.2s;
 }
 
 .count-control button:hover {
@@ -232,121 +246,308 @@ section {
 }
 
 #press-count {
-  margin: 0 10px;
-  min-width: 15px;
+  font-size: var(--font-size-medium);
+  font-weight: 500;
+  min-width: 20px;
   text-align: center;
 }
 
 /* Select Styles */
 select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
+  appearance: none;
+  padding: 8px 12px;
   background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: var(--font-size-small);
   color: var(--text-primary);
-  font-size: 14px;
   cursor: pointer;
-  outline: none;
-  transition: border-color 0.2s ease;
+  width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236d6d6d' d='M6 9L0 3h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  transition: border-color 0.2s;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+select:hover {
+  border-color: var(--accent-color);
 }
 
 select:focus {
+  outline: none;
   border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--hover-bg);
 }
 
 /* Footer Styles */
 footer {
+  margin-top: auto;
+  padding-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
 }
 
 #options-button {
   border: none;
-  background-color: var(--accent-color);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: var(--font-size-small);
   font-weight: 500;
   cursor: pointer;
   width: 100%;
   margin-bottom: 10px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+  font-family: 'Noto Sans', sans-serif;
 }
 
 #options-button:hover {
-  background-color: var(--accent-color-hover);
+  background-color: var(--hover-bg);
+  color: var(--accent-color);
+}
+
+/* Premium Section */
+.premium-section {
+  margin-bottom: 15px;
 }
 
 .premium-banner {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 8px 16px;
-  background: linear-gradient(90deg, var(--accent-color) 0%, #7a80ea 100%);
-  color: white;
+  gap: 8px;
+  padding: 10px;
+  background-color: var(--accent-color);
   border-radius: 4px;
+  font-size: var(--font-size-medium);
+  color: white;
   cursor: pointer;
-  font-weight: 500;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.premium-banner:hover {
+  background-color: var(--accent-color-hover);
 }
 
 .crown-icon {
-  font-size: 18px;
+  font-size: var(--font-size-medium);
+  color: #ffe866; /* Светло-жёлтый (кики-иро) */
+}
+
+/* Usage Counter */
+.usage-counter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+}
+
+.usage-count {
+  color: var(--accent-color);
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: var(--bg-primary);
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  padding: 20px;
+  width: 80%;
+  max-width: 320px;
+  position: relative;
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 22px;
+  font-weight: normal;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.close-modal:hover {
+  color: var(--accent-color);
+}
+
+.modal h2 {
+  color: var(--accent-color);
+  font-size: var(--font-size-large);
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.modal p {
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.price {
+  display: flex;
+  align-items: flex-start;
+}
+
+.currency {
+  font-size: var(--font-size-large);
+  font-weight: bold;
+  color: var(--accent-color);
+  margin-top: 5px;
+}
+
+.amount {
+  font-size: 36px;
+  font-weight: bold;
+  color: var(--accent-color);
+  line-height: 1;
+}
+
+.price-period {
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-top: 5px;
+}
+
+.pay-button {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px;
+  font-size: var(--font-size-medium);
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s ease;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.pay-button:hover {
+  background-color: var(--accent-color-hover);
 }
 
 /* Language Selector Styles */
 .language-selector {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 16px;
-  padding: 12px;
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
+}
+
+.language-selector span {
+  font-size: var(--font-size-small);
 }
 
 .language-selector select {
-  padding: 6px 10px;
+  width: auto;
+  padding: 6px 30px 6px 10px;
+  font-size: var(--font-size-small);
   border-radius: 4px;
+  background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 14px;
-  cursor: pointer;
-  min-width: 110px;
 }
 
 .language-selector select:focus {
   outline: none;
   border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--hover-bg);
 }
 
-/* RTL Support */
+/* RTL support */
 html[dir="rtl"] .container {
   direction: rtl;
   text-align: right;
 }
 
 html[dir="rtl"] .switch {
+  margin-right: 10px;
   margin-left: 0;
-  margin-right: auto;
 }
 
 html[dir="rtl"] .slider:before {
+  right: 4px;
   left: auto;
-  right: 2px;
 }
 
 html[dir="rtl"] input:checked + .slider:before {
   transform: translateX(-18px);
 }
 
-/* Стили для заметки о настройках */
-.setting-note {
-  font-size: 12px;
+.mode-description {
+  font-size: var(--font-size-small);
   color: var(--text-secondary);
-  padding: 0 5px 10px;
-  font-style: italic;
-  text-align: center;
+  margin: 0;
+  padding: 5px 0 12px 0;
+  line-height: 1.4;
+}
+
+.mode-setting-item {
+  margin-bottom: 0;
+}
+
+.mode-select {
+  width: 160px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: var(--font-size-small);
+  color: var(--text-primary);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236d6d6d' d='M6 9L0 3h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  transition: border-color 0.2s;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.mode-select:hover {
+  border-color: var(--accent-color);
+}
+
+.mode-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--hover-bg);
 } 

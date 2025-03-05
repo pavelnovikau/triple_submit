@@ -31,9 +31,17 @@
     "message": "Normal",
     "description": "Label for normal mode"
   },
+  "mode_normal_desc": {
+    "message": "Comportement standard - pressions multiples sur Entrée pour soumettre",
+    "description": "Description for normal mode"
+  },
   "mode_alternative": {
-    "message": "Alternatif",
+    "message": "Amélioré",
     "description": "Label for alternative mode"
+  },
+  "mode_alternative_desc": {
+    "message": "Sauts de ligne avec une seule pression sur Entrée, soumission avec plusieurs pressions",
+    "description": "Description for alternative mode"
   },
   "enter_presses": {
     "message": "Pressions sur Entrée :",

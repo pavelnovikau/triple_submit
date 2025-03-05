@@ -31,9 +31,17 @@
     "message": "عادي",
     "description": "Label for normal mode"
   },
+  "mode_normal_desc": {
+    "message": "السلوك القياسي - ضغطات متعددة على Enter للإرسال",
+    "description": "Description for normal mode"
+  },
   "mode_alternative": {
-    "message": "بديل",
+    "message": "معزز",
     "description": "Label for alternative mode"
+  },
+  "mode_alternative_desc": {
+    "message": "فواصل الأسطر بضغطة Enter واحدة، إرسال النموذج بضغطات متعددة",
+    "description": "Description for alternative mode"
   },
   "enter_presses": {
     "message": "ضغطات الإدخال:",

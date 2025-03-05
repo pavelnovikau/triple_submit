@@ -6,6 +6,7 @@ let lastEnterPressTime = 0;
 let domainSettings = null;
 let initializationAttempts = 0;
 const MAX_INIT_ATTEMPTS = 5;
+let usageTracked = false; // Флаг для отслеживания, было ли уже подсчитано использование
 
 // Detect browser type
 function detectBrowser() {
@@ -30,6 +31,34 @@ function detectBrowser() {
 const browserType = detectBrowser();
 console.log('Triple Submit: Running in browser type:', browserType);
 
+// Increment usage counter
+function incrementUsage() {
+  if (usageTracked) return; // Не считаем повторно
+  
+  usageTracked = true; // Отмечаем, что использование учтено
+  
+  try {
+    chrome.runtime.sendMessage({ action: 'incrementUsage' }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('Triple Submit: Error incrementing usage:', chrome.runtime.lastError);
+        return;
+      }
+      
+      if (response && response.usageData) {
+        console.log('Triple Submit: Usage incremented, count:', response.usageData.count);
+        
+        // Если достигнут лимит и пользователь не premium
+        if (response.usageData.count >= 10 && 
+            (!domainSettings.isPremium || domainSettings.isPremium === false)) {
+          console.log('Triple Submit: Usage limit reached, Premium upgrade recommended');
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Triple Submit: Error sending usage data:', error);
+  }
+}
+
 // Get settings from background script
 function getSettings() {
   return new Promise((resolve, reject) => {
@@ -53,6 +82,10 @@ function getSettings() {
         if (response && response.domainSettings) {
           domainSettings = response.domainSettings;
           console.log('Triple Submit: Received settings:', domainSettings);
+          
+          // Отмечаем использование расширения
+          incrementUsage();
+          
           resolve(domainSettings);
         } else {
           console.warn('Triple Submit: No settings received, using defaults');
@@ -183,9 +216,17 @@ function handleKeyDown(event) {
             // В Arc просто запускаем стандартное поведение Enter
             if (event.target && typeof event.target.form !== 'undefined' && event.target.form) {
               console.log('Triple Submit: Arc - Submitting form directly');
+              
+              // Увеличиваем счетчик использования
+              incrementUsage();
+              
               event.target.form.submit();
             } else {
               console.log('Triple Submit: Arc - Dispatching simple Enter event');
+              
+              // Увеличиваем счетчик использования
+              incrementUsage();
+              
               event.target.dispatchEvent(newEvent);
             }
           } else {
@@ -204,6 +245,9 @@ function handleKeyDown(event) {
             // Prevent original event
             event.preventDefault();
             event.stopPropagation();
+            
+            // Увеличиваем счетчик использования
+            incrementUsage();
             
             // Dispatch new event without shift key
             event.target.dispatchEvent(newEvent);
@@ -243,6 +287,14 @@ function handleKeyDown(event) {
           console.log('Triple Submit: Required press count reached, allowing submission');
           // Reset counter after submission
           enterPressCount = 0;
+          lastEnterPressTime = 0;
+          
+          // Reset usage tracking flag to allow counting next submission
+          usageTracked = false;
+          
+          // Increment usage counter
+          incrementUsage();
+          
           return; // Allow the event to proceed
         }
         

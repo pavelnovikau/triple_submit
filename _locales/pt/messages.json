@@ -31,9 +31,17 @@
     "message": "Normal",
     "description": "Label for normal mode"
   },
+  "mode_normal_desc": {
+    "message": "Comportamento padrão - múltiplos pressionamentos de Enter para enviar",
+    "description": "Description for normal mode"
+  },
   "mode_alternative": {
-    "message": "Alternativo",
+    "message": "Aprimorado",
     "description": "Label for alternative mode"
+  },
+  "mode_alternative_desc": {
+    "message": "Quebras de linha com um único Enter, envio de formulário com múltiplos pressionamentos",
+    "description": "Description for alternative mode"
   },
   "enter_presses": {
     "message": "Pressionar Enter:",

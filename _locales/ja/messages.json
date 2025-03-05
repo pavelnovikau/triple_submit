@@ -31,9 +31,17 @@
     "message": "通常",
     "description": "Label for normal mode"
   },
+  "mode_normal_desc": {
+    "message": "標準動作 - 複数回のEnterキー押下で送信",
+    "description": "Description for normal mode"
+  },
   "mode_alternative": {
-    "message": "代替",
+    "message": "拡張",
     "description": "Label for alternative mode"
+  },
+  "mode_alternative_desc": {
+    "message": "1回のEnterで改行、複数回のEnterでフォーム送信",
+    "description": "Description for alternative mode"
   },
   "enter_presses": {
     "message": "Enterキー押下回数：",

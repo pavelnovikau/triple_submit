@@ -31,9 +31,17 @@
     "message": "Normal",
     "description": "Label for normal mode"
   },
+  "mode_normal_desc": {
+    "message": "Standardverhalten - mehrere Enter-Tastendrücke zum Absenden",
+    "description": "Description for normal mode"
+  },
   "mode_alternative": {
-    "message": "Alternativ",
+    "message": "Erweitert",
     "description": "Label for alternative mode"
+  },
+  "mode_alternative_desc": {
+    "message": "Zeilenumbrüche mit einzelnem Enter, Formularübermittlung mit mehreren Tastendrücken",
+    "description": "Description for alternative mode"
   },
   "enter_presses": {
     "message": "Enter-Tastendrücke:",

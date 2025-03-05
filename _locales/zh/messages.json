@@ -31,9 +31,17 @@
     "message": "正常",
     "description": "Label for normal mode"
   },
+  "mode_normal_desc": {
+    "message": "标准行为 - 多次按回车键提交",
+    "description": "Description for normal mode"
+  },
   "mode_alternative": {
-    "message": "替代",
+    "message": "增强",
     "description": "Label for alternative mode"
+  },
+  "mode_alternative_desc": {
+    "message": "单次回车换行，多次回车提交表单",
+    "description": "Description for alternative mode"
   },
   "enter_presses": {
     "message": "回车键按压次数：",

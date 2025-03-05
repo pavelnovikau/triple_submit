@@ -23,36 +23,72 @@
     "message": "Enable for this site",
     "description": "Label for enabling extension on current site"
   },
-  "mode": {
+  "mode_label": {
     "message": "Mode:",
     "description": "Label for mode selection"
   },
   "mode_normal": {
-    "message": "Normal (standard behavior)",
+    "message": "Normal",
     "description": "Label for normal mode"
   },
   "mode_alternative": {
-    "message": "Enhanced (line breaks + multiple presses)",
+    "message": "Enhanced",
     "description": "Label for alternative mode"
   },
-  "enter_presses": {
+  "mode_normal_description": {
+    "message": "Standard Enter key functionality without additional checks.",
+    "description": "Description for normal mode"
+  },
+  "mode_alternative_description": {
+    "message": "Protection against accidental form submission requiring multiple Enter presses.",
+    "description": "Description for alternative mode"
+  },
+  "enter_presses_label": {
     "message": "Enter presses:",
     "description": "Label for Enter key press count"
   },
-  "visual_feedback": {
+  "visual_feedback_label": {
     "message": "Visual feedback:",
     "description": "Label for visual feedback toggle"
   },
   "advanced_options": {
-    "message": "Advanced Options",
+    "message": "Advanced settings",
     "description": "Label for advanced options button"
   },
   "upgrade_premium": {
     "message": "Upgrade to Premium",
     "description": "Label for premium upgrade banner"
   },
-  "settings_note": {
-    "message": "* Additional settings available in advanced options",
-    "description": "Note about additional settings in advanced options"
+  "premium_status": {
+    "message": "Premium activated",
+    "description": "Text for activated Premium status"
+  },
+  "usage_remaining_label": {
+    "message": "Free uses remaining:",
+    "description": "Text for remaining free uses"
+  },
+  "usage_limit_title": {
+    "message": "Usage limit reached",
+    "description": "Title for usage limit modal"
+  },
+  "usage_limit_message": {
+    "message": "You have used the free version of Triple Submit 10 times.",
+    "description": "Message about reaching usage limit"
+  },
+  "upgrade_message": {
+    "message": "To continue using, please upgrade to the Premium version.",
+    "description": "Message about need to upgrade"
+  },
+  "price_period": {
+    "message": "one time",
+    "description": "Payment period"
+  },
+  "pay_button": {
+    "message": "Pay now",
+    "description": "Text for payment button"
+  },
+  "processing_payment": {
+    "message": "Processing payment...",
+    "description": "Text during payment processing"
   }
 } 

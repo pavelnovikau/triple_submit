@@ -31,9 +31,17 @@
     "message": "Normal",
     "description": "Label for normal mode"
   },
+  "mode_normal_desc": {
+    "message": "Comportamiento estándar - pulsaciones múltiples de Enter para enviar",
+    "description": "Description for normal mode"
+  },
   "mode_alternative": {
-    "message": "Alternativo",
+    "message": "Mejorado",
     "description": "Label for alternative mode"
+  },
+  "mode_alternative_desc": {
+    "message": "Saltos de línea con un solo Enter, envío de formulario con múltiples pulsaciones",
+    "description": "Description for alternative mode"
   },
   "enter_presses": {
     "message": "Pulsaciones de Enter:",

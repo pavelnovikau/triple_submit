@@ -31,9 +31,17 @@
     "message": "Normale",
     "description": "Label for normal mode"
   },
+  "mode_normal_desc": {
+    "message": "Comportamento standard - più pressioni di Invio per inviare",
+    "description": "Description for normal mode"
+  },
   "mode_alternative": {
-    "message": "Alternativa",
+    "message": "Avanzata",
     "description": "Label for alternative mode"
+  },
+  "mode_alternative_desc": {
+    "message": "Interruzioni di linea con un solo Invio, invio del modulo con più pressioni",
+    "description": "Description for alternative mode"
   },
   "enter_presses": {
     "message": "Pressioni di Invio:",

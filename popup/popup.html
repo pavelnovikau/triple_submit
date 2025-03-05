@@ -32,6 +32,17 @@
       </select>
     </section>
     
+    <section class="premium-section">
+      <div class="premium-banner">
+        <span id="premium-label">Обновиться до Premium</span>
+        <span class="crown-icon">👑</span>
+      </div>
+      <div class="usage-counter">
+        <span id="usage-label">Осталось бесплатных нажатий:</span>
+        <span id="usage-count" class="usage-count">10</span>
+      </div>
+    </section>
+    
     <section class="main-toggle">
       <span id="enable-extension-label">Включить Triple Submit</span>
       <label class="switch">
@@ -56,16 +67,16 @@
     </section>
     
     <section class="settings-preview">
-      <div class="setting-item">
+      <div class="setting-item mode-setting-item">
         <span id="mode-label">Режим:</span>
-        <select id="mode-select">
-          <option value="normal" id="mode-normal">Обычный (стандартная работа)</option>
-          <option value="alternative" id="mode-alternative">Защищенный (многократный ввод)</option>
+        <select id="mode-select" class="mode-select">
+          <option value="normal" id="mode-normal">Обычный</option>
+          <option value="alternative" id="mode-alternative">Расширенный</option>
         </select>
       </div>
       
-      <div class="setting-note">
-        <span id="settings-note">* Дополнительные настройки доступны в расширенных опциях</span>
+      <div class="mode-description">
+        <span id="mode-description"></span>
       </div>
       
       <div class="setting-item">
@@ -88,11 +99,25 @@
     
     <footer>
       <button id="options-button">Расширенные настройки</button>
-      <div class="premium-banner">
-        <span id="premium-label">Обновиться до Premium</span>
-        <span class="crown-icon">👑</span>
-      </div>
     </footer>
+  </div>
+  
+  <!-- Модальное окно для Premium -->
+  <div id="premium-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Лимит использования достигнут</h2>
+      <p>Вы использовали бесплатную версию Triple Submit 10 раз.</p>
+      <p>Для продолжения использования, пожалуйста, обновитесь до Premium версии.</p>
+      <div class="price-container">
+        <div class="price">
+          <span class="currency">$</span>
+          <span class="amount">4.99</span>
+        </div>
+        <span class="price-period">один раз</span>
+      </div>
+      <button id="pay-button" class="pay-button">Оплатить сейчас</button>
+    </div>
   </div>
   
   <script src="popup.js"></script>
