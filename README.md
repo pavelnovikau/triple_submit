@@ -7,9 +7,10 @@ Triple Submit is a Chrome extension designed to prevent accidental form submissi
 ### Key Functionality
 - **Multi-Press Enter**: Requires a configurable number of Enter key presses (default: 3) within a time window to trigger actual form submission
 - **Key Remapping**: Shift+Enter acts as a regular Enter key
-- **Domain-Based Activation**: Enable/disable functionality based on specific domains
+- **Domain-Based Activation**: Enable/disable functionality based on specific domains (whitelist or blacklist)
 - **Visual Feedback**: Shows a visual indicator of progress toward the required number of presses
 - **Dark/Light Themes**: Customize the extension's appearance
+- **Multi-Language Support**: Available in English, Spanish, Chinese, Arabic, Portuguese, French, German, Japanese, Italian, and Russian
 
 ### Operation Modes
 - **Normal Mode**: Requires multiple Enter presses, Shift+Enter acts as Enter
@@ -44,6 +45,7 @@ Triple Submit is a Chrome extension designed to prevent accidental form submissi
    - Change operation mode
    - Adjust required press count
    - Toggle visual feedback
+   - Choose your preferred language
 
 2. For advanced settings, click "Advanced Options" in the popup or right-click the extension icon and select "Options":
    - Manage domain whitelist/blacklist
@@ -51,12 +53,39 @@ Triple Submit is a Chrome extension designed to prevent accidental form submissi
    - Change theme
    - Configure other settings
 
+### Domain Management
+The extension provides two modes for domain management:
+- **Whitelist Mode**: Extension is only active on the domains you add to the list
+- **Blacklist Mode**: Extension is active everywhere except on the domains you add to the list
+
+To add a domain:
+1. Open the advanced options page
+2. Select either Whitelist or Blacklist mode
+3. Enter the domain name (e.g., example.com)
+4. Click "Add"
+5. Don't forget to click "Save Settings" to apply your changes
+
 ## Premium Features (Coming Soon)
 - Unlimited domains in whitelist/blacklist (free version limited to 3)
 - Cross-device synchronization
 - Custom themes
 - Advanced analytics
 - Custom key bindings
+
+## Localization
+The extension automatically detects your browser's language and uses the appropriate translations. Currently supported languages:
+- English (default)
+- Spanish (Español)
+- Chinese (中文)
+- Arabic (العربية)
+- Portuguese (Português)
+- French (Français)
+- German (Deutsch)
+- Japanese (日本語)
+- Italian (Italiano)
+- Russian (Русский)
+
+You can manually change the language in the popup settings.
 
 ## Development
 
@@ -80,12 +109,22 @@ triple_submit/
 │   ├── visualFeedback.js # Visual feedback components
 │   └── lib/              # Utility libraries
 │       └── storage.js    # Storage management
+├── _locales/             # Localization files
+│   ├── en/               # English
+│   ├── es/               # Spanish
+│   ├── zh/               # Chinese
+│   └── ...               # Other languages
 ```
 
 ### Building and Testing
 1. Make your changes to the source code
 2. Load the extension in Chrome using Developer mode
 3. For testing changes to content scripts, you may need to reload the extension and refresh the page
+
+### Recent Updates
+- **v1.2.0**: Added multi-language support with 10 languages
+- **v1.1.1**: Fixed issues with domain whitelist/blacklist management
+- **v1.1.0**: Added dark/light theme support
 
 ### Contributing
 Contributions are welcome! If you'd like to contribute, please:

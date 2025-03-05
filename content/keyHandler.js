@@ -49,11 +49,15 @@ function handleKeyDown(event) {
   const isEnterKey = event.key === 'Enter';
   const isShiftEnterKey = event.key === 'Enter' && event.shiftKey;
   
-  // Normal mode: Multiple Enter presses required, Shift+Enter acts as Enter
+  // Normal mode: No interference with keyboard behavior
   if (domainSettings.mode === 'normal') {
-    // Handle Shift+Enter - convert to regular Enter
+    // Do nothing, allow all keys to work as normal
+    return;
+  }
+  // Alternative mode: Require multiple Enter, convert Shift+Enter to single Enter
+  else if (domainSettings.mode === 'alternative') {
     if (isShiftEnterKey) {
-      // Let the event pass through as normal Enter
+      // Convert Shift+Enter to regular Enter
       const newEvent = new KeyboardEvent('keydown', { 
         key: 'Enter',
         code: 'Enter',
@@ -61,7 +65,8 @@ function handleKeyDown(event) {
         which: 13,
         bubbles: true,
         cancelable: true,
-        composed: true
+        composed: true,
+        shiftKey: false // Remove the shift key modifier
       });
       
       // Prevent original event
@@ -72,9 +77,8 @@ function handleKeyDown(event) {
       event.target.dispatchEvent(newEvent);
       return;
     }
-    
-    // Handle regular Enter key - require multiple presses
-    if (isEnterKey && !isShiftEnterKey) {
+    else if (isEnterKey && !event.shiftKey) {
+      // Handle regular Enter key - require multiple presses
       const currentTime = Date.now();
       
       // Check if this is a new sequence or continuing an existing one
@@ -98,13 +102,11 @@ function handleKeyDown(event) {
       if (enterPressCount < domainSettings.pressCount) {
         event.preventDefault();
         event.stopPropagation();
+      } else {
+        // Reset counter after successful submission
+        enterPressCount = 0;
       }
     }
-  }
-  // Alternative mode: No special handling for Enter, but may have other features
-  else if (domainSettings.mode === 'alternative') {
-    // Currently just uses default browser behavior
-    return;
   }
 }
 

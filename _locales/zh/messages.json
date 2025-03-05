@@ -1,0 +1,54 @@
+{
+  "extName": {
+    "message": "Triple Submit",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "通过要求多次按回车键来防止意外提交表单",
+    "description": "Extension description"
+  },
+  "language_label": {
+    "message": "语言：",
+    "description": "Label for language selection"
+  },
+  "enable_extension": {
+    "message": "启用 Triple Submit",
+    "description": "Label for enabling the extension"
+  },
+  "current_site": {
+    "message": "当前网站：",
+    "description": "Label for current website"
+  },
+  "enable_for_site": {
+    "message": "在此站点启用",
+    "description": "Label for enabling extension on current site"
+  },
+  "mode": {
+    "message": "模式：",
+    "description": "Label for mode selection"
+  },
+  "mode_normal": {
+    "message": "正常",
+    "description": "Label for normal mode"
+  },
+  "mode_alternative": {
+    "message": "替代",
+    "description": "Label for alternative mode"
+  },
+  "enter_presses": {
+    "message": "回车键按压次数：",
+    "description": "Label for Enter key press count"
+  },
+  "visual_feedback": {
+    "message": "视觉反馈：",
+    "description": "Label for visual feedback toggle"
+  },
+  "advanced_options": {
+    "message": "高级选项",
+    "description": "Label for advanced options button"
+  },
+  "upgrade_premium": {
+    "message": "升级到高级版",
+    "description": "Label for premium upgrade banner"
+  }
+} 

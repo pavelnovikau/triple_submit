@@ -1,0 +1,54 @@
+{
+  "extName": {
+    "message": "Triple Submit",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "複数回のEnterキー押下を要求することで、フォームの誤送信を防止します",
+    "description": "Extension description"
+  },
+  "language_label": {
+    "message": "言語：",
+    "description": "Label for language selection"
+  },
+  "enable_extension": {
+    "message": "Triple Submitを有効にする",
+    "description": "Label for enabling the extension"
+  },
+  "current_site": {
+    "message": "現在のサイト：",
+    "description": "Label for current website"
+  },
+  "enable_for_site": {
+    "message": "このサイトで有効にする",
+    "description": "Label for enabling extension on current site"
+  },
+  "mode": {
+    "message": "モード：",
+    "description": "Label for mode selection"
+  },
+  "mode_normal": {
+    "message": "通常",
+    "description": "Label for normal mode"
+  },
+  "mode_alternative": {
+    "message": "代替",
+    "description": "Label for alternative mode"
+  },
+  "enter_presses": {
+    "message": "Enterキー押下回数：",
+    "description": "Label for Enter key press count"
+  },
+  "visual_feedback": {
+    "message": "視覚的フィードバック：",
+    "description": "Label for visual feedback toggle"
+  },
+  "advanced_options": {
+    "message": "詳細設定",
+    "description": "Label for advanced options button"
+  },
+  "upgrade_premium": {
+    "message": "プレミアムにアップグレード",
+    "description": "Label for premium upgrade banner"
+  }
+} 

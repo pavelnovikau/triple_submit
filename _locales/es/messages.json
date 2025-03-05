@@ -1,0 +1,54 @@
+{
+  "extName": {
+    "message": "Triple Submit",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Previene envíos accidentales de formularios al requerir múltiples pulsaciones de la tecla Enter",
+    "description": "Extension description"
+  },
+  "language_label": {
+    "message": "Idioma:",
+    "description": "Label for language selection"
+  },
+  "enable_extension": {
+    "message": "Habilitar Triple Submit",
+    "description": "Label for enabling the extension"
+  },
+  "current_site": {
+    "message": "Sitio actual:",
+    "description": "Label for current website"
+  },
+  "enable_for_site": {
+    "message": "Habilitar para este sitio",
+    "description": "Label for enabling extension on current site"
+  },
+  "mode": {
+    "message": "Modo:",
+    "description": "Label for mode selection"
+  },
+  "mode_normal": {
+    "message": "Normal",
+    "description": "Label for normal mode"
+  },
+  "mode_alternative": {
+    "message": "Alternativo",
+    "description": "Label for alternative mode"
+  },
+  "enter_presses": {
+    "message": "Pulsaciones de Enter:",
+    "description": "Label for Enter key press count"
+  },
+  "visual_feedback": {
+    "message": "Retroalimentación visual:",
+    "description": "Label for visual feedback toggle"
+  },
+  "advanced_options": {
+    "message": "Opciones avanzadas",
+    "description": "Label for advanced options button"
+  },
+  "upgrade_premium": {
+    "message": "Actualizar a Premium",
+    "description": "Label for premium upgrade banner"
+  }
+} 

@@ -1,5 +1,77 @@
 // Popup script for Triple Submit extension
 
+// Текущий выбранный язык
+let currentLanguage = 'ru';
+// Объект с переводами (будем загружать из локальных файлов)
+let translations = {};
+
+// Функция для загрузки переводов для выбранного языка
+async function loadTranslations(lang) {
+  try {
+    // Загружаем сообщения из расширения
+    const response = await fetch(`../_locales/${lang}/messages.json`);
+    if (!response.ok) {
+      throw new Error(`Failed to load translations for ${lang}`);
+    }
+    translations = await response.json();
+    return translations;
+  } catch (error) {
+    console.error('Error loading translations:', error);
+    // Если не удалось загрузить язык, возвращаемся к английскому
+    if (lang !== 'en') {
+      return loadTranslations('en');
+    }
+    return {};
+  }
+}
+
+// Функция для получения перевода по ключу
+function getTranslation(key) {
+  if (translations[key] && translations[key].message) {
+    return translations[key].message;
+  }
+  return key; // Возвращаем ключ, если перевод не найден
+}
+
+// Функция для обновления всех текстов на странице
+function updateUITexts() {
+  // Обновляем тексты для всех элементов с ID
+  document.getElementById('language-label').textContent = getTranslation('language_label');
+  document.getElementById('enable-extension-label').textContent = getTranslation('enable_extension');
+  document.getElementById('current-site-label').textContent = getTranslation('current_site');
+  document.getElementById('enable-for-site-label').textContent = getTranslation('enable_for_site');
+  document.getElementById('mode-label').textContent = getTranslation('mode');
+  document.getElementById('mode-normal').textContent = getTranslation('mode_normal');
+  document.getElementById('mode-alternative').textContent = getTranslation('mode_alternative');
+  document.getElementById('enter-presses-label').textContent = getTranslation('enter_presses');
+  document.getElementById('visual-feedback-label').textContent = getTranslation('visual_feedback');
+  document.getElementById('options-button').textContent = getTranslation('advanced_options');
+  document.getElementById('premium-label').textContent = getTranslation('upgrade_premium');
+  
+  // Устанавливаем направление текста для языков с RTL (справа налево)
+  document.documentElement.setAttribute('dir', 
+    ['ar'].includes(currentLanguage) ? 'rtl' : 'ltr');
+}
+
+// Функция для изменения языка
+async function changeLanguage(lang) {
+  currentLanguage = lang;
+  
+  // Обновляем язык HTML-документа
+  document.documentElement.setAttribute('lang', lang);
+  
+  // Загружаем переводы
+  await loadTranslations(lang);
+  
+  // Обновляем интерфейс
+  updateUITexts();
+  
+  // Сохраняем выбранный язык в настройках
+  if (currentSettings) {
+    await saveSettings({ language: lang });
+  }
+}
+
 // DOM elements
 const themeSwitchEl = document.getElementById('theme-switch');
 const extensionToggleEl = document.getElementById('extension-toggle');
@@ -12,6 +84,7 @@ const pressCountEl = document.getElementById('press-count');
 const feedbackToggleEl = document.getElementById('feedback-toggle');
 const optionsButtonEl = document.getElementById('options-button');
 const premiumBannerEl = document.querySelector('.premium-banner');
+const languageSelectEl = document.getElementById('language-select');
 
 let currentSettings = null;
 let currentTabUrl = '';
@@ -45,6 +118,25 @@ async function initPopup() {
   // Apply theme
   applyTheme();
   
+  // Загружаем язык из настроек
+  if (currentSettings && currentSettings.language) {
+    currentLanguage = currentSettings.language;
+    languageSelectEl.value = currentLanguage;
+  } else {
+    // Используем язык браузера, если язык не указан в настройках
+    const browserLang = navigator.language.split('-')[0];
+    const availableLangs = ['en', 'es', 'zh', 'ru', 'ar', 'pt', 'fr', 'de', 'ja', 'it'];
+    
+    if (availableLangs.includes(browserLang)) {
+      currentLanguage = browserLang;
+      languageSelectEl.value = currentLanguage;
+    }
+  }
+  
+  // Загружаем переводы и обновляем интерфейс
+  await loadTranslations(currentLanguage);
+  updateUITexts();
+  
   // Attach event listeners
   attachEventListeners();
 }
@@ -53,19 +145,45 @@ async function initPopup() {
 async function loadSettings() {
   try {
     const data = await chrome.storage.local.get('settings');
-    currentSettings = data.settings || {
-      isEnabled: true,
-      mode: 'normal',
-      pressCount: 3,
-      timeWindow: 2000,
-      visualFeedback: true,
-      domains: {
-        whitelist: [],
-        blacklist: [],
-        mode: 'whitelist'
-      },
-      theme: 'light'
-    };
+    console.log('Loaded settings from storage:', data);
+    
+    // Если настройки не найдены, используем значения по умолчанию
+    if (!data.settings) {
+      currentSettings = {
+        isEnabled: true,
+        mode: 'normal',
+        pressCount: 3,
+        timeWindow: 2000,
+        visualFeedback: true,
+        domains: {
+          whitelist: [],
+          blacklist: [],
+          mode: 'whitelist'
+        },
+        theme: 'light',
+        language: 'ru' // Языковая настройка по умолчанию
+      };
+    } else {
+      // Убедимся, что объект domains имеет правильную структуру
+      const settings = data.settings;
+      if (!settings.domains) {
+        settings.domains = {
+          whitelist: [],
+          blacklist: [],
+          mode: 'whitelist'
+        };
+      } else {
+        // Убедимся, что все поля присутствуют
+        settings.domains.whitelist = settings.domains.whitelist || [];
+        settings.domains.blacklist = settings.domains.blacklist || [];
+        settings.domains.mode = settings.domains.mode || 'whitelist';
+      }
+      
+      currentSettings = settings;
+    }
+    
+    console.log('Current settings after load:', currentSettings);
+    console.log('Domain whitelist:', currentSettings.domains.whitelist);
     
     // Check domain status
     let isDomainEnabled = currentSettings.isEnabled;
@@ -105,10 +223,23 @@ function applyTheme() {
 // Save settings
 async function saveSettings(updates) {
   try {
-    const updatedSettings = { ...currentSettings, ...updates };
+    // Создаем глубокую копию текущих настроек
+    const currentSettingsCopy = JSON.parse(JSON.stringify(currentSettings));
     
-    await chrome.storage.local.set({ settings: updatedSettings });
-    currentSettings = updatedSettings;
+    // Если обновляем domains и это объект, обрабатываем его особо
+    if (updates.domains) {
+      const updatedSettings = { 
+        ...currentSettingsCopy,
+        domains: updates.domains  // Используем объект domains напрямую, т.к. он уже скопирован в updateDomainList
+      };
+      await chrome.storage.local.set({ settings: updatedSettings });
+      currentSettings = updatedSettings;
+    } else {
+      // Для других обновлений используем обычное слияние объектов
+      const updatedSettings = { ...currentSettingsCopy, ...updates };
+      await chrome.storage.local.set({ settings: updatedSettings });
+      currentSettings = updatedSettings;
+    }
     
     // Notify content script to update
     if (currentTabId) {
@@ -129,32 +260,46 @@ async function updateDomainList(domain, isEnabled) {
     // Don't proceed if no domain
     if (!domain) return;
     
-    const domains = { ...currentSettings.domains };
+    console.log('Updating domain list for:', domain, 'Enabled:', isEnabled);
+    console.log('Current settings before update:', JSON.stringify(currentSettings));
+    
+    // Создаем глубокую копию объекта domains
+    const domains = {
+      mode: currentSettings.domains.mode,
+      whitelist: [...currentSettings.domains.whitelist],
+      blacklist: [...currentSettings.domains.blacklist]
+    };
     
     // Add or remove domain from the appropriate list
     if (domains.mode === 'whitelist') {
       if (isEnabled) {
         // Add to whitelist if not already present
         if (!domains.whitelist.includes(domain)) {
-          domains.whitelist = [...domains.whitelist, domain];
+          domains.whitelist.push(domain);
+          console.log('Added to whitelist:', domain);
         }
       } else {
         // Remove from whitelist
         domains.whitelist = domains.whitelist.filter(d => d !== domain);
+        console.log('Removed from whitelist:', domain);
       }
     } else { // blacklist mode
       if (isEnabled) {
         // Remove from blacklist
         domains.blacklist = domains.blacklist.filter(d => d !== domain);
+        console.log('Removed from blacklist:', domain);
       } else {
         // Add to blacklist if not already present
         if (!domains.blacklist.includes(domain)) {
-          domains.blacklist = [...domains.blacklist, domain];
+          domains.blacklist.push(domain);
+          console.log('Added to blacklist:', domain);
         }
       }
     }
     
+    console.log('Updated domains object:', domains);
     await saveSettings({ domains });
+    console.log('Current settings after update:', JSON.stringify(currentSettings));
     
   } catch (error) {
     console.error('Error updating domain list:', error);
@@ -247,6 +392,11 @@ function attachEventListeners() {
   // Premium banner
   premiumBannerEl.addEventListener('click', () => {
     chrome.tabs.create({ url: 'https://example.com/triple-submit-premium' });
+  });
+  
+  // Language select
+  languageSelectEl.addEventListener('change', () => {
+    changeLanguage(languageSelectEl.value);
   });
 }
 

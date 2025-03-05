@@ -39,18 +39,132 @@ let currentSettings = { ...DEFAULT_SETTINGS };
 let hasChanges = false;
 
 // Initialize options page
-async function initOptions() {
-  await loadSettings();
-  applyTheme();
-  populateDomainList();
-  attachEventListeners();
+function initOptions() {
+  loadSettings().then(() => {
+    applyTheme();
+    populateDomainList();
+    
+    // Focus on domain input for better UX
+    setTimeout(() => {
+      domainInputEl.focus();
+    }, 500);
+  });
+  
+  // Add event listeners
+  saveButtonEl.addEventListener('click', saveSettings);
+  
+  // Theme listener
+  themeSwitchEl.addEventListener('change', () => {
+    currentSettings.theme = themeSwitchEl.checked ? 'dark' : 'light';
+    applyTheme();
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Extension toggle listener
+  extensionToggleEl.addEventListener('change', () => {
+    currentSettings.isEnabled = extensionToggleEl.checked;
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Mode select listener
+  modeSelectEl.addEventListener('change', () => {
+    currentSettings.mode = modeSelectEl.value;
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Press count listener
+  pressCountEl.addEventListener('change', () => {
+    const count = parseInt(pressCountEl.value);
+    if (count >= 2 && count <= 10) {
+      currentSettings.pressCount = count;
+      hasChanges = true;
+      updateSaveButton();
+    }
+  });
+  
+  // Time window listener
+  timeWindowEl.addEventListener('change', () => {
+    const time = parseInt(timeWindowEl.value);
+    if (time >= 100 && time <= 5000) {
+      currentSettings.timeWindow = time;
+      hasChanges = true;
+      updateSaveButton();
+    }
+  });
+  
+  // Visual feedback listener
+  feedbackToggleEl.addEventListener('change', () => {
+    currentSettings.visualFeedback = feedbackToggleEl.checked;
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Domain mode listener
+  domainModeSelectEl.addEventListener('change', () => {
+    console.log('Changing domain mode to:', domainModeSelectEl.value);
+    console.log('Current settings before change:', JSON.stringify(currentSettings));
+    
+    // Make a deep copy of the settings
+    const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
+    updatedSettings.domains.mode = domainModeSelectEl.value;
+    
+    // Update settings
+    currentSettings = updatedSettings;
+    console.log('Updated settings after mode change:', JSON.stringify(currentSettings));
+    
+    // Update the title
+    domainListTitleEl.textContent = currentSettings.domains.mode === 'whitelist' ? 'Whitelist' : 'Blacklist';
+    
+    // Re-populate the list
+    populateDomainList();
+    
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Domain add listener
+  addDomainButtonEl.addEventListener('click', addDomain);
+  domainInputEl.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      addDomain();
+    }
+  });
 }
 
 // Load current settings
 async function loadSettings() {
   try {
     const data = await chrome.storage.local.get('settings');
-    currentSettings = data.settings || { ...DEFAULT_SETTINGS };
+    console.log('Loaded settings from storage:', data);
+    
+    // Если настройки не найдены, используем значения по умолчанию
+    if (!data.settings) {
+      currentSettings = { ...DEFAULT_SETTINGS };
+    } else {
+      // Убедимся, что объект domains имеет правильную структуру
+      const settings = data.settings;
+      if (!settings.domains) {
+        settings.domains = {
+          whitelist: [],
+          blacklist: [],
+          mode: 'whitelist'
+        };
+      } else {
+        // Убедимся, что все поля присутствуют
+        settings.domains.whitelist = settings.domains.whitelist || [];
+        settings.domains.blacklist = settings.domains.blacklist || [];
+        settings.domains.mode = settings.domains.mode || 'whitelist';
+      }
+      
+      currentSettings = settings;
+    }
+    
+    console.log('Current settings after load:', currentSettings);
+    console.log('Domain whitelist:', currentSettings.domains.whitelist);
+    console.log('Domain blacklist:', currentSettings.domains.blacklist);
     
     // Apply settings to UI
     extensionToggleEl.checked = currentSettings.isEnabled;
@@ -85,38 +199,46 @@ function applyTheme() {
 function populateDomainList() {
   domainListEl.innerHTML = '';
   
-  const domainList = currentSettings.domains.mode === 'whitelist' 
-    ? currentSettings.domains.whitelist 
-    : currentSettings.domains.blacklist;
+  const mode = currentSettings.domains.mode;
+  const whiteList = currentSettings.domains.whitelist || [];
+  const blackList = currentSettings.domains.blacklist || [];
+  console.log('Domain list mode:', mode);
+  console.log('Whitelist domains:', whiteList);
+  console.log('Blacklist domains:', blackList);
   
-  if (domainList.length === 0) {
-    const emptyMessage = document.createElement('div');
-    emptyMessage.className = 'domain-item empty';
-    emptyMessage.textContent = `No domains in ${currentSettings.domains.mode}`;
-    domainListEl.appendChild(emptyMessage);
+  const list = mode === 'whitelist' ? whiteList : blackList;
+  console.log('Current domain list:', list);
+  
+  if (list.length === 0) {
+    const noDomainsEl = document.createElement('div');
+    noDomainsEl.classList.add('no-domains');
+    noDomainsEl.textContent = `No domains in the ${mode}`;
+    domainListEl.appendChild(noDomainsEl);
     return;
   }
   
-  domainList.forEach(domain => {
-    const domainItem = document.createElement('div');
-    domainItem.className = 'domain-item';
+  list.forEach(domain => {
+    const domainEl = document.createElement('div');
+    domainEl.classList.add('domain-item');
     
-    const domainText = document.createElement('span');
-    domainText.textContent = domain;
+    const domainNameEl = document.createElement('span');
+    domainNameEl.textContent = domain;
+    domainNameEl.classList.add('domain-name');
     
     const removeButton = document.createElement('button');
-    removeButton.className = 'remove-domain';
-    removeButton.textContent = '✕';
-    removeButton.setAttribute('data-domain', domain);
-    removeButton.addEventListener('click', () => removeDomain(domain));
+    removeButton.textContent = 'Remove';
+    removeButton.classList.add('remove-domain');
+    removeButton.addEventListener('click', () => {
+      removeDomain(domain);
+    });
     
-    domainItem.appendChild(domainText);
-    domainItem.appendChild(removeButton);
-    domainListEl.appendChild(domainItem);
+    domainEl.appendChild(domainNameEl);
+    domainEl.appendChild(removeButton);
+    domainListEl.appendChild(domainEl);
   });
 }
 
-// Add domain to list
+// Add domain
 function addDomain() {
   const domain = domainInputEl.value.trim().toLowerCase();
   
@@ -131,81 +253,96 @@ function addDomain() {
     return;
   }
   
-  const listType = currentSettings.domains.mode;
-  const domainList = listType === 'whitelist' 
-    ? currentSettings.domains.whitelist 
-    : currentSettings.domains.blacklist;
+  console.log('Adding domain:', domain);
+  console.log('Current settings before adding:', JSON.stringify(currentSettings));
+  
+  // Make a deep copy of current settings to avoid reference issues
+  const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
+  
+  const mode = currentSettings.domains.mode;
+  const list = mode === 'whitelist' ? updatedSettings.domains.whitelist : updatedSettings.domains.blacklist;
   
   // Check if domain already exists
-  if (domainList.includes(domain)) {
-    showStatusMessage(`Domain already exists in ${listType}`, 'error');
+  if (list.includes(domain)) {
+    showStatusMessage(`Domain already exists in the ${mode}`, 'error');
     return;
   }
   
-  // Add domain to the appropriate list
-  if (listType === 'whitelist') {
-    currentSettings.domains.whitelist.push(domain);
-  } else {
-    currentSettings.domains.blacklist.push(domain);
-  }
+  // Add domain
+  list.push(domain);
+  
+  // Update settings
+  currentSettings = updatedSettings;
+  console.log('Updated settings after adding domain:', JSON.stringify(currentSettings));
   
   // Clear input
   domainInputEl.value = '';
   
-  // Update UI
+  // Show success message
+  showStatusMessage(`Domain added to the ${mode}`, 'success');
+  
+  // Re-populate domain list
   populateDomainList();
   
-  // Mark as changed
+  // Mark as having changes
   hasChanges = true;
   updateSaveButton();
-  
-  showStatusMessage(`Domain added to ${listType}`, 'success');
 }
 
-// Remove domain from list
+// Remove domain
 function removeDomain(domain) {
-  const listType = currentSettings.domains.mode;
+  console.log('Removing domain:', domain);
+  console.log('Current settings before removing:', JSON.stringify(currentSettings));
   
-  if (listType === 'whitelist') {
-    currentSettings.domains.whitelist = currentSettings.domains.whitelist.filter(d => d !== domain);
-  } else {
-    currentSettings.domains.blacklist = currentSettings.domains.blacklist.filter(d => d !== domain);
+  // Make a deep copy of current settings to avoid reference issues
+  const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
+  
+  const mode = currentSettings.domains.mode;
+  const list = mode === 'whitelist' ? updatedSettings.domains.whitelist : updatedSettings.domains.blacklist;
+  
+  // Find and remove domain
+  const index = list.indexOf(domain);
+  if (index > -1) {
+    list.splice(index, 1);
   }
   
-  // Update UI
+  // Update settings
+  currentSettings = updatedSettings;
+  console.log('Updated settings after removing domain:', JSON.stringify(currentSettings));
+  
+  // Show success message
+  showStatusMessage(`Domain removed from the ${mode}`, 'success');
+  
+  // Re-populate domain list
   populateDomainList();
   
-  // Mark as changed
+  // Mark as having changes
   hasChanges = true;
   updateSaveButton();
-  
-  showStatusMessage(`Domain removed from ${listType}`, 'success');
 }
 
-// Validate domain format
+// Check if domain is valid
 function isValidDomain(domain) {
-  // Simple domain validation regex
-  const domainRegex = /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/;
+  // Basic domain validation
+  // Allows alphanumeric, dash, dot, and underscore
+  // Must have at least one dot
+  // Must not start or end with dot or dash
+  const domainRegex = /^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*\.[A-Za-z]{2,}$/;
   return domainRegex.test(domain);
 }
 
 // Save settings
 async function saveSettings() {
   try {
-    await chrome.storage.local.set({ settings: currentSettings });
+    // Создаем глубокую копию настроек для сохранения
+    const settingsToSave = JSON.parse(JSON.stringify(currentSettings));
     
-    // Show success message
-    showStatusMessage('Settings saved successfully', 'success');
-    
-    // Notify content scripts
-    chrome.tabs.query({}, (tabs) => {
-      tabs.forEach(tab => {
-        chrome.tabs.sendMessage(tab.id, { action: 'settingsUpdated' });
-      });
-    });
+    await chrome.storage.local.set({ settings: settingsToSave });
     
     hasChanges = false;
     updateSaveButton();
+    
+    showStatusMessage('Settings saved successfully', 'success');
     
   } catch (error) {
     console.error('Error saving settings:', error);
@@ -255,120 +392,6 @@ function showStatusMessage(message, type = 'success') {
 function updateSaveButton() {
   saveButtonEl.disabled = !hasChanges;
   saveButtonEl.style.opacity = hasChanges ? '1' : '0.5';
-}
-
-// Attach event listeners
-function attachEventListeners() {
-  // Theme toggle
-  themeSwitchEl.addEventListener('change', () => {
-    currentSettings.theme = themeSwitchEl.checked ? 'dark' : 'light';
-    applyTheme();
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Extension toggle
-  extensionToggleEl.addEventListener('change', () => {
-    currentSettings.isEnabled = extensionToggleEl.checked;
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Mode select
-  modeSelectEl.addEventListener('change', () => {
-    currentSettings.mode = modeSelectEl.value;
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Press count
-  pressCountEl.addEventListener('change', () => {
-    let value = parseInt(pressCountEl.value);
-    
-    // Validate range
-    if (value < 1) value = 1;
-    if (value > 5) value = 5;
-    
-    pressCountEl.value = value;
-    currentSettings.pressCount = value;
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Decrease press count
-  decreaseCountEl.addEventListener('click', () => {
-    let value = parseInt(pressCountEl.value);
-    if (value > 1) {
-      value--;
-      pressCountEl.value = value;
-      currentSettings.pressCount = value;
-      hasChanges = true;
-      updateSaveButton();
-    }
-  });
-  
-  // Increase press count
-  increaseCountEl.addEventListener('click', () => {
-    let value = parseInt(pressCountEl.value);
-    if (value < 5) {
-      value++;
-      pressCountEl.value = value;
-      currentSettings.pressCount = value;
-      hasChanges = true;
-      updateSaveButton();
-    }
-  });
-  
-  // Time window
-  timeWindowEl.addEventListener('change', () => {
-    let value = parseInt(timeWindowEl.value);
-    
-    // Validate range
-    if (value < 500) value = 500;
-    if (value > 5000) value = 5000;
-    
-    timeWindowEl.value = value;
-    currentSettings.timeWindow = value;
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Visual feedback toggle
-  feedbackToggleEl.addEventListener('change', () => {
-    currentSettings.visualFeedback = feedbackToggleEl.checked;
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Domain mode select
-  domainModeSelectEl.addEventListener('change', () => {
-    currentSettings.domains.mode = domainModeSelectEl.value;
-    domainListTitleEl.textContent = currentSettings.domains.mode === 'whitelist' ? 'Whitelist' : 'Blacklist';
-    populateDomainList();
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Add domain button
-  addDomainButtonEl.addEventListener('click', addDomain);
-  
-  // Domain input enter key
-  domainInputEl.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-      addDomain();
-    }
-  });
-  
-  // Upgrade button
-  upgradeButtonEl.addEventListener('click', () => {
-    chrome.tabs.create({ url: 'https://example.com/triple-submit-premium' });
-  });
-  
-  // Reset button
-  resetButtonEl.addEventListener('click', resetSettings);
-  
-  // Save button
-  saveButtonEl.addEventListener('click', saveSettings);
 }
 
 // Initialize the options page
