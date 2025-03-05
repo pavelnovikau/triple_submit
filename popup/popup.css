@@ -322,24 +322,31 @@ footer {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 10px;
+  gap: 10px;
+  padding: 12px;
   background-color: var(--accent-color);
   border-radius: 4px;
   font-size: var(--font-size-medium);
   color: white;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 .premium-banner:hover {
   background-color: var(--accent-color-hover);
+  transform: translateY(-1px);
 }
 
 .crown-icon {
   font-size: var(--font-size-medium);
   color: #ffe866; /* Светло-жёлтый (кики-иро) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
 }
 
 /* Usage Counter */
@@ -550,4 +557,23 @@ html[dir="rtl"] input:checked + .slider:before {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 2px var(--hover-bg);
+}
+
+#premium-status {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+/* Добавление japanese-inspired элемента дизайна */
+#premium-status:before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+  margin-right: 8px;
 } 

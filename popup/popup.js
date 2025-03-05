@@ -1,43 +1,102 @@
 // Popup script for Triple Submit extension
 
-// Текущий выбранный язык
-let currentLanguage = 'ru';
-// Объект с переводами (будем загружать из локальных файлов)
-let translations = {};
+// Глобальные переменные
+let currentSettings = {};
+let currentDomain = '';
+let translations = {}; // Объект для хранения переводов
+let currentLanguage = 'en'; // По умолчанию - английский
 
 // Переменные для отслеживания использования
 let usageCount = 0;
 let isPremium = false;
 
-// Глобальные переменные
-let currentSettings = {};
-let currentDomain = '';
+// DOM elements
+// const themeSwitchEl = document.getElementById('theme-switch');
+const lightThemeButtonEl = document.getElementById('light-theme-button');
+const darkThemeButtonEl = document.getElementById('dark-theme-button');
+const extensionToggleEl = document.getElementById('extension-toggle');
+const domainToggleEl = document.getElementById('domain-toggle');
+const currentDomainTextEl = document.getElementById('current-domain-text');
+const modeSelectEl = document.getElementById('mode-select');
+const decreaseCountEl = document.getElementById('decrease-count');
+const increaseCountEl = document.getElementById('increase-count');
+const pressCountEl = document.getElementById('press-count');
+const feedbackToggleEl = document.getElementById('feedback-toggle');
+const optionsButtonEl = document.getElementById('options-button');
+const premiumBannerEl = document.querySelector('.premium-banner');
+const languageSelectEl = document.getElementById('language-select');
+const premiumModalEl = document.getElementById('premium-modal');
+const closeModalEl = document.querySelector('.close-modal');
+const payButtonEl = document.getElementById('pay-button');
 
-// Функция для загрузки переводов для выбранного языка
+let currentTabUrl = '';
+let currentTabId = null;
+
+// Полностью переработанная функция для загрузки переводов
 async function loadTranslations(lang) {
   try {
-    // Загружаем сообщения из расширения
-    const response = await fetch(`../_locales/${lang}/messages.json`);
+    console.log('Запуск загрузки переводов для языка:', lang);
+    
+    // Используем chrome.i18n API вместо прямой загрузки файла
+    const messagesUrl = chrome.runtime.getURL(`_locales/${lang}/messages.json`);
+    console.log('URL переводов:', messagesUrl);
+    
+    const response = await fetch(messagesUrl);
     if (!response.ok) {
-      throw new Error(`Failed to load translations for ${lang}`);
+      console.error(`HTTP ошибка при загрузке переводов: ${response.status}`);
+      throw new Error(`Не удалось загрузить переводы для ${lang}`);
     }
+    
     translations = await response.json();
+    console.log('Переводы успешно загружены:', Object.keys(translations).length, 'ключей');
     return translations;
   } catch (error) {
-    console.error('Error loading translations:', error);
-    // Если не удалось загрузить язык, возвращаемся к английскому
+    console.error('Ошибка загрузки переводов:', error);
+    
+    // Если не удалось загрузить указанный язык, пробуем английский
     if (lang !== 'en') {
+      console.log('Пробуем загрузить английский язык в качестве резервного');
       return loadTranslations('en');
     }
-    return {};
+    
+    // Если даже английский не загружается, используем встроенные резервные переводы
+    console.log('Используем встроенные резервные переводы');
+    return {
+      'language_label': { message: 'Language' },
+      'enable_extension': { message: 'Enable Triple Submit' },
+      'current_site': { message: 'Current site:' },
+      'enable_for_site': { message: 'Enable for this site' },
+      'mode_label': { message: 'Mode:' },
+      'mode_normal': { message: 'Normal' },
+      'mode_alternative': { message: 'Enhanced' },
+      'mode_normal_description': { message: 'Submits form three times when Enter key is pressed' },
+      'mode_alternative_description': { message: 'Submits form three times with Ctrl+Enter' },
+      'enter_presses_label': { message: 'Number of Enter presses:' },
+      'visual_feedback_label': { message: 'Visual feedback' },
+      'advanced_options': { message: 'Advanced settings' },
+      'upgrade_premium': { message: 'Upgrade to Premium' },
+      'usage_remaining_label': { message: 'Free uses remaining:' }
+    };
   }
 }
 
-// Функция для получения перевода по ключу
+// Улучшенная функция для получения перевода по ключу
 function getTranslation(key) {
+  if (!key) {
+    console.error('getTranslation вызван с пустым ключом');
+    return '[MISSING KEY]';
+  }
+  
+  if (!translations) {
+    console.error('Объект translations не инициализирован');
+    return key;
+  }
+  
   if (translations[key] && translations[key].message) {
     return translations[key].message;
   }
+  
+  console.warn(`Перевод для ключа "${key}" не найден в языке "${currentLanguage}"`);
   return key; // Возвращаем ключ, если перевод не найден
 }
 
@@ -93,116 +152,227 @@ function updateUITexts() {
   updateModeDescription();
 }
 
-// Функция для обновления описания режима
+// Улучшенная функция для обновления описания режима
 function updateModeDescription() {
   const modeSelect = document.getElementById('mode-select');
   const modeDescription = document.getElementById('mode-description');
   
-  if (modeSelect && modeDescription) {
-    const selectedMode = modeSelect.value;
-    
-    if (selectedMode === 'normal') {
-      modeDescription.textContent = getTranslation('mode_normal_description');
-    } else {
-      modeDescription.textContent = getTranslation('mode_alternative_description');
-    }
+  if (!modeSelect || !modeDescription) {
+    console.error('Элементы mode-select или mode-description не найдены!');
+    return;
   }
+  
+  console.log('Обновляем описание режима. Выбранный режим:', modeSelect.value);
+  
+  if (modeSelect.value === 'normal') {
+    const translation = getTranslation('mode_normal_description');
+    console.log('Получен перевод для нормального режима:', translation);
+    modeDescription.textContent = translation;
+  } else {
+    const translation = getTranslation('mode_alternative_description');
+    console.log('Получен перевод для альтернативного режима:', translation);
+    modeDescription.textContent = translation;
+  }
+  
+  // Убедимся, что описание видимо
+  modeDescription.style.display = 'block';
 }
 
-// Исправленная функция изменения языка
+// Полностью переработанная функция изменения языка
 async function changeLanguage(lang) {
   try {
+    console.log('Начинаем смену языка на:', lang);
+    
+    // Защита от пустого значения
+    if (!lang) {
+      console.error('Получено пустое значение языка');
+      return;
+    }
+    
+    // Устанавливаем язык в переменной
     currentLanguage = lang;
     
-    // Сохраняем выбранный язык в local storage
+    // Устанавливаем значение в селекторе
+    const languageSelect = document.getElementById('language-select');
+    if (languageSelect) {
+      languageSelect.value = lang;
+      console.log('Установлено значение в селекторе языка:', lang);
+    } else {
+      console.error('Элемент language-select не найден в DOM!');
+    }
+    
+    // Сохраняем выбранный язык в локальном хранилище
     await chrome.storage.local.set({ selectedLanguage: lang });
+    console.log('Язык сохранен в storage:', lang);
     
     // Загружаем переводы для выбранного языка
-    await loadTranslations(lang);
+    const loadedTranslations = await loadTranslations(lang);
+    console.log('Переводы загружены:', !!loadedTranslations, 'количество ключей:', Object.keys(loadedTranslations).length);
     
     // Обновляем тексты в интерфейсе
     updateUITexts();
+    console.log('Тексты UI обновлены');
     
-    console.log('Язык изменен на:', lang);
+    // Дополнительно обновляем описание режима
+    updateModeDescription();
+    console.log('Описание режима обновлено');
+    
+    // Устанавливаем направление текста (RTL/LTR)
+    if (['ar'].includes(lang)) {
+      document.documentElement.setAttribute('dir', 'rtl');
+      console.log('Установлено направление текста: RTL');
+    } else {
+      document.documentElement.setAttribute('dir', 'ltr');
+      console.log('Установлено направление текста: LTR');
+    }
+    
+    console.log('Язык успешно изменен на:', lang);
+    
+    // Принудительно обновляем все элементы страницы
+    setTimeout(() => {
+      // Дополнительное обновление через 100мс для гарантии
+      updateUITexts();
+      updateModeDescription();
+      console.log('Выполнено дополнительное обновление текстов');
+    }, 100);
+    
   } catch (error) {
     console.error('Ошибка при изменении языка:', error);
   }
 }
 
-// DOM elements
-// const themeSwitchEl = document.getElementById('theme-switch');
-const lightThemeButtonEl = document.getElementById('light-theme-button');
-const darkThemeButtonEl = document.getElementById('dark-theme-button');
-const extensionToggleEl = document.getElementById('extension-toggle');
-const domainToggleEl = document.getElementById('domain-toggle');
-const currentDomainTextEl = document.getElementById('current-domain-text');
-const modeSelectEl = document.getElementById('mode-select');
-const decreaseCountEl = document.getElementById('decrease-count');
-const increaseCountEl = document.getElementById('increase-count');
-const pressCountEl = document.getElementById('press-count');
-const feedbackToggleEl = document.getElementById('feedback-toggle');
-const optionsButtonEl = document.getElementById('options-button');
-const premiumBannerEl = document.querySelector('.premium-banner');
-const languageSelectEl = document.getElementById('language-select');
-const premiumModalEl = document.getElementById('premium-modal');
-const closeModalEl = document.querySelector('.close-modal');
-const payButtonEl = document.getElementById('pay-button');
-
-let currentTabUrl = '';
-let currentTabId = null;
-
-// Обновленная функция инициализации попапа
+// Обновленная функция инициализации попапа с дополнительными проверками
 async function initPopup() {
   try {
-    console.log('Инициализация попапа...');
+    console.log('Инициализация попапа начата...');
+    
+    // Проверка DOM-элементов
+    const criticalElements = [
+      { id: 'language-select', name: 'Селектор языка' },
+      { id: 'mode-select', name: 'Селектор режима' },
+      { id: 'mode-description', name: 'Описание режима' },
+      { id: 'options-button', name: 'Кнопка настроек' }
+    ];
+    
+    let allElementsFound = true;
+    for (const elem of criticalElements) {
+      if (!document.getElementById(elem.id)) {
+        console.error(`Критический элемент не найден: ${elem.name} (id: ${elem.id})`);
+        allElementsFound = false;
+      }
+    }
+    
+    if (!allElementsFound) {
+      console.error('Инициализация продолжится, но некоторые функции могут не работать!');
+    }
     
     // Получаем текущий домен из активной вкладки
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs && tabs.length > 0) {
-      const url = new URL(tabs[0].url);
-      currentDomain = url.hostname;
-      document.getElementById('current-domain-text').textContent = currentDomain;
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs && tabs.length > 0) {
+        const url = new URL(tabs[0].url);
+        currentDomain = url.hostname;
+        const domainElem = document.getElementById('current-domain-text');
+        if (domainElem) {
+          domainElem.textContent = currentDomain;
+        }
+      }
+    } catch (tabError) {
+      console.error('Ошибка при получении текущего домена:', tabError);
     }
     
     // Загружаем сохраненный язык
-    const languageData = await chrome.storage.local.get('selectedLanguage');
-    if (languageData.selectedLanguage) {
-      currentLanguage = languageData.selectedLanguage;
-      document.getElementById('language-select').value = currentLanguage;
+    try {
+      const languageData = await chrome.storage.local.get('selectedLanguage');
+      if (languageData.selectedLanguage) {
+        currentLanguage = languageData.selectedLanguage;
+        console.log('Загружен язык из storage:', currentLanguage);
+        
+        const langSelector = document.getElementById('language-select');
+        if (langSelector) {
+          langSelector.value = currentLanguage;
+          console.log('Установлен селектор языка:', currentLanguage);
+        }
+      }
+    } catch (langError) {
+      console.error('Ошибка при загрузке языка из storage:', langError);
     }
     
     // Загружаем настройки темы
-    const themeData = await chrome.storage.local.get('theme');
-    if (themeData.theme === 'dark') {
-      document.documentElement.classList.add('dark-theme');
-    } else {
-      document.documentElement.classList.remove('dark-theme');
+    try {
+      const themeData = await chrome.storage.local.get('theme');
+      if (themeData.theme === 'dark') {
+        document.documentElement.classList.add('dark-theme');
+      } else {
+        document.documentElement.classList.remove('dark-theme');
+      }
+      console.log('Тема установлена:', themeData.theme || 'light');
+    } catch (themeError) {
+      console.error('Ошибка при загрузке темы:', themeError);
     }
     
     // Загружаем переводы для текущего языка
-    await loadTranslations(currentLanguage);
+    try {
+      const loadedTranslations = await loadTranslations(currentLanguage);
+      console.log('Переводы загружены для', currentLanguage, ':', !!loadedTranslations);
+    } catch (transError) {
+      console.error('Ошибка при загрузке переводов:', transError);
+    }
     
     // Загружаем основные настройки
-    await loadSettings();
+    try {
+      await loadSettings();
+      console.log('Настройки загружены');
+    } catch (settingsError) {
+      console.error('Ошибка при загрузке настроек:', settingsError);
+    }
     
     // Загружаем данные об использовании
-    await loadUsageData();
+    try {
+      await loadUsageData();
+      console.log('Данные об использовании загружены');
+    } catch (usageError) {
+      console.error('Ошибка при загрузке данных об использовании:', usageError);
+    }
     
     // Обновляем UI на основе настроек
-    updateUI();
+    try {
+      updateUI();
+      console.log('UI обновлен на основе настроек');
+    } catch (uiError) {
+      console.error('Ошибка при обновлении UI:', uiError);
+    }
     
     // Обновляем UI для Premium
-    updatePremiumUI();
+    try {
+      updatePremiumUI();
+      console.log('Premium UI обновлен');
+    } catch (premiumError) {
+      console.error('Ошибка при обновлении Premium UI:', premiumError);
+    }
     
-    // Обновляем описание режима
-    updateModeDescription();
+    // Обновляем тексты интерфейса и описание режима
+    try {
+      updateUITexts();
+      console.log('Тексты интерфейса обновлены');
+      
+      updateModeDescription();
+      console.log('Описание режима обновлено');
+    } catch (textsError) {
+      console.error('Ошибка при обновлении текстов:', textsError);
+    }
     
     // Прикрепляем обработчики событий
-    attachEventListeners();
+    try {
+      attachEventListeners();
+      console.log('Обработчики событий прикреплены');
+    } catch (eventsError) {
+      console.error('Ошибка при прикреплении обработчиков событий:', eventsError);
+    }
     
     console.log('Инициализация попапа завершена успешно.');
   } catch (error) {
-    console.error('Ошибка при инициализации попапа:', error);
+    console.error('Критическая ошибка при инициализации попапа:', error);
   }
 }
 
@@ -326,7 +496,8 @@ function updateUsageCounter(usageData) {
     usageCounter.style.display = 'none';
     if (premiumBanner) {
       premiumBanner.innerHTML = '<span id="premium-status">Premium активирован</span><span class="crown-icon">👑</span>';
-      premiumBanner.style.backgroundColor = '#2ecc71'; // Зеленый для Premium
+      premiumBanner.style.backgroundColor = 'var(--accent-color-hover)';
+      premiumBanner.style.borderLeft = '3px solid var(--accent-color)';
       premiumBanner.style.cursor = 'default';
       premiumBanner.removeEventListener('click', showPremiumModal);
     }
@@ -358,8 +529,12 @@ function updatePremiumUI() {
     const usageCounter = document.querySelector('.usage-counter');
     
     if (premiumBanner) {
+      // Используем стиль в соответствии с общей цветовой гаммой
       premiumBanner.innerHTML = '<span id="premium-status">Premium активирован</span><span class="crown-icon">👑</span>';
-      premiumBanner.style.backgroundColor = '#2ecc71'; // Зеленый для Premium
+      
+      // Вместо зеленого используем более темный оттенок основного акцентного цвета
+      premiumBanner.style.backgroundColor = 'var(--accent-color-hover)';
+      premiumBanner.style.borderLeft = '3px solid var(--accent-color)';
       premiumBanner.style.cursor = 'default';
       premiumBanner.removeEventListener('click', showPremiumModal);
     }
@@ -433,6 +608,9 @@ function applyTheme() {
     document.documentElement.classList.add('dark-theme');
     chrome.storage.local.set({ theme: 'dark' });
   }
+  
+  // Обновление текстов интерфейса после смены темы
+  updateUITexts();
 }
 
 // Обновленная функция сохранения настроек
@@ -535,9 +713,29 @@ function attachEventListeners() {
   // Обработчик переключения языка
   const languageSelect = document.getElementById('language-select');
   if (languageSelect) {
-    languageSelect.addEventListener('change', (event) => {
-      changeLanguage(event.target.value);
-    });
+    console.log('Прикрепляем обработчик для события изменения языка');
+    
+    // Удаляем существующие обработчики, если они есть
+    languageSelect.removeEventListener('change', handleLanguageChange);
+    
+    // Определяем функцию обработчика для более простого управления
+    function handleLanguageChange(event) {
+      const newLang = event.target.value;
+      console.log('Выбран новый язык через селектор:', newLang);
+      
+      if (newLang && newLang !== currentLanguage) {
+        console.log('Запускаем функцию changeLanguage с языком:', newLang);
+        changeLanguage(newLang);
+      } else {
+        console.log('Язык не изменился или пустой:', newLang);
+      }
+    }
+    
+    // Добавляем новый обработчик
+    languageSelect.addEventListener('change', handleLanguageChange);
+    console.log('Обработчик события изменения языка прикреплен');
+  } else {
+    console.error('Элемент language-select не найден в DOM!');
   }
   
   // Обработчики для кнопок темы
@@ -555,13 +753,38 @@ function attachEventListeners() {
   // Обработчик кнопки настроек
   const optionsButton = document.getElementById('options-button');
   if (optionsButton) {
-    optionsButton.addEventListener('click', () => {
-      if (chrome.runtime.openOptionsPage) {
-        chrome.runtime.openOptionsPage();
-      } else {
-        window.open(chrome.runtime.getURL('options/options.html'));
+    optionsButton.addEventListener('click', function() {
+      console.log('Нажата кнопка настроек');
+      
+      try {
+        // Проверка наличия метода openOptionsPage
+        if (chrome.runtime && chrome.runtime.openOptionsPage) {
+          console.log('Используем chrome.runtime.openOptionsPage()');
+          chrome.runtime.openOptionsPage();
+        } else if (chrome.extension && chrome.extension.getURL) {
+          // Запасной вариант - открываем через URL
+          console.log('Используем прямой URL к странице настроек');
+          const optionsUrl = chrome.extension.getURL('options/options.html');
+          console.log('URL страницы настроек:', optionsUrl);
+          window.open(optionsUrl);
+        } else {
+          // Совсем запасной вариант
+          console.log('Используем chrome.runtime.getURL()');
+          window.open(chrome.runtime.getURL('options/options.html'));
+        }
+      } catch (error) {
+        // Если произошла ошибка, логируем её и пробуем самый простой вариант
+        console.error('Ошибка при открытии страницы настроек:', error);
+        try {
+          window.open('options/options.html');
+        } catch (finalError) {
+          console.error('Не удалось открыть страницу настроек:', finalError);
+          alert('Не удалось открыть страницу настроек. Пожалуйста, проверьте консоль разработчика.');
+        }
       }
     });
+  } else {
+    console.error('Кнопка настроек не найдена в DOM!');
   }
   
   // Обработчики для основных настроек
