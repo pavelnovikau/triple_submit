@@ -7,19 +7,19 @@
     "message": "複数回のEnterキー押下を要求することで、フォームの誤送信を防止します",
     "description": "Extension description"
   },
-  "language_label": {
+  "languageLabel": {
     "message": "言語：",
     "description": "Label for language selection"
   },
-  "enable_extension": {
+  "enableExtensionLabel": {
     "message": "Triple Submitを有効にする",
     "description": "Label for enabling the extension"
   },
-  "current_site": {
+  "currentSiteLabel": {
     "message": "現在のサイト：",
     "description": "Label for current website"
   },
-  "enable_for_site": {
+  "enableForSiteLabel": {
     "message": "このサイトで有効にする",
     "description": "Label for enabling extension on current site"
   },
@@ -43,11 +43,11 @@
     "message": "1回のEnterで改行、複数回のEnterでフォーム送信",
     "description": "Description for alternative mode"
   },
-  "enter_presses": {
+  "enterPressesLabel": {
     "message": "Enterキー押下回数：",
     "description": "Label for Enter key press count"
   },
-  "visual_feedback": {
+  "visualFeedbackLabel": {
     "message": "視覚的フィードバック：",
     "description": "Label for visual feedback toggle"
   },
@@ -62,5 +62,53 @@
   "settings_note": {
     "message": "* 追加設定は詳細設定で利用可能です",
     "description": "Note about additional settings in advanced options"
+  },
+  "delayLabel": {
+    "message": "遅延：",
+    "description": "Label for delay slider"
+  },
+  "fastLabel": {
+    "message": "速い",
+    "description": "Label for fast delay setting"
+  },
+  "normalLabel": {
+    "message": "普通",
+    "description": "Label for normal delay setting"
+  },
+  "slowLabel": {
+    "message": "遅い",
+    "description": "Label for slow delay setting"
+  },
+  "premiumLabel": {
+    "message": "プレミアムにアップグレード",
+    "description": "Label for premium upgrade banner"
+  },
+  "usageLabel": {
+    "message": "残りの無料送信回数：",
+    "description": "Text for remaining free uses"
+  },
+  "limitReachedTitle": {
+    "message": "使用制限に達しました",
+    "description": "Title for usage limit modal"
+  },
+  "usageLimitText": {
+    "message": "Triple Submitの無料版を20回使用しました。",
+    "description": "Message about reaching usage limit"
+  },
+  "upgradeText": {
+    "message": "引き続き使用するには、プレミアム版にアップグレードしてください。",
+    "description": "Message about need to upgrade"
+  },
+  "perMonth": {
+    "message": "/ 月",
+    "description": "Payment period"
+  },
+  "payNowButton": {
+    "message": "今すぐ支払う",
+    "description": "Text for payment button"
+  },
+  "processing_payment": {
+    "message": "支払い処理中...",
+    "description": "Text during payment processing"
   }
 } 

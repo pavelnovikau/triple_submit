@@ -7,19 +7,19 @@
     "message": "Empêche les soumissions accidentelles de formulaires en exigeant plusieurs pressions sur la touche Entrée",
     "description": "Extension description"
   },
-  "language_label": {
+  "languageLabel": {
     "message": "Langue :",
     "description": "Label for language selection"
   },
-  "enable_extension": {
+  "enableExtensionLabel": {
     "message": "Activer Triple Submit",
     "description": "Label for enabling the extension"
   },
-  "current_site": {
+  "currentSiteLabel": {
     "message": "Site actuel :",
     "description": "Label for current website"
   },
-  "enable_for_site": {
+  "enableForSiteLabel": {
     "message": "Activer pour ce site",
     "description": "Label for enabling extension on current site"
   },
@@ -43,11 +43,11 @@
     "message": "Sauts de ligne avec une seule pression sur Entrée, soumission avec plusieurs pressions",
     "description": "Description for alternative mode"
   },
-  "enter_presses": {
+  "enterPressesLabel": {
     "message": "Pressions sur Entrée :",
     "description": "Label for Enter key press count"
   },
-  "visual_feedback": {
+  "visualFeedbackLabel": {
     "message": "Retour visuel :",
     "description": "Label for visual feedback toggle"
   },
@@ -62,5 +62,53 @@
   "settings_note": {
     "message": "* Paramètres supplémentaires disponibles dans les options avancées",
     "description": "Note about additional settings in advanced options"
+  },
+  "delayLabel": {
+    "message": "Délai :",
+    "description": "Label for delay slider"
+  },
+  "fastLabel": {
+    "message": "Rapide",
+    "description": "Label for fast delay setting"
+  },
+  "normalLabel": {
+    "message": "Normal",
+    "description": "Label for normal delay setting"
+  },
+  "slowLabel": {
+    "message": "Lent",
+    "description": "Label for slow delay setting"
+  },
+  "premiumLabel": {
+    "message": "Passer à Premium",
+    "description": "Label for premium upgrade banner"
+  },
+  "usageLabel": {
+    "message": "Soumissions gratuites restantes :",
+    "description": "Text for remaining free uses"
+  },
+  "limitReachedTitle": {
+    "message": "Limite d'utilisation atteinte",
+    "description": "Title for usage limit modal"
+  },
+  "usageLimitText": {
+    "message": "Vous avez utilisé la version gratuite de Triple Submit 20 fois.",
+    "description": "Message about reaching usage limit"
+  },
+  "upgradeText": {
+    "message": "Pour continuer à utiliser, veuillez passer à la version Premium.",
+    "description": "Message about need to upgrade"
+  },
+  "perMonth": {
+    "message": "/ mois",
+    "description": "Payment period"
+  },
+  "payNowButton": {
+    "message": "Payer maintenant",
+    "description": "Text for payment button"
+  },
+  "processing_payment": {
+    "message": "Traitement du paiement...",
+    "description": "Text during payment processing"
   }
 } 

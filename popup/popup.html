@@ -39,14 +39,6 @@
       </div>
     </section>
     
-    <section class="main-toggle">
-      <span id="enable-extension-label">Enable Triple Submit</span>
-      <label class="switch">
-        <input type="checkbox" id="extension-toggle" checked>
-        <span class="slider round"></span>
-      </label>
-    </section>
-    
     <section class="domain-control">
       <div class="current-domain">
         <span id="current-site-label">Current site:</span>
@@ -72,11 +64,14 @@
         </div>
       </div>
       
-      <div class="setting-item">
-        <span id="delay-label">Delay (ms):</span>
+      <div class="setting-item full-width">
         <div class="slider-container">
-          <input type="range" min="200" max="1000" value="200" class="delay-slider" id="delay-slider">
-          <span id="delay-value">200</span>
+          <div class="delay-labels">
+            <span id="fast-label">Fast</span>
+            <span id="normal-label">Normal</span>
+            <span id="slow-label">Slow</span>
+          </div>
+          <input type="range" min="200" max="2000" value="600" class="delay-slider" id="delay-slider">
         </div>
       </div>
       

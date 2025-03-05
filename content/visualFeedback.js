@@ -42,6 +42,7 @@ function createFeedbackContainer() {
       border-radius: 50%;
       background-color: rgba(255, 255, 255, 0.3);
       margin: 0 3px;
+      transition: background-color 0.2s ease;
     }
     
     .progress-dot.active {
@@ -49,7 +50,14 @@ function createFeedbackContainer() {
     }
     
     .progress-dot.complete {
-      background-color: rgba(0, 255, 0, 1);
+      background-color: #4CAF50;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
     }
   `;
   
@@ -88,21 +96,26 @@ function updateFeedback(currentCount, requiredCount, isComplete) {
     const dot = document.createElement('div');
     dot.className = 'progress-dot';
     
+    // Always activate dots up to current count (inclusive)
     if (i < currentCount) {
       dot.classList.add('active');
-    }
-    
-    if (isComplete) {
-      dot.classList.add('complete');
     }
     
     progress.appendChild(dot);
   }
   
+  // If complete, mark all dots as complete for the success animation
+  if (isComplete) {
+    const dots = progress.querySelectorAll('.progress-dot');
+    dots.forEach(dot => {
+      dot.classList.add('complete');
+    });
+  }
+  
   // Update message
   const message = document.getElementById('triple-submit-message');
   if (isComplete) {
-    message.textContent = 'Form submitted';
+    message.textContent = 'Form submitted!';
   } else {
     const remaining = requiredCount - currentCount;
     message.textContent = `Press Enter ${remaining} more ${remaining === 1 ? 'time' : 'times'} to submit`;
@@ -115,14 +128,13 @@ function updateFeedback(currentCount, requiredCount, isComplete) {
   clearTimeout(window.feedbackTimeout);
   window.feedbackTimeout = setTimeout(() => {
     container.classList.remove('visible');
-  }, 2000);
+  }, isComplete ? 3000 : 2000); // Show success message longer
 }
 
 // Listen for feedback events from keyHandler.js
 document.addEventListener('tripleSubmitFeedback', (event) => {
-  const { currentCount, requiredCount } = event.detail;
-  const isComplete = currentCount >= requiredCount;
-  updateFeedback(currentCount, requiredCount, isComplete);
+  const { currentCount, requiredCount, isComplete } = event.detail;
+  updateFeedback(currentCount, requiredCount, isComplete || currentCount >= requiredCount);
 });
 
 // Initialize the feedback container when the script loads

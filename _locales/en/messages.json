@@ -52,8 +52,20 @@
     "description": "Label for visual feedback toggle"
   },
   "delayLabel": {
-    "message": "Delay (ms):",
+    "message": "Delay:",
     "description": "Label for delay slider"
+  },
+  "fastLabel": {
+    "message": "Fast",
+    "description": "Label for fast delay setting"
+  },
+  "normalLabel": {
+    "message": "Normal",
+    "description": "Label for normal delay setting"
+  },
+  "slowLabel": {
+    "message": "Slow",
+    "description": "Label for slow delay setting"
   },
   "advanced_options": {
     "message": "Advanced settings",

@@ -32,7 +32,12 @@ TripleSubmitConfig.getLanguage = async function() {
     console.log('TripleSubmitConfig: Получение языка...');
     
     // Сначала проверяем, есть ли язык в отдельной записи
-    const data = await chrome.storage.sync.get('language');
+    const data = await chrome.storage.sync.
+    File
+    ~/github/triple_submit
+    Error
+    Could not load icon 'icons/icon32.png' specified in 'icons'.
+    Could not load manifest.get('language');
     
     if (data.language) {
       console.log('TripleSubmitConfig: Найден язык в отдельной записи:', data.language);

@@ -7,19 +7,19 @@
     "message": "Verhindert versehentliche Formularübermittlungen, indem mehrere Eingabetasten-Drücke erforderlich sind",
     "description": "Extension description"
   },
-  "language_label": {
+  "languageLabel": {
     "message": "Sprache:",
     "description": "Label for language selection"
   },
-  "enable_extension": {
+  "enableExtensionLabel": {
     "message": "Triple Submit aktivieren",
     "description": "Label for enabling the extension"
   },
-  "current_site": {
+  "currentSiteLabel": {
     "message": "Aktuelle Seite:",
     "description": "Label for current website"
   },
-  "enable_for_site": {
+  "enableForSiteLabel": {
     "message": "Für diese Seite aktivieren",
     "description": "Label for enabling extension on current site"
   },
@@ -43,11 +43,11 @@
     "message": "Zeilenumbrüche mit einzelnem Enter, Formularübermittlung mit mehreren Tastendrücken",
     "description": "Description for alternative mode"
   },
-  "enter_presses": {
+  "enterPressesLabel": {
     "message": "Enter-Tastendrücke:",
     "description": "Label for Enter key press count"
   },
-  "visual_feedback": {
+  "visualFeedbackLabel": {
     "message": "Visuelles Feedback:",
     "description": "Label for visual feedback toggle"
   },

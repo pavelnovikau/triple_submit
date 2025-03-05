@@ -16,21 +16,6 @@ const Logger = {
   }
 };
 
-// Default settings for the extension
-const DEFAULT_SETTINGS = {
-  enabled: true,
-  pressCount: 3,
-  showFeedback: true,
-  delay: 200, // ms
-  isPremium: false // Premium status
-};
-
-// Default usage data
-const DEFAULT_USAGE_DATA = {
-  count: 0,
-  lastUpdated: new Date().toISOString()
-};
-
 // Initialize extension when installed or updated
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
@@ -39,10 +24,10 @@ chrome.runtime.onInstalled.addListener((details) => {
     
     // Initialize default settings
     const defaultSettings = {
-      enabled: true,      // Extension enabled by default
-      pressCount: 3,      // Default required press count
-      showFeedback: true, // Visual feedback enabled by default
-      delay: 200          // Default delay between presses (ms)
+      domainEnabled: false,  // Each site should be enabled individually
+      pressCount: 3,        // Default required press count
+      showFeedback: true,   // Visual feedback enabled by default
+      delay: 600           // Default delay between presses (ms) - Normal
     };
     
     // Save default settings
@@ -80,20 +65,22 @@ function migrateSettings() {
       
       const needsMigration = data && data.settings && 
                             (data.settings.mode !== undefined || 
-                             data.settings.delay === undefined);
+                             data.settings.delay === undefined ||
+                             data.settings.enabled !== undefined);
       
       if (needsMigration) {
         Logger.info('Migrating settings from older version');
         
         const migratedSettings = {
-          enabled: data.settings.enabled !== undefined ? data.settings.enabled : true,
+          domainEnabled: data.settings.domainEnabled !== undefined ? data.settings.domainEnabled : false,
           pressCount: data.settings.pressCount !== undefined ? data.settings.pressCount : 3,
           showFeedback: data.settings.showFeedback !== undefined ? data.settings.showFeedback : true,
-          delay: data.settings.delay !== undefined ? data.settings.delay : 200
+          delay: data.settings.delay !== undefined ? data.settings.delay : 600
         };
         
         // Remove old fields
         if (migratedSettings.mode !== undefined) delete migratedSettings.mode;
+        if (migratedSettings.enabled !== undefined) delete migratedSettings.enabled;
         
         // Save migrated settings
         chrome.storage.sync.set({
@@ -113,40 +100,6 @@ function migrateSettings() {
   }
 }
 
-// Функция для увеличения счетчика использования
-function incrementUsageCount(usageData, callback) {
-  try {
-    // Проверяем статус Premium
-    chrome.storage.sync.get('isPremium', (premiumData) => {
-      if (premiumData.isPremium) {
-        if (callback) callback({ usageData: { count: 0, isPremium: true } });
-        return;
-      }
-      
-      // Используем переданные данные или значения по умолчанию
-      let currentUsage = usageData || DEFAULT_USAGE_DATA;
-      
-      // Увеличиваем счетчик
-      currentUsage.count += 1;
-      currentUsage.lastUpdated = new Date().toISOString();
-      
-      // Сохраняем обновленные данные
-      chrome.storage.local.set({ usageData: currentUsage }, () => {
-        if (chrome.runtime.lastError) {
-          console.error('Error saving usage data:', chrome.runtime.lastError);
-          if (callback) callback({ error: chrome.runtime.lastError.message });
-        } else {
-          console.log('Usage count updated:', currentUsage.count);
-          if (callback) callback({ usageData: currentUsage });
-        }
-      });
-    });
-  } catch (error) {
-    console.error('Error incrementing usage count:', error);
-    if (callback) callback({ error: error.message });
-  }
-}
-
 // Message handling from content scripts and popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Log incoming message for debugging
@@ -160,6 +113,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         
       case 'saveSettings':
         handleSaveSettings(message.settings, sendResponse);
+        break;
+        
+      case 'settings_updated':
+        Logger.info('Received settings update notification from popup');
+        notifyAllTabsAboutSettingsUpdate(sendResponse);
         break;
         
       case 'checkDomain':
@@ -198,10 +156,10 @@ function handleGetSettings(sendResponse) {
     
     // If settings don't exist yet, use defaults
     const settings = data.settings || {
-      enabled: true,
+      domainEnabled: false,
       pressCount: 3,
       showFeedback: true,
-      delay: 200
+      delay: 600
     };
     
     // Add premium status
@@ -334,6 +292,63 @@ function notifyTabsAboutSettingsUpdate() {
   });
 }
 
+// Улучшенная функция для отправки полных обновленных настроек во все вкладки
+function notifyAllTabsAboutSettingsUpdate(sendResponse) {
+  // Получаем текущие настройки перед отправкой
+  chrome.storage.sync.get(['settings', 'domains'], (data) => {
+    if (chrome.runtime.lastError) {
+      Logger.error('Error getting settings for notification:', chrome.runtime.lastError);
+      if (sendResponse) sendResponse({ error: chrome.runtime.lastError.message });
+      return;
+    }
+    
+    const settings = data.settings || {
+      domainEnabled: false,
+      pressCount: 3,
+      showFeedback: true,
+      delay: 600
+    };
+    
+    Logger.info('Sending updated settings to all tabs:', settings);
+    
+    // Отправляем обновленные настройки во все вкладки
+    chrome.tabs.query({}, (tabs) => {
+      let updatePromises = [];
+      
+      tabs.forEach((tab) => {
+        if (tab.url && tab.url.startsWith('http')) {
+          try {
+            const hostname = new URL(tab.url).hostname;
+            // Проверяем, включено ли расширение для данного домена
+            const domains = data.domains || {};
+            const domainEnabled = domains[hostname] === true;
+            
+            // Отправляем обновленные настройки и статус для домена
+            updatePromises.push(
+              chrome.tabs.sendMessage(tab.id, { 
+                action: 'settingsUpdated',
+                settings: settings,
+                domainEnabled: domainEnabled 
+              }).catch((error) => {
+                Logger.warn(`Error sending settings update to tab ${tab.id}:`, error);
+                // Игнорируем ошибки при отправке сообщений, поскольку не все вкладки могут быть готовы
+              })
+            );
+          } catch (error) {
+            Logger.warn(`Error processing tab ${tab.id} for settings update:`, error);
+          }
+        }
+      });
+      
+      // Отвечаем, когда все сообщения отправлены (или попытались отправить)
+      Promise.allSettled(updatePromises).then(() => {
+        Logger.info('Finished sending settings updates to all tabs');
+        if (sendResponse) sendResponse({ success: true });
+      });
+    });
+  });
+}
+
 // Listen for tab updates to update icon
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
@@ -349,7 +364,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         const hostname = new URL(tab.url).hostname;
         
         // Проверяем правила доменов
-        let isEnabled = settings.enabled;
+        let isEnabled = settings.domainEnabled;
         
         if (settings.domainMode === 'whitelist') {
           // В режиме белого списка: включено только если домен в списке
@@ -361,7 +376,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           const isBlacklisted = settings.blacklist.some(blacklistedDomain => 
             hostname.includes(blacklistedDomain)
           );
-          isEnabled = settings.enabled && !isBlacklisted;
+          isEnabled = settings.domainEnabled && !isBlacklisted;
         }
         
         // Обновляем иконку

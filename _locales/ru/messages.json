@@ -7,88 +7,72 @@
     "message": "Предотвращает случайные отправки форм, требуя многократного нажатия клавиши Enter",
     "description": "Описание расширения"
   },
-  "language_label": {
+  "languageLabel": {
     "message": "Язык:",
     "description": "Название выбора языка"
   },
-  "enable_extension": {
+  "enableExtensionLabel": {
     "message": "Включить Triple Submit",
     "description": "Текст для включения расширения"
   },
-  "current_site": {
+  "currentSiteLabel": {
     "message": "Текущий сайт:",
     "description": "Текст для текущего сайта"
   },
-  "enable_for_site": {
+  "enableForSiteLabel": {
     "message": "Включить для этого сайта",
     "description": "Текст для включения для сайта"
   },
-  "mode_label": {
-    "message": "Режим:",
-    "description": "Название выбора режима"
-  },
-  "mode_normal": {
-    "message": "Обычный",
-    "description": "Текст для обычного режима"
-  },
-  "mode_alternative": {
-    "message": "Расширенный",
-    "description": "Текст для альтернативного режима"
-  },
-  "mode_normal_description": {
-    "message": "Стандартная работа Enter без дополнительных проверок.",
-    "description": "Описание обычного режима"
-  },
-  "mode_alternative_description": {
-    "message": "Защита от случайной отправки формы с вводом Enter несколько раз.",
-    "description": "Описание альтернативного режима"
-  },
-  "enter_presses_label": {
+  "enterPressesLabel": {
     "message": "Нажатия Enter:",
     "description": "Название для количества нажатий"
   },
-  "visual_feedback_label": {
+  "visualFeedbackLabel": {
     "message": "Визуальный отклик:",
     "description": "Название для визуального отклика"
   },
-  "advanced_options": {
-    "message": "Расширенные настройки",
-    "description": "Текст кнопки расширенных настроек"
+  "delayLabel": {
+    "message": "Задержка:",
+    "description": "Название для ползунка задержки"
   },
-  "upgrade_premium": {
+  "fastLabel": {
+    "message": "Быстро",
+    "description": "Метка для быстрой задержки"
+  },
+  "normalLabel": {
+    "message": "Средне",
+    "description": "Метка для средней задержки"
+  },
+  "slowLabel": {
+    "message": "Медленно",
+    "description": "Метка для медленной задержки"
+  },
+  "premiumLabel": {
     "message": "Обновиться до Premium",
     "description": "Текст для обновления до Premium"
   },
-  "premium_status": {
-    "message": "Premium активирован",
-    "description": "Текст для активированного Premium"
+  "usageLabel": {
+    "message": "Осталось бесплатных отправок:",
+    "description": "Текст для оставшихся бесплатных отправок"
   },
-  "usage_remaining_label": {
-    "message": "Осталось бесплатных нажатий:",
-    "description": "Текст для оставшихся бесплатных нажатий"
-  },
-  "usage_limit_title": {
+  "limitReachedTitle": {
     "message": "Лимит использования достигнут",
     "description": "Заголовок окна лимита использования"
   },
-  "usage_limit_message": {
-    "message": "Вы использовали бесплатную версию Triple Submit 10 раз.",
+  "usageLimitText": {
+    "message": "Вы использовали бесплатную версию Triple Submit 20 раз.",
     "description": "Сообщение о достижении лимита использования"
   },
-  "upgrade_message": {
+  "upgradeText": {
     "message": "Для продолжения использования, пожалуйста, обновитесь до Premium версии.",
     "description": "Сообщение о необходимости обновления"
   },
-  "price_period": {
-    "message": "один раз",
+  "perMonth": {
+    "message": "/ месяц",
     "description": "Период оплаты"
   },
-  "pay_button": {
+  "payNowButton": {
     "message": "Оплатить сейчас",
     "description": "Текст кнопки оплаты"
-  },
-  "processing_payment": {
-    "message": "Обработка платежа...",
-    "description": "Текст во время обработки платежа"
   }
 } 

@@ -16,9 +16,12 @@ const Logger = {
   }
 };
 
+// Custom localization cache
+let localizedStrings = {};
+const defaultLanguage = 'en';
+
 document.addEventListener('DOMContentLoaded', function() {
   // Main UI elements
-  const extensionToggle = document.getElementById('extension-toggle');
   const domainToggle = document.getElementById('domain-toggle');
   const currentDomainText = document.getElementById('current-domain-text');
   const decreaseCountBtn = document.getElementById('decrease-count');
@@ -31,17 +34,22 @@ document.addEventListener('DOMContentLoaded', function() {
   const closeModalBtn = document.querySelector('.close-modal');
   const payButton = document.getElementById('pay-button');
   const delaySlider = document.getElementById('delay-slider');
-  const delayValue = document.getElementById('delay-value');
   const languageSelect = document.getElementById('language-select');
+  
+  // Delay value labels
+  const delayLabels = {
+    fast: { min: 200, max: 700 },
+    normal: { min: 701, max: 1300 },
+    slow: { min: 1301, max: 2000 }
+  };
   
   // Current settings and state
   let currentDomain = '';
   let currentSettings = {
-    enabled: true,
     domainEnabled: false,
     pressCount: 3,
     showFeedback: true,
-    delay: 200,
+    delay: 600,
     language: 'en'
   };
   
@@ -108,6 +116,11 @@ document.addEventListener('DOMContentLoaded', function() {
         await chrome.storage.sync.set({ language: currentSettings.language });
       }
       
+      // Set selected language in dropdown
+      if (languageSelect) {
+        languageSelect.value = currentSettings.language;
+      }
+      
       // Get Premium status and usage
       const usageData = await chrome.storage.sync.get(['isPremium', 'usageCount']);
       if (usageData) {
@@ -129,52 +142,115 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
+      // Load localized strings first, then update UI
+      await loadLocalizedStrings(currentSettings.language);
+      
       // Update UI
       updateUI();
       
-      // Set up language
+      // Apply language
       updateLanguage(currentSettings.language);
       
+      Logger.info('Popup initialized with settings:', currentSettings);
     } catch (error) {
       Logger.error('Error initializing popup:', error);
     }
   }
   
   /**
-   * Update UI based on current settings
+   * Load localized strings for a specific language
+   */
+  async function loadLocalizedStrings(langCode) {
+    try {
+      // Skip if already loaded
+      if (localizedStrings[langCode]) {
+        Logger.info(`Using cached strings for language: ${langCode}`);
+        return;
+      }
+      
+      Logger.info(`Loading strings for language: ${langCode}`);
+      
+      // Fetch the messages file for the specified language
+      const url = chrome.runtime.getURL(`_locales/${langCode}/messages.json`);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load strings for ${langCode}: ${response.status}`);
+      }
+      
+      const messages = await response.json();
+      localizedStrings[langCode] = messages;
+      
+      Logger.info(`Successfully loaded ${Object.keys(messages).length} strings for ${langCode}`);
+    } catch (error) {
+      Logger.error(`Error loading localized strings for ${langCode}:`, error);
+      
+      // If failed and not English, try loading English as fallback
+      if (langCode !== defaultLanguage && !localizedStrings[defaultLanguage]) {
+        Logger.info(`Falling back to ${defaultLanguage} locale`);
+        await loadLocalizedStrings(defaultLanguage);
+      }
+    }
+  }
+  
+  /**
+   * Get a localized message by key
+   */
+  function getLocalizedMessage(key, defaultText = '') {
+    const currentLang = currentSettings.language;
+    
+    // Try current language
+    if (localizedStrings[currentLang] && 
+        localizedStrings[currentLang][key] && 
+        localizedStrings[currentLang][key].message) {
+      return localizedStrings[currentLang][key].message;
+    }
+    
+    // Try default language if different from current
+    if (currentLang !== defaultLanguage && 
+        localizedStrings[defaultLanguage] && 
+        localizedStrings[defaultLanguage][key] && 
+        localizedStrings[defaultLanguage][key].message) {
+      return localizedStrings[defaultLanguage][key].message;
+    }
+    
+    // Fallback to Chrome's i18n API
+    const chromeMessage = chrome.i18n.getMessage(key);
+    if (chromeMessage) {
+      return chromeMessage;
+    }
+    
+    // Last resort: return default text
+    return defaultText;
+  }
+  
+  /**
+   * Update UI with current settings
    */
   function updateUI() {
-    // Update main toggles
-    extensionToggle.checked = currentSettings.enabled;
+    // Update domain toggle
     domainToggle.checked = currentSettings.domainEnabled;
-    feedbackToggle.checked = currentSettings.showFeedback;
     
     // Update press count
     pressCountEl.textContent = currentSettings.pressCount;
     
+    // Update feedback toggle
+    feedbackToggle.checked = currentSettings.showFeedback;
+    
     // Update delay slider
     delaySlider.value = currentSettings.delay;
-    delayValue.textContent = currentSettings.delay;
     
-    // Update language selector
-    if (languageSelect) {
-      languageSelect.value = currentSettings.language;
+    // Make sure the delay is within the new range
+    if (currentSettings.delay > 2000) {
+      currentSettings.delay = 2000;
     }
     
-    // Update usage counter
-    if (isPremium) {
-      usageCountEl.textContent = "∞";
-      usageCountEl.style.color = "var(--accent-color)";
-    } else {
-      usageCountEl.textContent = (20 - usageCount);
-      
-      // If few uses left, change color
-      if (usageCount >= 15) {
-        usageCountEl.style.color = "#ff3b30";
-      }
-    }
+    updateDelayLabel(currentSettings.delay);
     
-    // Update UI availability based on status
+    // Update usage count
+    usageCountEl.textContent = usageCount;
+    
+    // Update UI availability based on domain enabled state
     updateUIAvailability();
   }
   
@@ -182,22 +258,8 @@ document.addEventListener('DOMContentLoaded', function() {
    * Update UI elements availability
    */
   function updateUIAvailability() {
-    const domainControlsDisabled = !currentSettings.enabled;
-    
-    // Enable/disable domain controls
-    domainToggle.disabled = domainControlsDisabled;
-    
-    // Apply visual style for disabled elements
-    document.querySelectorAll('.domain-control, .domain-toggle').forEach(el => {
-      if (domainControlsDisabled) {
-        el.classList.add('disabled');
-      } else {
-        el.classList.remove('disabled');
-      }
-    });
-    
     // Update settings availability based on domain enabled
-    const settingsDisabled = !currentSettings.enabled || !currentSettings.domainEnabled;
+    const settingsDisabled = !currentSettings.domainEnabled;
     
     decreaseCountBtn.disabled = settingsDisabled;
     increaseCountBtn.disabled = settingsDisabled;
@@ -217,71 +279,86 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Updates the interface language
    */
-  function updateLanguage(langCode) {
-    // Set HTML lang attribute for RTL languages
-    document.documentElement.lang = langCode;
-    
-    // Special handling for RTL languages like Arabic
-    if (langCode === 'ar') {
-      document.documentElement.dir = 'rtl';
-    } else {
-      document.documentElement.dir = 'ltr';
-    }
-    
-    // Update text content based on selected language
+  async function updateLanguage(langCode) {
     try {
-      chrome.i18n.getAcceptLanguages(function(languages) {
-        Logger.info(`Browser languages: ${languages.join(', ')}`);
-      });
+      // Log language change attempt
+      Logger.info(`Applying language change to: ${langCode}`);
       
-      // Use i18n API to get localized strings
-      const elements = {
-        'language-label': chrome.i18n.getMessage('languageLabel') || 'Language:',
-        'premium-label': chrome.i18n.getMessage('premiumLabel') || 'Upgrade to Premium',
-        'usage-label': chrome.i18n.getMessage('usageLabel') || 'Free submissions left:',
-        'enable-extension-label': chrome.i18n.getMessage('enableExtensionLabel') || 'Enable Triple Submit',
-        'current-site-label': chrome.i18n.getMessage('currentSiteLabel') || 'Current site:',
-        'enable-for-site-label': chrome.i18n.getMessage('enableForSiteLabel') || 'Enable for this site',
-        'enter-presses-label': chrome.i18n.getMessage('enterPressesLabel') || 'Enter presses:',
-        'delay-label': chrome.i18n.getMessage('delayLabel') || 'Delay (ms):',
-        'visual-feedback-label': chrome.i18n.getMessage('visualFeedbackLabel') || 'Visual feedback:'
-      };
+      // Update current settings
+      currentSettings.language = langCode;
       
-      // Update all localized elements
-      for (const [id, text] of Object.entries(elements)) {
-        const element = document.getElementById(id);
-        if (element) {
-          element.textContent = text;
-        }
+      // Set HTML lang attribute
+      document.documentElement.lang = langCode;
+      
+      // Set selected language in dropdown if it doesn't match
+      if (languageSelect && languageSelect.value !== langCode) {
+        languageSelect.value = langCode;
       }
+      
+      // Special handling for RTL languages like Arabic
+      if (langCode === 'ar') {
+        document.documentElement.dir = 'rtl';
+      } else {
+        document.documentElement.dir = 'ltr';
+      }
+      
+      // Ensure strings are loaded for this language
+      await loadLocalizedStrings(langCode);
+      
+      // Update all text elements with localized strings
+      updateElementText('language-label', 'languageLabel', 'Language:');
+      updateElementText('premium-label', 'premiumLabel', 'Upgrade to Premium');
+      updateElementText('usage-label', 'usageLabel', 'Free submissions left:');
+      updateElementText('current-site-label', 'currentSiteLabel', 'Current site:');
+      updateElementText('enable-for-site-label', 'enableForSiteLabel', 'Enable for this site');
+      updateElementText('enter-presses-label', 'enterPressesLabel', 'Enter presses:');
+      updateElementText('delay-label', 'delayLabel', 'Delay:');
+      updateElementText('visual-feedback-label', 'visualFeedbackLabel', 'Visual feedback:');
+      updateElementText('fast-label', 'fastLabel', 'Fast');
+      updateElementText('normal-label', 'normalLabel', 'Normal');
+      updateElementText('slow-label', 'slowLabel', 'Slow');
       
       // Update modal texts
       const modalTitle = document.querySelector('.modal-content h2');
       if (modalTitle) {
-        modalTitle.textContent = chrome.i18n.getMessage('limitReachedTitle') || 'Usage Limit Reached';
+        modalTitle.textContent = getLocalizedMessage('limitReachedTitle', 'Usage Limit Reached');
       }
       
       const modalParagraphs = document.querySelectorAll('.modal-content p');
       if (modalParagraphs && modalParagraphs.length >= 2) {
-        modalParagraphs[0].textContent = chrome.i18n.getMessage('usageLimitText') || 
-          'You have used the free version of Triple Submit 20 times.';
+        modalParagraphs[0].textContent = getLocalizedMessage('usageLimitText', 
+          'You have used the free version of Triple Submit 20 times.');
         
-        modalParagraphs[1].textContent = chrome.i18n.getMessage('upgradeText') || 
-          'To continue using, please upgrade to the Premium version.';
+        modalParagraphs[1].textContent = getLocalizedMessage('upgradeText', 
+          'To continue using, please upgrade to the Premium version.');
       }
       
       const periodSpan = document.querySelector('.price-period');
       if (periodSpan) {
-        periodSpan.textContent = chrome.i18n.getMessage('perMonth') || '/ month';
+        periodSpan.textContent = getLocalizedMessage('perMonth', '/ month');
       }
       
-      const payButton = document.getElementById('pay-button');
-      if (payButton) {
-        payButton.textContent = chrome.i18n.getMessage('payNowButton') || 'Pay Now';
+      const payButtonEl = document.getElementById('pay-button');
+      if (payButtonEl) {
+        payButtonEl.textContent = getLocalizedMessage('payNowButton', 'Pay Now');
       }
       
+      // Save the language setting to storage
+      chrome.storage.sync.set({ language: langCode });
+      
+      Logger.info('Language updated successfully to:', langCode);
     } catch (error) {
       Logger.error('Error updating language:', error);
+    }
+  }
+  
+  /**
+   * Helper function to update element text with localized message
+   */
+  function updateElementText(elementId, messageName, defaultText) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.textContent = getLocalizedMessage(messageName, defaultText);
     }
   }
   
@@ -291,38 +368,39 @@ document.addEventListener('DOMContentLoaded', function() {
   async function saveSettings() {
     try {
       // Save general settings
-      await chrome.storage.sync.set({ 
-        settings: currentSettings,
-        language: currentSettings.language 
+      await chrome.storage.sync.set({
+        settings: {
+          pressCount: currentSettings.pressCount,
+          showFeedback: currentSettings.showFeedback,
+          delay: currentSettings.delay,
+        },
+        language: currentSettings.language
       });
       
-      // Save domain setting
+      // Save domain-specific settings
       if (currentDomain) {
         const domainData = await chrome.storage.sync.get(['domains']);
-        let domains = domainData.domains || {};
+        let domains = {};
         
+        if (domainData && domainData.domains) {
+          domains = domainData.domains;
+        }
+        
+        // If enabled, add domain to list, otherwise remove it
         if (currentSettings.domainEnabled) {
           domains[currentDomain] = true;
         } else {
           delete domains[currentDomain];
         }
         
-        await chrome.storage.sync.set({ domains: domains });
+        // Save updated domains
+        await chrome.storage.sync.set({ domains });
       }
       
-      // Notify content scripts about changes
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            action: 'settingsUpdated',
-            settings: currentSettings,
-            domainEnabled: currentSettings.domainEnabled
-          }).catch(error => {
-            Logger.warn('Could not send settings update notification:', error);
-          });
-        }
-      });
+      // Notify background script about settings update
+      chrome.runtime.sendMessage({ action: 'settings_updated' });
       
+      Logger.info('Settings saved:', currentSettings);
     } catch (error) {
       Logger.error('Error saving settings:', error);
     }
@@ -365,14 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Event handlers
    */
-  
-  // Toggle for enabling/disabling extension
-  extensionToggle.addEventListener('change', function() {
-    currentSettings.enabled = this.checked;
-    updateUIAvailability();
-    saveSettings();
-  });
-  
+    
   // Toggle for enabling/disabling for current domain
   domainToggle.addEventListener('change', function() {
     currentSettings.domainEnabled = this.checked;
@@ -398,8 +469,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Delay slider
   delaySlider.addEventListener('input', function() {
     const value = parseInt(this.value);
-    delayValue.textContent = value;
     currentSettings.delay = value;
+    
+    // Update visual indicator for which speed is selected
+    updateDelayLabel(value);
   });
   
   delaySlider.addEventListener('change', function() {
@@ -434,6 +507,29 @@ document.addEventListener('DOMContentLoaded', function() {
       closePremiumModal();
     }
   });
+  
+  /**
+   * Updates the visual indication of which delay label is active
+   */
+  function updateDelayLabel(value) {
+    const fastLabel = document.getElementById('fast-label');
+    const normalLabel = document.getElementById('normal-label');
+    const slowLabel = document.getElementById('slow-label');
+    
+    // Reset all labels to default style
+    fastLabel.classList.remove('active');
+    normalLabel.classList.remove('active');
+    slowLabel.classList.remove('active');
+    
+    // Determine which label to highlight based on value
+    if (value <= delayLabels.fast.max) {
+      fastLabel.classList.add('active');
+    } else if (value <= delayLabels.normal.max) {
+      normalLabel.classList.add('active');
+    } else {
+      slowLabel.classList.add('active');
+    }
+  }
   
   // Initialize popup
   initPopup();

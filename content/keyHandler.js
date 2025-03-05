@@ -31,12 +31,28 @@ let enterPresses = [];
 function detectBrowser() {
   const userAgent = navigator.userAgent;
   
-  // More complete check for Arc browser
-  if ((userAgent.includes('Chrome') && userAgent.includes('Arc/')) || 
+  // Enhanced detection for Arc browser
+  try {
+    // Check multiple Arc indicators
+    const isArc = (
+      // Check user agent
+      (userAgent.includes('Chrome') && userAgent.includes('Arc/')) ||
+      // Check for Arc class on HTML element
       document.documentElement.classList.contains('arc-window') ||
-      typeof window.arc !== 'undefined') {
-    Logger.info('Arc browser detected');
-    return 'arc';
+      // Check for Arc global object
+      typeof window.arc !== 'undefined' ||
+      // Check for Arc color scheme data attributes
+      document.documentElement.hasAttribute('data-arc-stylesheets') ||
+      // Check for specific Arc element in DOM
+      !!document.querySelector('.arc-panel')
+    );
+    
+    if (isArc) {
+      Logger.info('Arc browser detected');
+      return 'arc';
+    }
+  } catch (error) {
+    Logger.error('Error detecting Arc browser:', error);
   }
   
   // Other Chromium-based browsers
@@ -44,11 +60,16 @@ function detectBrowser() {
     return 'chrome';
   }
   
+  // Firefox
+  if (userAgent.includes('Firefox')) {
+    return 'firefox';
+  }
+  
   return 'unknown';
 }
 
 const browserType = detectBrowser();
-Logger.info('Running in browser type:', browserType);
+Logger.info(`Browser detected: ${browserType}`);
 
 // Increment usage counter
 function incrementUsage() {
@@ -113,8 +134,8 @@ function getDomainSettings() {
             
             if (domainResponse && domainResponse.isEnabled !== undefined) {
               // Update domain enable status
-              domainSettings.enabled = domainResponse.isEnabled;
-              Logger.info(`Domain ${hostname} enabled:`, domainSettings.enabled);
+              domainSettings.domainEnabled = domainResponse.isEnabled;
+              Logger.info(`Domain ${hostname} enabled:`, domainSettings.domainEnabled);
               
               // By default, domain is disabled (isEnabled will be false)
               resolve(domainSettings);
@@ -139,7 +160,7 @@ function getDomainSettings() {
 function useDefaultSettings(resolve) {
   Logger.warn('Using default settings due to error');
   domainSettings = {
-    enabled: false, // Disabled by default
+    domainEnabled: false, // Disabled by default
     pressCount: 3,
     showFeedback: true,
     isPremium: false,
@@ -179,8 +200,8 @@ function initKeyListeners(settings) {
   lastEnterPressTime = 0;
   enterPresses = [];
   
-  // Check if extension is enabled
-  if (!settings.enabled) {
+  // Check if extension is enabled for this domain
+  if (!settings.domainEnabled) {
     Logger.info('Extension disabled for this domain');
     return;
   }
@@ -201,7 +222,7 @@ function initKeyListeners(settings) {
       
       // Update domain enable status
       if (message.domainEnabled !== undefined) {
-        domainSettings.enabled = message.domainEnabled;
+        domainSettings.domainEnabled = message.domainEnabled;
       }
       
       // Reset press counter
@@ -214,19 +235,61 @@ function initKeyListeners(settings) {
   });
 }
 
+// Debug key events
+function logKeyEvent(event, source) {
+  if (event.key === 'Enter') {
+    Logger.debug(`Enter key event from ${source} in ${browserType} browser:`, {
+      key: event.key,
+      shiftKey: event.shiftKey,
+      ctrlKey: event.ctrlKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      modifiers: {
+        Control: event.getModifierState('Control'),
+        Shift: event.getModifierState('Shift'),
+        Alt: event.getModifierState('Alt'),
+        Meta: event.getModifierState('Meta'),
+        AltGraph: event.getModifierState('AltGraph')
+      }
+    });
+  }
+}
+
 // Key down handler
 function handleKeyDown(event) {
-  // Check if extension is enabled
-  if (!domainSettings || !domainSettings.enabled) {
+  // Log key event for debugging
+  logKeyEvent(event, 'keydown');
+  
+  // Check if extension is enabled for this domain
+  if (!domainSettings || !domainSettings.domainEnabled) {
     return;
   }
   
   // Ignore repeat events from key holding
   if (event.repeat) return;
   
-  // Shift+Enter always works as regular Enter
-  if (event.key === 'Enter' && event.shiftKey) {
-    return; // Skip processing, allowing standard action
+  // Special handling for Arc browser
+  if (browserType === 'arc') {
+    // In Arc, we need more robust checking of modifier keys
+    if (event.key === 'Enter' && (
+        event.shiftKey || 
+        event.ctrlKey || 
+        event.altKey || 
+        event.metaKey || 
+        event.getModifierState('Control') || 
+        event.getModifierState('Alt') || 
+        event.getModifierState('Meta') || 
+        event.getModifierState('Shift'))) {
+      Logger.debug('Modifier key pressed with Enter in Arc browser, bypassing processing');
+      return; // Skip processing, allowing standard action
+    }
+  } else {
+    // Standard handling for other browsers
+    // Allow any modifier + Enter to bypass processing (Shift, Ctrl, Alt, Meta/Command)
+    if (event.key === 'Enter' && (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)) {
+      Logger.debug('Modifier key pressed with Enter, bypassing processing');
+      return; // Skip processing, allowing standard action
+    }
   }
   
   if (event.key === 'Enter') {
@@ -248,7 +311,7 @@ function handleKeyDown(event) {
     enterPressCount++;
     lastEnterPressTime = now;
     
-    Logger.debug(`Enter key pressed. Count: ${enterPressCount}/${domainSettings.pressCount}`);
+    Logger.debug(`Enter key pressed. Count: ${enterPressCount}/${domainSettings.pressCount}. Current settings: `, { pressCount: domainSettings.pressCount, delay: domainSettings.delay });
     
     // Extended mode is always active - insert line break instead of form submission
     if (enterPressCount < domainSettings.pressCount) {
@@ -266,7 +329,8 @@ function handleKeyDown(event) {
         const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
           detail: {
             currentCount: enterPressCount,
-            requiredCount: domainSettings.pressCount
+            requiredCount: domainSettings.pressCount,
+            isComplete: false
           }
         });
         document.dispatchEvent(feedbackEvent);
@@ -274,6 +338,18 @@ function handleKeyDown(event) {
     } else {
       // Enough Enter presses, allow form submission
       Logger.info(`Form submission allowed after ${enterPressCount} Enter presses`);
+      
+      // Show final visual feedback if enabled
+      if (domainSettings.showFeedback) {
+        const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
+          detail: {
+            currentCount: enterPressCount,
+            requiredCount: domainSettings.pressCount,
+            isComplete: true
+          }
+        });
+        document.dispatchEvent(feedbackEvent);
+      }
       
       // Count usage for analytics
       incrementUsage();
@@ -296,21 +372,47 @@ function alternativeAction(event) {
       const element = event.target;
       const doc = element.ownerDocument;
       
-      // Create and dispatch a keyboard event for a line break
-      const keyEvent = new KeyboardEvent('keypress', {
-        key: 'Enter',
-        code: 'Enter',
-        keyCode: 13,
-        which: 13,
-        bubbles: true,
-        cancelable: true,
-        composed: true
-      });
-      
-      // Special handling for contenteditable
-      if (element.matches('[contenteditable="true"], [contenteditable=""]')) {
-        // Insert line break
-        doc.execCommand('insertLineBreak');
+      // Special handling for Arc browser
+      if (browserType === 'arc') {
+        Logger.debug('Using Arc-specific line break insertion');
+        
+        if (element.matches('[contenteditable="true"], [contenteditable=""]')) {
+          // Insert br element directly for Arc browser
+          const selection = window.getSelection();
+          const range = selection.getRangeAt(0);
+          const br = document.createElement('br');
+          range.deleteContents();
+          range.insertNode(br);
+          
+          // Move cursor after the br
+          range.setStartAfter(br);
+          range.setEndAfter(br);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else {
+          // For textarea in Arc
+          const start = element.selectionStart;
+          const end = element.selectionEnd;
+          element.value = element.value.substring(0, start) + '\n' + element.value.substring(end);
+          element.selectionStart = element.selectionEnd = start + 1;
+        }
+      } else {
+        // Create and dispatch a keyboard event for a line break
+        const keyEvent = new KeyboardEvent('keypress', {
+          key: 'Enter',
+          code: 'Enter',
+          keyCode: 13,
+          which: 13,
+          bubbles: true,
+          cancelable: true,
+          composed: true
+        });
+        
+        // Special handling for contenteditable
+        if (element.matches('[contenteditable="true"], [contenteditable=""]')) {
+          // Insert line break
+          doc.execCommand('insertLineBreak');
+        }
       }
     } else if (event.target.matches('input')) {
       // For standard input fields - can't add line breaks
@@ -323,6 +425,9 @@ function alternativeAction(event) {
 
 // Key up handler
 function handleKeyUp(event) {
+  // Log key event for debugging
+  logKeyEvent(event, 'keyup');
+  
   // Nothing special for now
 }
 
