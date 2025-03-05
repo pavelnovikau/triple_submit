@@ -1,0 +1,109 @@
+# Triple Submit - Chrome Extension
+
+Triple Submit is a Chrome extension designed to prevent accidental form submissions by requiring multiple Enter key presses before actually submitting forms. It also remaps Shift+Enter to act as a regular Enter key.
+
+## Features
+
+### Key Functionality
+- **Multi-Press Enter**: Requires a configurable number of Enter key presses (default: 3) within a time window to trigger actual form submission
+- **Key Remapping**: Shift+Enter acts as a regular Enter key
+- **Domain-Based Activation**: Enable/disable functionality based on specific domains
+- **Visual Feedback**: Shows a visual indicator of progress toward the required number of presses
+- **Dark/Light Themes**: Customize the extension's appearance
+
+### Operation Modes
+- **Normal Mode**: Requires multiple Enter presses, Shift+Enter acts as Enter
+- **Alternative Mode**: Uses regular Enter behavior (useful for specific sites)
+
+## Installation
+
+### From Chrome Web Store (Coming Soon)
+1. Visit the Chrome Web Store (link TBD)
+2. Click "Add to Chrome"
+3. Confirm installation when prompted
+
+### Manual Installation (Developer Mode)
+1. Download or clone this repository
+2. Open Chrome and go to `chrome://extensions/`
+3. Enable "Developer mode" in the top-right corner
+4. Click "Load unpacked" and select the extension directory
+5. The extension is now installed and ready to use
+
+## Usage
+
+### Basic Usage
+1. Once installed, the extension is active by default
+2. Press Enter multiple times (default: 3) to submit a form
+3. Use Shift+Enter as a regular Enter key (single press submission)
+4. Visual feedback will appear showing your progress toward the required number of presses
+
+### Configuration
+1. Click on the Triple Submit icon in your browser toolbar to access quick settings:
+   - Enable/disable the extension globally
+   - Enable/disable for the current site
+   - Change operation mode
+   - Adjust required press count
+   - Toggle visual feedback
+
+2. For advanced settings, click "Advanced Options" in the popup or right-click the extension icon and select "Options":
+   - Manage domain whitelist/blacklist
+   - Customize time window for key press detection
+   - Change theme
+   - Configure other settings
+
+## Premium Features (Coming Soon)
+- Unlimited domains in whitelist/blacklist (free version limited to 3)
+- Cross-device synchronization
+- Custom themes
+- Advanced analytics
+- Custom key bindings
+
+## Development
+
+### Project Structure
+```
+triple_submit/
+├── manifest.json         # Extension manifest
+├── icons/                # Extension icons
+├── popup/                # Popup UI
+│   ├── popup.html
+│   ├── popup.css
+│   └── popup.js
+├── options/              # Options page
+│   ├── options.html
+│   ├── options.css
+│   └── options.js
+├── background/           # Background scripts
+│   └── background.js
+├── content/              # Content scripts
+│   ├── keyHandler.js     # Key press handling logic
+│   ├── visualFeedback.js # Visual feedback components
+│   └── lib/              # Utility libraries
+│       └── storage.js    # Storage management
+```
+
+### Building and Testing
+1. Make your changes to the source code
+2. Load the extension in Chrome using Developer mode
+3. For testing changes to content scripts, you may need to reload the extension and refresh the page
+
+### Contributing
+Contributions are welcome! If you'd like to contribute, please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add some feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+## Privacy Policy
+Triple Submit does not collect or store any personal data. All settings are stored locally on your device. The extension does not track your browsing history or form submissions.
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+If you encounter any issues or have suggestions for improvements, please open an issue on the GitHub repository or contact support at support@example.com.
+
+---
+
+© 2023 Triple Submit | [Website](https://example.com/triple-submit) | [GitHub](https://github.com/example/triple-submit) 

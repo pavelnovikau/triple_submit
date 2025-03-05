@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Triple Submit - Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Triple Submit Options</h1>
+      <div class="theme-toggle">
+        <label class="switch">
+          <input type="checkbox" id="theme-switch">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </header>
+    
+    <main>
+      <section class="card">
+        <h2>General Settings</h2>
+        
+        <div class="setting-item">
+          <div class="setting-label">
+            <h3>Enable Triple Submit</h3>
+            <p>Global switch for the extension functionality</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="extension-toggle" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">
+            <h3>Operation Mode</h3>
+            <p>How the extension processes Enter key presses</p>
+          </div>
+          <select id="mode-select">
+            <option value="normal">Normal</option>
+            <option value="alternative">Alternative</option>
+          </select>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">
+            <h3>Required Enter Presses</h3>
+            <p>Number of Enter presses required to submit</p>
+          </div>
+          <div class="input-with-buttons">
+            <button id="decrease-count" class="icon-button">-</button>
+            <input type="number" id="press-count" min="1" max="5" value="3">
+            <button id="increase-count" class="icon-button">+</button>
+          </div>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">
+            <h3>Time Window (ms)</h3>
+            <p>Maximum time between key presses to count as sequence</p>
+          </div>
+          <input type="number" id="time-window" min="500" max="5000" step="100" value="2000">
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">
+            <h3>Visual Feedback</h3>
+            <p>Show visual indicator when pressing Enter</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="feedback-toggle" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </section>
+      
+      <section class="card">
+        <h2>Domain Management</h2>
+        
+        <div class="setting-item">
+          <div class="setting-label">
+            <h3>Domain List Mode</h3>
+            <p>How to apply the domain list</p>
+          </div>
+          <select id="domain-mode-select">
+            <option value="whitelist">Whitelist (enabled only for listed domains)</option>
+            <option value="blacklist">Blacklist (disabled for listed domains)</option>
+          </select>
+        </div>
+        
+        <div class="domain-management">
+          <div class="domain-input">
+            <input type="text" id="domain-input" placeholder="example.com">
+            <button id="add-domain-button">Add Domain</button>
+          </div>
+          
+          <div class="domain-list-container">
+            <h3 id="domain-list-title">Whitelist</h3>
+            <div id="domain-list" class="domain-list">
+              <!-- Domains will be added here by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="card premium-card">
+        <div class="premium-banner">
+          <h2>Premium Features</h2>
+          <span class="crown-icon">👑</span>
+        </div>
+        
+        <div class="premium-features">
+          <div class="premium-feature">
+            <div class="premium-feature-icon">🔄</div>
+            <div class="premium-feature-text">
+              <h3>Cross-Device Sync</h3>
+              <p>Sync settings across all your devices</p>
+            </div>
+          </div>
+          
+          <div class="premium-feature">
+            <div class="premium-feature-icon">🎨</div>
+            <div class="premium-feature-text">
+              <h3>Custom Themes</h3>
+              <p>Personalize the visual appearance</p>
+            </div>
+          </div>
+          
+          <div class="premium-feature">
+            <div class="premium-feature-icon">📊</div>
+            <div class="premium-feature-text">
+              <h3>Usage Analytics</h3>
+              <p>See how the extension saves you time</p>
+            </div>
+          </div>
+          
+          <div class="premium-feature">
+            <div class="premium-feature-icon">🔑</div>
+            <div class="premium-feature-text">
+              <h3>Custom Key Bindings</h3>
+              <p>Configure your own keyboard shortcuts</p>
+            </div>
+          </div>
+        </div>
+        
+        <button id="upgrade-button" class="upgrade-button">Upgrade to Premium</button>
+      </section>
+    </main>
+    
+    <footer>
+      <div class="status-message" id="status-message"></div>
+      <div class="action-buttons">
+        <button id="reset-button">Reset to Default</button>
+        <button id="save-button">Save Changes</button>
+      </div>
+    </footer>
+  </div>
+  
+  <script src="options.js"></script>
+</body>
+</html> 

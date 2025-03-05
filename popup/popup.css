@@ -1,0 +1,246 @@
+/* Popup styles for Triple Submit extension */
+
+:root {
+  --primary-color: #4a6cf7;
+  --secondary-color: #f76c6c;
+  --text-color: #333;
+  --background-color: #f9f9f9;
+  --card-background: #fff;
+  --border-color: #e0e0e0;
+  --success-color: #6cf7a0;
+  --toggle-off-color: #ccc;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Dark theme variables */
+.dark-theme {
+  --primary-color: #6e8eff;
+  --secondary-color: #ff8e8e;
+  --text-color: #e0e0e0;
+  --background-color: #292929;
+  --card-background: #383838;
+  --border-color: #555;
+  --success-color: #8eff9a;
+  --toggle-off-color: #555;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+}
+
+.container {
+  width: 300px;
+  padding: 16px;
+}
+
+/* Header */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* Sections */
+section {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+/* Toggle switches */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--toggle-off-color);
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Main toggle section */
+.main-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Domain control section */
+.domain-control {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.current-domain {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+#current-domain-text {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.domain-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Settings preview */
+.settings-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+select {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: var(--text-color);
+}
+
+.count-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count-control button {
+  width: 24px;
+  height: 24px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#press-count {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Footer */
+footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#options-button {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+#options-button:hover {
+  background-color: var(--border-color);
+}
+
+.premium-banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(45deg, #f7d35c, #f7bd5c);
+  color: #333;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.crown-icon {
+  font-size: 16px;
+} 
