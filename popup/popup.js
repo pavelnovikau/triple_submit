@@ -32,6 +32,27 @@ const payButtonEl = document.getElementById('pay-button');
 let currentTabUrl = '';
 let currentTabId = null;
 
+// Инициализация языка из централизованной конфигурации
+async function initLanguage() {
+  try {
+    currentLanguage = await TripleSubmitConfig.getLanguage();
+    console.log('Инициализация языка из конфигурации:', currentLanguage);
+    
+    // Обновляем селектор языка
+    if (languageSelectEl) {
+      languageSelectEl.value = currentLanguage;
+    }
+    
+    // Загружаем переводы для текущего языка
+    await loadTranslations(currentLanguage);
+    
+    // Обновляем UI с новыми переводами
+    updateUI();
+  } catch (error) {
+    console.error('Ошибка при инициализации языка:', error);
+  }
+}
+
 // Полностью переработанная функция для загрузки переводов
 async function loadTranslations(lang) {
   try {
@@ -178,64 +199,27 @@ function updateModeDescription() {
   modeDescription.style.display = 'block';
 }
 
-// Полностью переработанная функция изменения языка
-async function changeLanguage(lang) {
+// Функция для изменения языка через централизованную конфигурацию
+async function changeLanguage(newLang) {
   try {
-    console.log('Начинаем смену языка на:', lang);
+    console.log('Изменение языка на:', newLang);
     
-    // Защита от пустого значения
-    if (!lang) {
-      console.error('Получено пустое значение языка');
-      return;
-    }
+    // Устанавливаем язык через централизованную конфигурацию
+    await TripleSubmitConfig.setLanguage(newLang);
     
-    // Устанавливаем язык в переменной
-    currentLanguage = lang;
+    // Обновляем текущий язык в попапе
+    currentLanguage = newLang;
     
-    // Устанавливаем значение в селекторе
-    const languageSelect = document.getElementById('language-select');
-    if (languageSelect) {
-      languageSelect.value = lang;
-      console.log('Установлено значение в селекторе языка:', lang);
-    } else {
-      console.error('Элемент language-select не найден в DOM!');
-    }
+    // Обновляем атрибут lang у HTML
+    document.documentElement.lang = newLang;
     
-    // Сохраняем выбранный язык в локальном хранилище
-    await chrome.storage.local.set({ selectedLanguage: lang });
-    console.log('Язык сохранен в storage:', lang);
+    // Загружаем переводы для нового языка
+    await loadTranslations(newLang);
     
-    // Загружаем переводы для выбранного языка
-    const loadedTranslations = await loadTranslations(lang);
-    console.log('Переводы загружены:', !!loadedTranslations, 'количество ключей:', Object.keys(loadedTranslations).length);
+    // Обновляем UI с новыми переводами
+    updateUI();
     
-    // Обновляем тексты в интерфейсе
-    updateUITexts();
-    console.log('Тексты UI обновлены');
-    
-    // Дополнительно обновляем описание режима
-    updateModeDescription();
-    console.log('Описание режима обновлено');
-    
-    // Устанавливаем направление текста (RTL/LTR)
-    if (['ar'].includes(lang)) {
-      document.documentElement.setAttribute('dir', 'rtl');
-      console.log('Установлено направление текста: RTL');
-    } else {
-      document.documentElement.setAttribute('dir', 'ltr');
-      console.log('Установлено направление текста: LTR');
-    }
-    
-    console.log('Язык успешно изменен на:', lang);
-    
-    // Принудительно обновляем все элементы страницы
-    setTimeout(() => {
-      // Дополнительное обновление через 100мс для гарантии
-      updateUITexts();
-      updateModeDescription();
-      console.log('Выполнено дополнительное обновление текстов');
-    }, 100);
-    
+    console.log('Язык успешно изменен на:', newLang);
   } catch (error) {
     console.error('Ошибка при изменении языка:', error);
   }
@@ -281,21 +265,18 @@ async function initPopup() {
       console.error('Ошибка при получении текущего домена:', tabError);
     }
     
-    // Загружаем сохраненный язык
+    // Загружаем язык из централизованной конфигурации
     try {
-      const languageData = await chrome.storage.local.get('selectedLanguage');
-      if (languageData.selectedLanguage) {
-        currentLanguage = languageData.selectedLanguage;
-        console.log('Загружен язык из storage:', currentLanguage);
-        
-        const langSelector = document.getElementById('language-select');
-        if (langSelector) {
-          langSelector.value = currentLanguage;
-          console.log('Установлен селектор языка:', currentLanguage);
-        }
+      currentLanguage = await TripleSubmitConfig.getLanguage();
+      console.log('Загружен язык из конфигурации:', currentLanguage);
+      
+      const langSelector = document.getElementById('language-select');
+      if (langSelector) {
+        langSelector.value = currentLanguage;
+        console.log('Установлен селектор языка:', currentLanguage);
       }
     } catch (langError) {
-      console.error('Ошибка при загрузке языка из storage:', langError);
+      console.error('Ошибка при загрузке языка из конфигурации:', langError);
     }
     
     // Загружаем настройки темы
@@ -725,6 +706,7 @@ function attachEventListeners() {
       
       if (newLang && newLang !== currentLanguage) {
         console.log('Запускаем функцию changeLanguage с языком:', newLang);
+        // Используем функцию changeLanguage из централизованной конфигурации
         changeLanguage(newLang);
       } else {
         console.log('Язык не изменился или пустой:', newLang);

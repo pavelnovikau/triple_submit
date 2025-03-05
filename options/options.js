@@ -1,428 +1,1028 @@
-// Options page script for Triple Submit extension
+// Глобальные переменные
+let currentLanguage = 'en'; // Текущий язык
+let currentSettings = {}; // Текущие настройки
+let hasChanges = false; // Флаг наличия изменений
 
-// DOM elements
-// const themeSwitchEl = document.getElementById('theme-switch');
-const lightThemeButtonEl = document.getElementById('light-theme-button');
-const darkThemeButtonEl = document.getElementById('dark-theme-button');
-const extensionToggleEl = document.getElementById('extension-toggle');
-const modeSelectEl = document.getElementById('mode-select');
-const pressCountEl = document.getElementById('press-count');
-const decreaseCountEl = document.getElementById('decrease-count');
-const increaseCountEl = document.getElementById('increase-count');
-const timeWindowEl = document.getElementById('time-window');
-const feedbackToggleEl = document.getElementById('feedback-toggle');
-const domainModeSelectEl = document.getElementById('domain-mode-select');
-const domainInputEl = document.getElementById('domain-input');
-const addDomainButtonEl = document.getElementById('add-domain-button');
-const domainListEl = document.getElementById('domain-list');
-const domainListTitleEl = document.getElementById('domain-list-title');
-const upgradeButtonEl = document.getElementById('upgrade-button');
-const resetButtonEl = document.getElementById('reset-button');
-const saveButtonEl = document.getElementById('save-button');
-const statusMessageEl = document.getElementById('status-message');
-const normalModeDescriptionEl = document.getElementById('normal-mode-description');
-const alternativeModeDescriptionEl = document.getElementById('alternative-mode-description');
+// Применяет тему
+function applyTheme() {
+  console.log('applyTheme: Применение темы');
+  
+  // Получаем сохраненную тему или используем системную
+  const savedTheme = localStorage.getItem('theme');
+  const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  let theme = 'light';
+  
+  if (savedTheme) {
+    // Если есть сохраненная тема, используем ее
+    theme = savedTheme;
+  } else if (prefersDarkMode) {
+    // Если нет сохраненной темы, но система в темном режиме, используем темную тему
+    theme = 'dark';
+  }
+  
+  // Применяем тему
+  document.body.setAttribute('data-theme', theme);
+  console.log('applyTheme: Тема применена:', theme);
+}
 
-// Default settings
-const DEFAULT_SETTINGS = {
-  isEnabled: true,
-  mode: 'normal',
-  pressCount: 3,
-  timeWindow: 200,
-  visualFeedback: true,
-  domains: {
-    whitelist: [],
-    blacklist: [],
-    mode: 'whitelist'
-  },
-  theme: 'light'
-};
+// Дополнительные функции для отладки
 
-// Current settings
-let currentSettings = { ...DEFAULT_SETTINGS };
-let hasChanges = false;
-
-// Initialize options page
-function initOptions() {
-  loadSettings().then(() => {
-    applyTheme();
-    populateDomainList();
-    updateModeDescriptions();
-    
-    // Focus on domain input for better UX
-    setTimeout(() => {
-      domainInputEl.focus();
-    }, 500);
-  });
-  
-  // Add event listeners
-  saveButtonEl.addEventListener('click', saveSettings);
-  
-  // Theme buttons
-  lightThemeButtonEl.addEventListener('click', () => {
-    currentSettings.theme = 'light';
-    applyTheme();
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  darkThemeButtonEl.addEventListener('click', () => {
-    currentSettings.theme = 'dark';
-    applyTheme();
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Extension toggle listener
-  extensionToggleEl.addEventListener('change', () => {
-    currentSettings.isEnabled = extensionToggleEl.checked;
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Mode select listener
-  modeSelectEl.addEventListener('change', () => {
-    currentSettings.mode = modeSelectEl.value;
-    updateModeDescriptions();
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Press count listener
-  pressCountEl.addEventListener('change', () => {
-    const count = parseInt(pressCountEl.value);
-    if (count >= 2 && count <= 10) {
-      currentSettings.pressCount = count;
-      hasChanges = true;
-      updateSaveButton();
-    }
-  });
-  
-  // Time window listener
-  timeWindowEl.addEventListener('change', () => {
-    const time = parseInt(timeWindowEl.value);
-    if (time >= 100 && time <= 5000) {
-      currentSettings.timeWindow = time;
-      hasChanges = true;
-      updateSaveButton();
-    }
-  });
-  
-  // Visual feedback listener
-  feedbackToggleEl.addEventListener('change', () => {
-    currentSettings.visualFeedback = feedbackToggleEl.checked;
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Domain mode listener
-  domainModeSelectEl.addEventListener('change', () => {
-    console.log('Changing domain mode to:', domainModeSelectEl.value);
-    console.log('Current settings before change:', JSON.stringify(currentSettings));
-    
-    // Make a deep copy of the settings
-    const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
-    updatedSettings.domains.mode = domainModeSelectEl.value;
-    
-    // Update settings
-    currentSettings = updatedSettings;
-    console.log('Updated settings after mode change:', JSON.stringify(currentSettings));
-    
-    // Update the title
-    domainListTitleEl.textContent = currentSettings.domains.mode === 'whitelist' ? 'Whitelist' : 'Blacklist';
-    
-    // Re-populate the list
-    populateDomainList();
-    
-    hasChanges = true;
-    updateSaveButton();
-  });
-  
-  // Domain add listener
-  addDomainButtonEl.addEventListener('click', addDomain);
-  domainInputEl.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      addDomain();
+// Отображает текущие списки в консоли
+function logDomainLists() {
+  chrome.storage.sync.get('settings', (data) => {
+    if (data.settings) {
+      console.group('📋 Текущие списки доменов:');
+      console.log('Режим:', data.settings.domainMode || 'whitelist');
+      console.log('Белый список:', data.settings.whitelist || []);
+      console.log('Черный список:', data.settings.blacklist || []);
+      console.groupEnd();
+    } else {
+      console.warn('⚠️ Настройки не найдены в хранилище');
     }
   });
 }
 
-// Load current settings
-async function loadSettings() {
-  try {
-    const data = await chrome.storage.local.get('settings');
-    console.log('Loaded settings from storage:', data);
+function initOptions() {
+  console.log('%c[initOptions] Начало инициализации настроек', 'font-weight: bold; color: blue;');
+  
+  // Отладочная информация
+  console.log('%c[DEBUG] DOM статус:', 'color: purple;');
+  console.log('domain-list-container:', document.querySelector('.domain-list-container'));
+  console.log('domain-list:', document.getElementById('domain-list'));
+  console.log('domain-list-title:', document.getElementById('domain-list-title'));
+  
+  // Логируем текущие списки доменов
+  logDomainLists();
+  
+  // Включаем режим тестовых данных для отладки
+  localStorage.setItem('showTestData', 'true');
+  
+  // Устанавливаем обработчик изменений storage, чтобы обнаруживать изменения из других страниц
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    console.log('%c[Storage изменено]', 'color: orange;', changes);
     
-    // Если настройки не найдены, используем значения по умолчанию
-    if (!data.settings) {
-      currentSettings = { ...DEFAULT_SETTINGS };
-    } else {
-      // Убедимся, что объект domains имеет правильную структуру
-      const settings = data.settings;
-      if (!settings.domains) {
-        settings.domains = {
-          whitelist: [],
-          blacklist: [],
-          mode: 'whitelist'
-        };
-      } else {
-        // Убедимся, что все поля присутствуют
-        settings.domains.whitelist = settings.domains.whitelist || [];
-        settings.domains.blacklist = settings.domains.blacklist || [];
-        settings.domains.mode = settings.domains.mode || 'whitelist';
+    // Если изменились настройки, логируем изменения в доменах
+    if (changes.settings && namespace === 'sync') {
+      const oldSettings = changes.settings.oldValue || {};
+      const newSettings = changes.settings.newValue || {};
+      
+      // Проверяем изменения в списках доменов
+      if (JSON.stringify(oldSettings.whitelist) !== JSON.stringify(newSettings.whitelist) ||
+          JSON.stringify(oldSettings.blacklist) !== JSON.stringify(newSettings.blacklist) ||
+          oldSettings.domainMode !== newSettings.domainMode) {
+        console.log('%c[Изменение в списках доменов]', 'color: green;');
+        logDomainLists();
       }
       
-      currentSettings = settings;
+      // Если изменился язык, обновляем UI
+      if (newSettings.language && newSettings.language !== currentLanguage) {
+        console.log('Обнаружено изменение языка:', newSettings.language);
+        currentLanguage = newSettings.language;
+        updateLanguageUI(currentLanguage);
+      }
+      
+      // Обновляем настройки и UI
+      currentSettings = newSettings;
+      updateUI(currentSettings);
     }
     
-    console.log('Current settings after load:', currentSettings);
-    console.log('Domain whitelist:', currentSettings.domains.whitelist);
-    console.log('Domain blacklist:', currentSettings.domains.blacklist);
+    // Если изменился язык в отдельной записи, обновляем UI
+    if (changes.language && namespace === 'sync') {
+      const newLanguage = changes.language.newValue;
+      console.log('Обнаружено изменение языка:', newLanguage);
+      
+      if (newLanguage && newLanguage !== currentLanguage) {
+        currentLanguage = newLanguage;
+        updateLanguageUI(currentLanguage);
+      }
+    }
+  });
+  
+  // Загружаем и применяем тему
+  applyTheme();
+  
+  // Форсируем отображение DOM элементов
+  setTimeout(() => {
+    const domainList = document.getElementById('domain-list');
+    const domainListContainer = document.querySelector('.domain-list-container');
     
-    // Apply settings to UI
-    extensionToggleEl.checked = currentSettings.isEnabled;
-    modeSelectEl.value = currentSettings.mode;
-    pressCountEl.value = currentSettings.pressCount;
-    timeWindowEl.value = currentSettings.timeWindow;
-    feedbackToggleEl.checked = currentSettings.visualFeedback;
-    domainModeSelectEl.value = currentSettings.domains.mode;
+    if (domainList) {
+      domainList.style.display = 'block';
+      domainList.style.minHeight = '150px';
+      domainList.style.border = '2px solid red'; // Временная рамка для отладки
+      console.log('%c[Форсирую отображение списка доменов]', 'color: green;');
+    }
     
-    domainListTitleEl.textContent = currentSettings.domains.mode === 'whitelist' ? 'Whitelist' : 'Blacklist';
+    if (domainListContainer) {
+      domainListContainer.style.display = 'block';
+      domainListContainer.style.minHeight = '250px';
+      console.log('%c[Форсирую отображение контейнера списка доменов]', 'color: green;');
+    }
     
-    hasChanges = false;
+    // Принудительно добавим тестовый домен в список
+    if (domainList && localStorage.getItem('showTestData') === 'true') {
+      console.log('%c[Добавляю тестовый домен]', 'color: green;');
+      
+      const testDomains = ['example.com', 'test-domain.com'];
+      populateDomainList(testDomains);
+    }
+  }, 500);
+  
+  // Получаем текущий язык напрямую из хранилища для обеспечения синхронизации
+  chrome.storage.sync.get(['language', 'settings'], (data) => {
+    console.log('initOptions: Получены данные из storage:', data);
+    
+    // Сначала проверяем отдельную запись language
+    let detectedLanguage = null;
+    
+    if (data.language) {
+      console.log('initOptions: Язык найден в отдельной записи:', data.language);
+      detectedLanguage = data.language;
+    } 
+    // Затем проверяем в настройках
+    else if (data.settings && data.settings.language) {
+      console.log('initOptions: Язык найден в настройках:', data.settings.language);
+      detectedLanguage = data.settings.language;
+    }
+    
+    if (detectedLanguage) {
+      currentLanguage = detectedLanguage;
+      console.log('initOptions: Установлен язык из хранилища:', currentLanguage);
+      
+      // Обновляем интерфейс с учетом языка
+      updateLanguageUI(currentLanguage);
+      
+      // Загружаем настройки после установки языка
+      loadSettings();
+    } else {
+      // Если язык не найден в хранилище, используем конфигурацию
+      TripleSubmitConfig.getLanguage().then(lang => {
+        console.log('initOptions: Получен язык из конфигурации:', lang);
+        currentLanguage = lang;
+        
+        // Обновляем интерфейс
+        updateLanguageUI(currentLanguage);
+        
+        // Загружаем настройки после установки языка
+        loadSettings();
+      }).catch(error => {
+        console.error('Ошибка при получении языка из конфигурации:', error);
+        // В случае ошибки все равно загружаем настройки
+        loadSettings();
+      });
+    }
+  });
+  
+  // Обработчик кнопки выбора языка
+  document.getElementById('language-button').addEventListener('click', showLanguageMenu);
+  
+  // Инициализируем список доменов
+  initDomainList();
+  
+  // Инициализируем все обработчики событий
+  attachEventListeners();
+}
+
+// Функция для инициализации списка доменов
+function initDomainList() {
+  console.log('initDomainList: Инициализация списка доменов');
+  
+  // Устанавливаем минимальную высоту для контейнера списка доменов
+  const domainListContainer = document.querySelector('.domain-list-container');
+  if (domainListContainer) {
+    domainListContainer.style.minHeight = '200px';
+    console.log('initDomainList: Установлена минимальная высота контейнера');
+  }
+  
+  const domainList = document.getElementById('domain-list');
+  if (domainList) {
+    // Убедимся, что список виден
+    domainList.style.display = 'block';
+    domainList.style.minHeight = '150px';
+    domainList.style.maxHeight = '300px';
+    domainList.style.overflowY = 'auto';
+    console.log('initDomainList: Обновлены стили списка доменов');
+    
+    // Добавляем тестовый домен, просто чтобы проверить отображение
+    chrome.storage.sync.get('domainList', (data) => {
+      const domains = data.domainList || [];
+      console.log('initDomainList: Получен список доменов из storage:', domains);
+      
+      // Если список пуст, добавим тестовый домен
+      if (domains.length === 0) {
+        console.log('initDomainList: Список пуст, добавляем тестовый домен');
+        const testDomains = ['example.com', 'test-domain.com'];
+        
+        // Отображаем тестовые домены в UI
+        populateDomainList(testDomains);
+        
+        // Сохраняем их в хранилище только если флаг тестовых данных установлен
+        if (localStorage.getItem('showTestData') === 'true') {
+          chrome.storage.sync.set({ domainList: testDomains });
+        }
+      } else {
+        // Если есть домены, отображаем их
+        populateDomainList(domains);
+      }
+    });
+  }
+}
+
+// Изменить язык интерфейса
+async function changeLanguage(lang) {
+  try {
+    console.log('changeLanguage: Установка языка:', lang);
+    
+    if (!lang || lang === currentLanguage) {
+      console.log('changeLanguage: Язык не изменился или не указан');
+      return;
+    }
+    
+    // Сохраняем язык прямо в хранилище для немедленного эффекта
+    await chrome.storage.sync.set({ language: lang });
+    console.log('changeLanguage: Язык сохранен в отдельную запись');
+    
+    // Также устанавливаем язык через централизованную конфигурацию для синхронизации
+    await TripleSubmitConfig.setLanguage(lang);
+    console.log('changeLanguage: Язык установлен через конфигурацию');
+    
+    // Обновляем текущий язык в опциях
+    currentLanguage = lang;
+    
+    // Устанавливаем атрибут lang у HTML
+    document.documentElement.lang = lang;
+    
+    // Обновляем страницу для применения нового языка
+    updateLanguageUI(lang);
+    
+    // Отображаем сообщение о смене языка
+    updateStatusMessage(chrome.i18n.getMessage('language_changed') || 'Язык изменен', true);
+    
+    // Обновляем настройки, чтобы сохранить язык и там тоже
+    try {
+      const data = await chrome.storage.sync.get('settings');
+      if (data.settings) {
+        const updatedSettings = {...data.settings, language: lang};
+        await chrome.storage.sync.set({ settings: updatedSettings });
+        console.log('changeLanguage: Язык также обновлен в настройках');
+        
+        // Обновляем локальные настройки
+        currentSettings = updatedSettings;
+      }
+    } catch (settingsError) {
+      console.error('Ошибка при обновлении языка в настройках:', settingsError);
+    }
+    
+    // Обновляем флаг наличия изменений
+    hasChanges = true;
     updateSaveButton();
-    
   } catch (error) {
-    console.error('Error loading settings:', error);
-    showStatusMessage('Error loading settings', 'error');
+    console.error('Ошибка при изменении языка:', error);
+    updateStatusMessage('Ошибка при изменении языка', false);
   }
 }
 
-// Функция для применения выбранной темы
-function applyTheme() {
-  if (currentSettings.theme === 'dark') {
-    document.documentElement.classList.add('dark-theme');
-    lightThemeButtonEl.classList.remove('active');
-    darkThemeButtonEl.classList.add('active');
-  } else {
-    document.documentElement.classList.remove('dark-theme');
-    lightThemeButtonEl.classList.add('active');
-    darkThemeButtonEl.classList.remove('active');
+// Асинхронно загружает настройки и обновляет UI
+async function loadSettings() {
+  console.log('loadSettings: Загрузка настроек');
+  try {
+    const data = await chrome.storage.sync.get('settings');
+    
+    if (data.settings) {
+      console.log('loadSettings: Настройки получены:', data.settings);
+      currentSettings = data.settings;
+      
+      // Обновляем UI на основе настроек
+      updateUI(currentSettings);
+      
+      // Обновляем список доменов из настроек
+      loadDomainsFromSettings(currentSettings);
+    } else {
+      console.log('loadSettings: Настройки не найдены, используем значения по умолчанию');
+      // Настройки не найдены, используем значения по умолчанию
+      getDefaultSettings().then(defaults => {
+        currentSettings = defaults;
+        updateUI(currentSettings);
+        loadDomainsFromSettings(currentSettings);
+      });
+    }
+  } catch (error) {
+    console.error('loadSettings: Ошибка при загрузке настроек:', error);
+    updateStatusMessage('Ошибка при загрузке настроек', false);
   }
 }
 
-// Функция для обновления видимости описаний режимов
-function updateModeDescriptions() {
-  const selectedMode = modeSelectEl.value;
+// Загружает домены из настроек в зависимости от режима (белый/черный список)
+function loadDomainsFromSettings(settings) {
+  console.log('loadDomainsFromSettings: Загрузка доменов из настроек');
   
-  if (selectedMode === 'normal') {
-    normalModeDescriptionEl.style.display = 'block';
-    alternativeModeDescriptionEl.style.display = 'none';
-  } else {
-    normalModeDescriptionEl.style.display = 'none';
-    alternativeModeDescriptionEl.style.display = 'block';
-  }
-}
-
-// Populate domain list
-function populateDomainList() {
-  domainListEl.innerHTML = '';
-  
-  const mode = currentSettings.domains.mode;
-  const whiteList = currentSettings.domains.whitelist || [];
-  const blackList = currentSettings.domains.blacklist || [];
-  console.log('Domain list mode:', mode);
-  console.log('Whitelist domains:', whiteList);
-  console.log('Blacklist domains:', blackList);
-  
-  const list = mode === 'whitelist' ? whiteList : blackList;
-  console.log('Current domain list:', list);
-  
-  if (list.length === 0) {
-    const noDomainsEl = document.createElement('div');
-    noDomainsEl.classList.add('no-domains');
-    noDomainsEl.textContent = `No domains in the ${mode}`;
-    domainListEl.appendChild(noDomainsEl);
+  // Проверяем настройки
+  if (!settings) {
+    console.error('loadDomainsFromSettings: Настройки не определены');
     return;
   }
   
-  list.forEach(domain => {
-    const domainEl = document.createElement('div');
-    domainEl.classList.add('domain-item');
+  let domains = [];
+  
+  // Режим белого или черного списка
+  const domainMode = settings.domainMode || 'whitelist';
+  
+  // В зависимости от режима загружаем соответствующий список
+  if (domainMode === 'whitelist') {
+    if (settings.whitelist && Array.isArray(settings.whitelist)) {
+      domains = settings.whitelist;
+      console.log('loadDomainsFromSettings: Загружен белый список:', domains);
+    } else if (settings.blacklistMode === false && Array.isArray(settings.whitelist)) {
+      // Обратная совместимость со старым форматом
+      domains = settings.whitelist;
+      console.log('loadDomainsFromSettings: Загружен белый список (старый формат):', domains);
+    }
+  } else {
+    if (settings.blacklist && Array.isArray(settings.blacklist)) {
+      domains = settings.blacklist;
+      console.log('loadDomainsFromSettings: Загружен черный список:', domains);
+    } else if (settings.blacklistMode === true && Array.isArray(settings.blacklist)) {
+      // Обратная совместимость со старым форматом
+      domains = settings.blacklist;
+      console.log('loadDomainsFromSettings: Загружен черный список (старый формат):', domains);
+    }
+  }
+  
+  // Обновляем UI
+  populateDomainList(domains);
+}
+
+// Заполняет список доменов
+function populateDomainList(domains) {
+  console.log('populateDomainList: Заполнение списка доменов:', domains);
+  const domainList = document.getElementById('domain-list');
+  
+  if (!domainList) {
+    console.error('populateDomainList: Элемент #domain-list не найден!');
+    return;
+  }
+  
+  // Убедимся, что список виден
+  domainList.style.display = 'block';
+  
+  // Очищаем текущий список
+  domainList.innerHTML = '';
+  
+  if (!domains || domains.length === 0) {
+    // Если список пуст, показываем сообщение
+    console.log('populateDomainList: Список пуст, показываем сообщение');
+    const emptyMessage = document.createElement('div');
+    emptyMessage.className = 'empty-domain-message';
+    emptyMessage.textContent = chrome.i18n.getMessage('domain_list_empty') || 'Список доменов пуст';
+    domainList.appendChild(emptyMessage);
     
-    const domainNameEl = document.createElement('span');
-    domainNameEl.textContent = domain;
-    domainNameEl.classList.add('domain-name');
+    // Добавим явно тестовый домен, чтобы показать, как будет выглядеть элемент списка
+    if (localStorage.getItem('showTestData') === 'true') {
+      console.log('populateDomainList: Добавляем тестовый домен для отображения');
+      
+      setTimeout(() => {
+        const testItem = document.createElement('div');
+        testItem.className = 'domain-item';
+        testItem.innerHTML = `
+          <span class="domain-text">example.com (тестовый, не сохранен)</span>
+          <button class="remove-domain-button" title="Удалить домен">&times;</button>
+        `;
+        domainList.appendChild(testItem);
+        
+        testItem.querySelector('.remove-domain-button').addEventListener('click', () => {
+          testItem.remove();
+          // Показываем сообщение снова, если список теперь пуст
+          if (domainList.children.length === 0) {
+            domainList.appendChild(emptyMessage);
+          }
+        });
+      }, 1000); // Добавляем с задержкой для наглядности
+    }
+    
+    return;
+  }
+  
+  // Заполняем список доменами
+  domains.forEach(domain => {
+    const domainItem = document.createElement('div');
+    domainItem.className = 'domain-item';
+    
+    const domainText = document.createElement('span');
+    domainText.className = 'domain-text';
+    domainText.textContent = domain;
     
     const removeButton = document.createElement('button');
-    removeButton.textContent = 'Remove';
-    removeButton.classList.add('remove-domain');
+    removeButton.className = 'remove-domain-button';
+    removeButton.innerHTML = '&times;';
+    removeButton.title = chrome.i18n.getMessage('remove_domain') || 'Удалить домен';
+    
     removeButton.addEventListener('click', () => {
       removeDomain(domain);
     });
     
-    domainEl.appendChild(domainNameEl);
-    domainEl.appendChild(removeButton);
-    domainListEl.appendChild(domainEl);
+    domainItem.appendChild(domainText);
+    domainItem.appendChild(removeButton);
+    domainList.appendChild(domainItem);
   });
+  
+  // Обновляем заголовок списка
+  const domainListTitle = document.getElementById('domain-list-title');
+  if (domainListTitle) {
+    const listMode = document.getElementById('domain-mode-select').value;
+    domainListTitle.textContent = 
+      listMode === 'whitelist' 
+        ? (chrome.i18n.getMessage('whitelist') || 'Белый список') 
+        : (chrome.i18n.getMessage('blacklist') || 'Черный список');
+  }
 }
 
-// Add domain
-function addDomain() {
-  const domain = domainInputEl.value.trim().toLowerCase();
+// Функция для добавления домена
+async function addDomain() {
+  const domainInput = document.getElementById('domain-input');
+  const domain = domainInput.value.trim();
   
   if (!domain) {
-    showStatusMessage('Please enter a domain', 'error');
+    updateStatusMessage(chrome.i18n.getMessage('empty_domain') || 'Введите домен', false);
     return;
   }
   
-  // Validate domain format
-  if (!isValidDomain(domain)) {
-    showStatusMessage('Please enter a valid domain', 'error');
-    return;
-  }
-  
-  console.log('Adding domain:', domain);
-  console.log('Current settings before adding:', JSON.stringify(currentSettings));
-  
-  // Make a deep copy of current settings to avoid reference issues
-  const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
-  
-  const mode = currentSettings.domains.mode;
-  const list = mode === 'whitelist' ? updatedSettings.domains.whitelist : updatedSettings.domains.blacklist;
-  
-  // Check if domain already exists
-  if (list.includes(domain)) {
-    showStatusMessage(`Domain already exists in the ${mode}`, 'error');
-    return;
-  }
-  
-  // Add domain
-  list.push(domain);
-  
-  // Update settings
-  currentSettings = updatedSettings;
-  console.log('Updated settings after adding domain:', JSON.stringify(currentSettings));
-  
-  // Clear input
-  domainInputEl.value = '';
-  
-  // Show success message
-  showStatusMessage(`Domain added to the ${mode}`, 'success');
-  
-  // Re-populate domain list
-  populateDomainList();
-  
-  // Mark as having changes
-  hasChanges = true;
-  updateSaveButton();
-}
-
-// Remove domain
-function removeDomain(domain) {
-  console.log('Removing domain:', domain);
-  console.log('Current settings before removing:', JSON.stringify(currentSettings));
-  
-  // Make a deep copy of current settings to avoid reference issues
-  const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
-  
-  const mode = currentSettings.domains.mode;
-  const list = mode === 'whitelist' ? updatedSettings.domains.whitelist : updatedSettings.domains.blacklist;
-  
-  // Find and remove domain
-  const index = list.indexOf(domain);
-  if (index > -1) {
-    list.splice(index, 1);
-  }
-  
-  // Update settings
-  currentSettings = updatedSettings;
-  console.log('Updated settings after removing domain:', JSON.stringify(currentSettings));
-  
-  // Show success message
-  showStatusMessage(`Domain removed from the ${mode}`, 'success');
-  
-  // Re-populate domain list
-  populateDomainList();
-  
-  // Mark as having changes
-  hasChanges = true;
-  updateSaveButton();
-}
-
-// Check if domain is valid
-function isValidDomain(domain) {
-  // Basic domain validation
-  // Allows alphanumeric, dash, dot, and underscore
-  // Must have at least one dot
-  // Must not start or end with dot or dash
-  const domainRegex = /^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*\.[A-Za-z]{2,}$/;
-  return domainRegex.test(domain);
-}
-
-// Save settings
-async function saveSettings() {
   try {
-    // Создаем глубокую копию настроек для сохранения
-    const settingsToSave = JSON.parse(JSON.stringify(currentSettings));
+    // Определяем режим работы со списком
+    const domainMode = document.getElementById('domain-mode-select').value;
+    const currentList = domainMode === 'whitelist' ? 'whitelist' : 'blacklist';
     
-    await chrome.storage.local.set({ settings: settingsToSave });
+    // Получаем текущие настройки
+    const data = await chrome.storage.sync.get('settings');
+    let settings = data.settings || await getDefaultSettings();
     
-    hasChanges = false;
-    updateSaveButton();
+    // Убеждаемся, что список существует
+    if (!Array.isArray(settings[currentList])) {
+      settings[currentList] = [];
+    }
     
-    showStatusMessage('Settings saved successfully', 'success');
+    // Проверяем, существует ли уже такой домен
+    if (settings[currentList].includes(domain)) {
+      updateStatusMessage(chrome.i18n.getMessage('domain_exists') || 'Домен уже добавлен', false);
+      return;
+    }
     
-  } catch (error) {
-    console.error('Error saving settings:', error);
-    showStatusMessage('Error saving settings', 'error');
-  }
-}
-
-// Reset settings to default
-function resetSettings() {
-  if (confirm('Are you sure you want to reset all settings to default?')) {
-    currentSettings = { ...DEFAULT_SETTINGS };
+    // Добавляем домен в список
+    settings[currentList].push(domain);
+    settings.domainMode = domainMode; // Сохраняем текущий режим
     
-    // Apply settings to UI
-    extensionToggleEl.checked = currentSettings.isEnabled;
-    modeSelectEl.value = currentSettings.mode;
-    pressCountEl.value = currentSettings.pressCount;
-    timeWindowEl.value = currentSettings.timeWindow;
-    feedbackToggleEl.checked = currentSettings.visualFeedback;
-    domainModeSelectEl.value = currentSettings.domains.mode;
-    lightThemeButtonEl.classList.add(currentSettings.theme === 'light' ? 'active' : '');
-    darkThemeButtonEl.classList.add(currentSettings.theme === 'dark' ? 'active' : '');
+    // Сохраняем обновленные настройки
+    await chrome.storage.sync.set({ settings });
+    console.log(`Домен ${domain} добавлен в ${currentList}`);
     
-    domainListTitleEl.textContent = 'Whitelist';
+    // Обновляем текущие настройки
+    currentSettings = settings;
     
-    applyTheme();
-    populateDomainList();
+    // Очищаем поле ввода
+    domainInput.value = '';
     
+    // Обновляем UI
+    loadDomainsFromSettings(settings);
+    
+    // Показываем сообщение об успехе
+    updateStatusMessage(chrome.i18n.getMessage('domain_added') || 'Домен добавлен', true);
+    
+    // Обновляем флаг наличия изменений
     hasChanges = true;
     updateSaveButton();
-    
-    showStatusMessage('Settings reset to default', 'success');
+  } catch (error) {
+    console.error('addDomain: Ошибка при добавлении домена:', error);
+    updateStatusMessage('Ошибка при добавлении домена', false);
   }
 }
 
-// Show status message
-function showStatusMessage(message, type = 'success') {
-  statusMessageEl.textContent = message;
-  statusMessageEl.className = `status-message ${type}`;
+// Удаление домена из списка
+async function removeDomain(domain) {
+  console.log('removeDomain: Удаление домена:', domain);
+  try {
+    // Определяем режим работы со списком
+    const domainMode = document.getElementById('domain-mode-select').value;
+    const currentList = domainMode === 'whitelist' ? 'whitelist' : 'blacklist';
+    
+    // Получаем текущие настройки
+    const data = await chrome.storage.sync.get('settings');
+    let settings = data.settings || await getDefaultSettings();
+    
+    // Убеждаемся, что список существует
+    if (!Array.isArray(settings[currentList])) {
+      settings[currentList] = [];
+      console.warn(`Список ${currentList} не существует, создан пустой список`);
+      return;
+    }
+    
+    // Удаляем домен из списка
+    settings[currentList] = settings[currentList].filter(d => d !== domain);
+    
+    // Сохраняем обновленные настройки
+    await chrome.storage.sync.set({ settings });
+    console.log(`Домен ${domain} удален из ${currentList}`);
+    
+    // Обновляем текущие настройки
+    currentSettings = settings;
+    
+    // Обновляем UI
+    loadDomainsFromSettings(settings);
+    
+    // Показываем сообщение об успехе
+    updateStatusMessage(chrome.i18n.getMessage('domain_removed') || 'Домен удален', true);
+    
+    // Обновляем флаг наличия изменений
+    hasChanges = true;
+    updateSaveButton();
+  } catch (error) {
+    console.error('removeDomain: Ошибка при удалении домена:', error);
+    updateStatusMessage('Ошибка при удалении домена', false);
+  }
+}
+
+// Обновляет сообщение о статусе
+function updateStatusMessage(message, isSuccess = true) {
+  const statusMessageEl = document.getElementById('status-message');
+  if (!statusMessageEl) return;
   
-  // Clear after 3 seconds
+  console.log(`updateStatusMessage: ${isSuccess ? 'Успех' : 'Ошибка'}: ${message}`);
+  
+  statusMessageEl.textContent = message;
+  statusMessageEl.className = `status-message ${isSuccess ? 'status-success' : 'status-error'}`;
+  
+  // Автоматически скрываем сообщение через 3 секунды
   setTimeout(() => {
     statusMessageEl.textContent = '';
     statusMessageEl.className = 'status-message';
   }, 3000);
 }
 
-// Update save button state
+// Обновляет состояние кнопки сохранения
 function updateSaveButton() {
-  saveButtonEl.disabled = !hasChanges;
-  saveButtonEl.style.opacity = hasChanges ? '1' : '0.5';
+  const saveButton = document.getElementById('save-button');
+  if (!saveButton) return;
+  
+  console.log('updateSaveButton: Обновление состояния кнопки сохранения, hasChanges:', hasChanges);
+  
+  if (hasChanges) {
+    saveButton.classList.add('has-changes');
+    saveButton.disabled = false;
+  } else {
+    saveButton.classList.remove('has-changes');
+    saveButton.disabled = true;
+  }
 }
 
-// Initialize the options page
-document.addEventListener('DOMContentLoaded', initOptions); 
+// Обновляет UI в соответствии с выбранным языком
+function updateLanguageUI(lang) {
+  console.log('updateLanguageUI: Обновление интерфейса для языка:', lang);
+  
+  // Устанавливаем атрибут lang у HTML
+  document.documentElement.lang = lang;
+  
+  // Обновляем текст для всех переводимых элементов
+  // Здесь мы можем использовать chrome.i18n для получения переводов
+  
+  // Заголовки
+  document.querySelector('h1').textContent = chrome.i18n.getMessage('extName') || 'Triple Submit';
+  document.querySelectorAll('h2').forEach(h2 => {
+    const key = h2.textContent.toLowerCase().replace(/\s+/g, '_');
+    const translation = chrome.i18n.getMessage(key);
+    if (translation) h2.textContent = translation;
+  });
+  
+  // Подсказки для кнопок
+  document.getElementById('language-button').title = chrome.i18n.getMessage('language_select') || 'Выбор языка';
+  document.getElementById('light-theme-button').title = chrome.i18n.getMessage('light_theme') || 'Светлая тема';
+  document.getElementById('dark-theme-button').title = chrome.i18n.getMessage('dark_theme') || 'Темная тема';
+  
+  // Кнопки сохранения и сброса
+  document.getElementById('save-button').textContent = chrome.i18n.getMessage('save_changes') || 'Сохранить изменения';
+  document.getElementById('reset-button').textContent = chrome.i18n.getMessage('reset_settings') || 'Сбросить настройки';
+  
+  // Режимы списка доменов
+  const domainModeSelect = document.getElementById('domain-mode-select');
+  if (domainModeSelect) {
+    const options = domainModeSelect.options;
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
+      const key = option.value === 'whitelist' ? 'whitelist_description' : 'blacklist_description';
+      const translation = chrome.i18n.getMessage(key);
+      if (translation) option.textContent = translation;
+    }
+  }
+  
+  // Заголовок списка доменов
+  const listMode = domainModeSelect ? domainModeSelect.value : 'whitelist';
+  const domainListTitle = document.getElementById('domain-list-title');
+  if (domainListTitle) {
+    domainListTitle.textContent = 
+      listMode === 'whitelist' 
+        ? (chrome.i18n.getMessage('whitelist') || 'Белый список') 
+        : (chrome.i18n.getMessage('blacklist') || 'Черный список');
+  }
+  
+  // Плейсхолдер для ввода домена
+  const domainInput = document.getElementById('domain-input');
+  if (domainInput) {
+    domainInput.placeholder = chrome.i18n.getMessage('domain_placeholder') || 'example.com';
+  }
+  
+  // Кнопка добавления домена
+  const addDomainButton = document.getElementById('add-domain-button');
+  if (addDomainButton) {
+    addDomainButton.textContent = chrome.i18n.getMessage('add_domain') || 'Добавить домен';
+  }
+  
+  // Кнопка перехода на премиум
+  const upgradeButton = document.getElementById('upgrade-button');
+  if (upgradeButton) {
+    upgradeButton.textContent = chrome.i18n.getMessage('upgrade_premium') || 'Перейти на Премиум';
+  }
+}
+
+// Показывает выпадающее меню выбора языка
+function showLanguageMenu() {
+  console.log('showLanguageMenu: Показ меню выбора языка');
+  
+  // Проверяем, существует ли уже меню
+  let languageMenu = document.getElementById('language-menu');
+  
+  // Если меню уже существует, просто переключаем его видимость
+  if (languageMenu) {
+    languageMenu.style.display = languageMenu.style.display === 'none' ? 'block' : 'none';
+    return;
+  }
+  
+  // Создаем меню
+  languageMenu = document.createElement('div');
+  languageMenu.id = 'language-menu';
+  languageMenu.className = 'language-menu';
+  
+  // Получаем список языков и их названий
+  const supportedLanguages = TripleSubmitConfig.getSupportedLanguages();
+  const languageNames = TripleSubmitConfig.getLanguageNames();
+  
+  // Добавляем пункты меню для каждого языка
+  supportedLanguages.forEach(lang => {
+    const menuItem = document.createElement('div');
+    menuItem.className = `language-menu-item ${lang === currentLanguage ? 'active' : ''}`;
+    menuItem.dataset.lang = lang;
+    menuItem.textContent = languageNames[lang] || lang;
+    
+    // При клике на пункт меню меняем язык и скрываем меню
+    menuItem.addEventListener('click', () => {
+      if (lang !== currentLanguage) {
+        changeLanguage(lang);
+      }
+      languageMenu.style.display = 'none';
+    });
+    
+    languageMenu.appendChild(menuItem);
+  });
+  
+  // Позиционируем меню рядом с кнопкой выбора языка
+  const languageButton = document.getElementById('language-button');
+  const rect = languageButton.getBoundingClientRect();
+  
+  // Добавляем меню в DOM
+  document.body.appendChild(languageMenu);
+  
+  // Позиционируем меню
+  languageMenu.style.position = 'absolute';
+  languageMenu.style.top = `${rect.bottom + window.scrollY}px`;
+  languageMenu.style.left = `${rect.left + window.scrollX}px`;
+  languageMenu.style.zIndex = '1000';
+  
+  // Добавляем обработчик для закрытия меню при клике вне его
+  document.addEventListener('click', function closeMenu(e) {
+    if (!languageMenu.contains(e.target) && e.target !== languageButton) {
+      languageMenu.style.display = 'none';
+      document.removeEventListener('click', closeMenu);
+    }
+  });
+}
+
+// Прикрепляет обработчики событий к элементам UI
+function attachEventListeners() {
+  console.log('attachEventListeners: Прикрепление обработчиков событий');
+  
+  // Кнопки темы
+  document.getElementById('light-theme-button').addEventListener('click', () => {
+    document.body.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  });
+  
+  document.getElementById('dark-theme-button').addEventListener('click', () => {
+    document.body.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  });
+  
+  // Кнопка сохранения
+  document.getElementById('save-button').addEventListener('click', saveSettings);
+  
+  // Кнопка сброса
+  document.getElementById('reset-button').addEventListener('click', resetSettings);
+  
+  // Переключатель расширения
+  document.getElementById('extension-toggle').addEventListener('change', function() {
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Выбор режима
+  document.getElementById('mode-select').addEventListener('change', function() {
+    const mode = this.value;
+    
+    // Показать соответствующее описание режима
+    document.querySelectorAll('.mode-description').forEach(desc => {
+      desc.style.display = 'none';
+    });
+    
+    document.getElementById(`${mode}-mode-description`).style.display = 'block';
+    
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Контроль количества нажатий
+  document.getElementById('decrease-count').addEventListener('click', function() {
+    const countInput = document.getElementById('press-count');
+    const count = parseInt(countInput.value);
+    if (count > 1) {
+      countInput.value = count - 1;
+      hasChanges = true;
+      updateSaveButton();
+    }
+  });
+  
+  document.getElementById('increase-count').addEventListener('click', function() {
+    const countInput = document.getElementById('press-count');
+    const count = parseInt(countInput.value);
+    if (count < 5) {
+      countInput.value = count + 1;
+      hasChanges = true;
+      updateSaveButton();
+    }
+  });
+  
+  document.getElementById('press-count').addEventListener('change', function() {
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Контроль временного окна
+  document.getElementById('time-window').addEventListener('change', function() {
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Переключатель визуальной обратной связи
+  document.getElementById('feedback-toggle').addEventListener('change', function() {
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Выбор режима списка доменов
+  document.getElementById('domain-mode-select').addEventListener('change', function() {
+    const listMode = this.value;
+    document.getElementById('domain-list-title').textContent = 
+      listMode === 'whitelist' 
+        ? (chrome.i18n.getMessage('whitelist') || 'Белый список') 
+        : (chrome.i18n.getMessage('blacklist') || 'Черный список');
+    
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  // Добавление домена
+  document.getElementById('add-domain-button').addEventListener('click', addDomain);
+  
+  // Ввод домена с клавиатуры (Enter)
+  document.getElementById('domain-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      addDomain();
+    }
+  });
+}
+
+// Сбросить настройки
+async function resetSettings() {
+  console.log('resetSettings: Сброс настроек');
+  
+  if (confirm(chrome.i18n.getMessage('confirm_reset') || 'Вы уверены, что хотите сбросить все настройки?')) {
+    try {
+      // Получаем настройки по умолчанию
+      const defaultSettings = await getDefaultSettings();
+      
+      // Сохраняем настройки по умолчанию
+      await chrome.storage.sync.set({ settings: defaultSettings });
+      
+      // Сбрасываем список доменов
+      await chrome.storage.sync.set({ domainList: [] });
+      
+      // Обновляем UI
+      currentSettings = defaultSettings;
+      updateUI(currentSettings);
+      populateDomainList([]);
+      
+      // Показываем сообщение об успехе
+      updateStatusMessage(chrome.i18n.getMessage('settings_reset') || 'Настройки сброшены', true);
+      
+      // Сбрасываем флаг наличия изменений
+      hasChanges = false;
+      updateSaveButton();
+    } catch (error) {
+      console.error('resetSettings: Ошибка при сбросе настроек:', error);
+      updateStatusMessage('Ошибка при сбросе настроек', false);
+    }
+  }
+}
+
+// Получить настройки по умолчанию
+async function getDefaultSettings() {
+  console.log('getDefaultSettings: Получение настроек по умолчанию');
+  
+  const defaultSettings = {
+    enabled: true,
+    mode: 'normal',
+    pressCount: 3,
+    timeWindow: 200,
+    visualFeedback: true,
+    domainMode: 'whitelist',  // Режим списка доменов (whitelist или blacklist)
+    whitelist: [],            // Белый список доменов
+    blacklist: [],            // Черный список доменов
+    language: await TripleSubmitConfig.getLanguage(),
+    theme: 'light',
+    isPremium: false
+  };
+  
+  console.log('getDefaultSettings: Настройки по умолчанию:', defaultSettings);
+  return defaultSettings;
+}
+
+// Обновляет UI на основе настроек
+function updateUI(settings) {
+  console.log('updateUI: Обновление интерфейса на основе настроек:', settings);
+  
+  if (!settings) {
+    console.error('updateUI: Настройки не определены');
+    return;
+  }
+  
+  // Переключатель расширения
+  const extensionToggle = document.getElementById('extension-toggle');
+  if (extensionToggle) {
+    extensionToggle.checked = settings.enabled !== false; // По умолчанию включено
+  }
+  
+  // Режим работы
+  const modeSelect = document.getElementById('mode-select');
+  if (modeSelect) {
+    modeSelect.value = settings.mode || 'normal';
+    
+    // Показать соответствующее описание режима
+    document.querySelectorAll('.mode-description').forEach(desc => {
+      desc.style.display = 'none';
+    });
+    
+    const modeDescription = document.getElementById(`${settings.mode || 'normal'}-mode-description`);
+    if (modeDescription) {
+      modeDescription.style.display = 'block';
+    }
+  }
+  
+  // Количество нажатий
+  const pressCount = document.getElementById('press-count');
+  if (pressCount) {
+    pressCount.value = settings.pressCount || 3;
+  }
+  
+  // Временное окно
+  const timeWindow = document.getElementById('time-window');
+  if (timeWindow) {
+    timeWindow.value = settings.timeWindow || 200;
+  }
+  
+  // Визуальная обратная связь
+  const feedbackToggle = document.getElementById('feedback-toggle');
+  if (feedbackToggle) {
+    feedbackToggle.checked = settings.visualFeedback !== false; // По умолчанию включено
+  }
+  
+  // Режим списка доменов
+  const domainModeSelect = document.getElementById('domain-mode-select');
+  if (domainModeSelect) {
+    // Поддержка как нового (domainMode), так и старого (blacklistMode) формата
+    let domainMode = 'whitelist';
+    
+    if (settings.domainMode) {
+      // Новый формат
+      domainMode = settings.domainMode;
+    } else if (settings.blacklistMode !== undefined) {
+      // Старый формат
+      domainMode = settings.blacklistMode ? 'blacklist' : 'whitelist';
+    }
+    
+    domainModeSelect.value = domainMode;
+    
+    // Обновляем заголовок списка доменов
+    const domainListTitle = document.getElementById('domain-list-title');
+    if (domainListTitle) {
+      domainListTitle.textContent = 
+        domainMode === 'whitelist' 
+          ? (chrome.i18n.getMessage('whitelist') || 'Белый список') 
+          : (chrome.i18n.getMessage('blacklist') || 'Черный список');
+    }
+    
+    // Загружаем соответствующий список доменов
+    loadDomainsFromSettings(settings);
+  }
+  
+  // Статус Premium
+  updatePremiumUI(settings.isPremium);
+  
+  // Сбрасываем флаг наличия изменений
+  hasChanges = false;
+  updateSaveButton();
+}
+
+// Обновляет UI для Premium
+function updatePremiumUI(isPremium) {
+  console.log('updatePremiumUI: Обновление Premium UI, isPremium:', isPremium);
+  
+  const premiumCard = document.querySelector('.premium-card');
+  const upgradeButton = document.getElementById('upgrade-button');
+  
+  if (isPremium) {
+    if (premiumCard) {
+      premiumCard.classList.add('is-premium');
+    }
+    
+    if (upgradeButton) {
+      upgradeButton.textContent = chrome.i18n.getMessage('premium_status') || 'Premium активирован';
+      upgradeButton.disabled = true;
+    }
+  } else {
+    if (premiumCard) {
+      premiumCard.classList.remove('is-premium');
+    }
+    
+    if (upgradeButton) {
+      upgradeButton.textContent = chrome.i18n.getMessage('upgrade_premium') || 'Перейти на Premium';
+      upgradeButton.disabled = false;
+    }
+  }
+}
+
+// Сохранить настройки
+async function saveSettings() {
+  console.log('saveSettings: Сохранение настроек');
+  
+  try {
+    // Получаем текущие настройки, чтобы не потерять другие поля
+    const data = await chrome.storage.sync.get('settings');
+    let settings = data.settings || await getDefaultSettings();
+    
+    // Собираем настройки из UI
+    const newSettings = {
+      enabled: document.getElementById('extension-toggle').checked,
+      mode: document.getElementById('mode-select').value,
+      pressCount: parseInt(document.getElementById('press-count').value),
+      timeWindow: parseInt(document.getElementById('time-window').value),
+      visualFeedback: document.getElementById('feedback-toggle').checked,
+      domainMode: document.getElementById('domain-mode-select').value,
+      language: currentLanguage,
+      isPremium: settings.isPremium || false
+    };
+    
+    // Сохраняем списки доменов и другие поля, которых нет в форме
+    if (settings.whitelist) newSettings.whitelist = settings.whitelist;
+    if (settings.blacklist) newSettings.blacklist = settings.blacklist;
+    
+    // Если списков нет, создаем пустые
+    if (!Array.isArray(newSettings.whitelist)) newSettings.whitelist = [];
+    if (!Array.isArray(newSettings.blacklist)) newSettings.blacklist = [];
+    
+    console.log('saveSettings: Новые настройки:', newSettings);
+    
+    // Сохраняем настройки
+    await chrome.storage.sync.set({ settings: newSettings });
+    
+    // Обновляем текущие настройки
+    currentSettings = newSettings;
+    
+    // Показываем сообщение об успехе
+    updateStatusMessage(chrome.i18n.getMessage('settings_saved') || 'Настройки сохранены', true);
+    
+    // Сбрасываем флаг наличия изменений
+    hasChanges = false;
+    updateSaveButton();
+  } catch (error) {
+    console.error('saveSettings: Ошибка при сохранении настроек:', error);
+    updateStatusMessage('Ошибка при сохранении настроек', false);
+  }
+}
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', initOptions);

@@ -58,6 +58,7 @@ Triple Submit is a Chrome Extension designed to prevent accidental form submissi
    - Manage domain whitelist/blacklist
    - Customize time window for key press detection (default: 200ms)
    - Change theme
+   - Select language (synced with popup settings)
    - Configure other settings
 
 ### Domain Management
@@ -92,7 +93,7 @@ The extension automatically detects your browser's language and uses the appropr
 - Italian (Italiano)
 - Russian (Русский)
 
-You can manually change the language in the popup settings.
+You can manually change the language in both the popup and options page settings. The language choice is synchronized between both interfaces for a consistent experience.
 
 ## Development
 
@@ -129,6 +130,7 @@ triple_submit/
 3. For testing changes to content scripts, you may need to reload the extension and refresh the page
 
 ### Recent Updates
+- **v1.6.0**: Added language selector to options page, synchronized language settings between popup and options
 - **v1.5.0**: Enhanced Alternative mode to support line breaks with single Enter press and form submission with multiple presses
 - **v1.4.0**: Improved Arc browser compatibility with optimized key handling and better retry logic
 - **v1.3.0**: Added detailed mode descriptions, improved theme button UX, and added compatibility for Arc browser

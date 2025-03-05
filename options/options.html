@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Triple Submit - Options</title>
+  <title>Triple Submit - Расширенные настройки</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Triple Submit Options</h1>
+      <h1>Triple Submit</h1>
       <div class="theme-toggle">
+        <button id="language-button" class="theme-button" title="Выбор языка">🌐</button>
         <button id="light-theme-button" class="theme-button" title="Светлая тема">☀️</button>
         <button id="dark-theme-button" class="theme-button" title="Темная тема">🌙</button>
       </div>
@@ -18,12 +19,12 @@
     
     <main>
       <section class="card">
-        <h2>General Settings</h2>
+        <h2>Основные настройки</h2>
         
         <div class="setting-item">
           <div class="setting-label">
-            <h3>Enable Triple Submit</h3>
-            <p>Global switch for the extension functionality</p>
+            <h3>Включить Triple Submit</h3>
+            <p>Глобальный переключатель для функций расширения</p>
           </div>
           <label class="switch">
             <input type="checkbox" id="extension-toggle" checked>
@@ -33,42 +34,42 @@
         
         <div class="setting-item">
           <div class="setting-label">
-            <h3>Operation Mode</h3>
-            <p>How the extension processes Enter key presses</p>
+            <h3>Режим работы</h3>
+            <p>Как расширение обрабатывает нажатия клавиши Enter</p>
           </div>
           <select id="mode-select">
-            <option value="normal">Normal</option>
-            <option value="alternative">Alternative</option>
+            <option value="normal">Обычный</option>
+            <option value="alternative">Расширенный</option>
           </select>
         </div>
         
         <div class="mode-descriptions">
           <div class="mode-description" id="normal-mode-description">
-            <h4>Normal Mode</h4>
-            <p>In Normal mode, the extension counts consecutive Enter key presses and only allows form submission when the required number is reached. The form submits normally using the browser's default behavior.</p>
+            <h4>Обычный режим</h4>
+            <p>В обычном режиме расширение подсчитывает последовательные нажатия клавиши Enter и разрешает отправку формы только при достижении требуемого количества. Форма отправляется обычным способом, используя поведение браузера по умолчанию.</p>
             <ul>
-              <li>Best for most websites</li>
-              <li>Compatible with standard forms</li>
-              <li>Works with regular input fields and textareas</li>
+              <li>Лучше всего подходит для большинства веб-сайтов</li>
+              <li>Совместим со стандартными формами</li>
+              <li>Работает с обычными полями ввода и текстовыми областями</li>
             </ul>
           </div>
           
           <div class="mode-description" id="alternative-mode-description">
-            <h4>Alternative Mode</h4>
-            <p>In Alternative mode, the extension uses a different technique to detect and prevent form submissions. The extension blocks all standard Enter key submissions and only allows submission after the required number of presses.</p>
+            <h4>Расширенный режим</h4>
+            <p>В альтернативном режиме расширение использует другую технику для обнаружения и предотвращения отправки форм. Расширение блокирует все стандартные отправки с помощью клавиши Enter и разрешает отправку только после требуемого количества нажатий.</p>
             <ul>
-              <li>Better compatibility with complex web applications</li>
-              <li>Suitable for sites where normal mode doesn't work</li>
-              <li>More aggressive interception of form submissions</li>
-              <li>Recommended for Shift+Enter key combinations</li>
+              <li>Лучшая совместимость со сложными веб-приложениями</li>
+              <li>Подходит для сайтов, где не работает обычный режим</li>
+              <li>Более агрессивный перехват отправок форм</li>
+              <li>Рекомендуется для комбинаций клавиш Shift+Enter</li>
             </ul>
           </div>
         </div>
         
         <div class="setting-item">
           <div class="setting-label">
-            <h3>Required Enter Presses</h3>
-            <p>Number of Enter presses required to submit</p>
+            <h3>Необходимое количество нажатий Enter</h3>
+            <p>Количество нажатий Enter, необходимых для отправки</p>
           </div>
           <div class="input-with-buttons">
             <button id="decrease-count" class="icon-button">-</button>
@@ -79,16 +80,16 @@
         
         <div class="setting-item">
           <div class="setting-label">
-            <h3>Time Window (ms)</h3>
-            <p>Maximum time between key presses to count as sequence</p>
+            <h3>Временное окно (мс)</h3>
+            <p>Максимальное время между нажатиями для подсчета как последовательности</p>
           </div>
           <input type="number" id="time-window" min="100" max="5000" step="50" value="200">
         </div>
         
         <div class="setting-item">
           <div class="setting-label">
-            <h3>Visual Feedback</h3>
-            <p>Show visual indicator when pressing Enter</p>
+            <h3>Визуальная обратная связь</h3>
+            <p>Показать визуальный индикатор при нажатии Enter</p>
           </div>
           <label class="switch">
             <input type="checkbox" id="feedback-toggle" checked>
@@ -98,29 +99,29 @@
       </section>
       
       <section class="card">
-        <h2>Domain Management</h2>
+        <h2>Управление доменами</h2>
         
         <div class="setting-item">
           <div class="setting-label">
-            <h3>Domain List Mode</h3>
-            <p>How to apply the domain list</p>
+            <h3>Режим списка доменов</h3>
+            <p>Как применять список доменов</p>
           </div>
           <select id="domain-mode-select">
-            <option value="whitelist">Whitelist (enabled only for listed domains)</option>
-            <option value="blacklist">Blacklist (disabled for listed domains)</option>
+            <option value="whitelist">Белый список (включено только для перечисленных доменов)</option>
+            <option value="blacklist">Черный список (отключено для перечисленных доменов)</option>
           </select>
         </div>
         
         <div class="domain-management">
           <div class="domain-input">
             <input type="text" id="domain-input" placeholder="example.com">
-            <button id="add-domain-button">Add Domain</button>
+            <button id="add-domain-button">Добавить домен</button>
           </div>
           
           <div class="domain-list-container">
-            <h3 id="domain-list-title">Whitelist</h3>
+            <h3 id="domain-list-title">Белый список</h3>
             <div id="domain-list" class="domain-list">
-              <!-- Domains will be added here by JavaScript -->
+              <!-- Домены будут добавлены сюда с помощью JavaScript -->
             </div>
           </div>
         </div>
@@ -128,7 +129,7 @@
       
       <section class="card premium-card">
         <div class="premium-banner">
-          <h2>Premium Features</h2>
+          <h2>Премиум функции</h2>
           <span class="crown-icon">👑</span>
         </div>
         
@@ -136,49 +137,50 @@
           <div class="premium-feature">
             <div class="premium-feature-icon">🔄</div>
             <div class="premium-feature-text">
-              <h3>Cross-Device Sync</h3>
-              <p>Sync settings across all your devices</p>
+              <h3>Синхронизация между устройствами</h3>
+              <p>Синхронизация настроек на всех ваших устройствах</p>
             </div>
           </div>
           
           <div class="premium-feature">
             <div class="premium-feature-icon">🎨</div>
             <div class="premium-feature-text">
-              <h3>Custom Themes</h3>
-              <p>Personalize the visual appearance</p>
+              <h3>Настраиваемые темы</h3>
+              <p>Персонализация внешнего вида</p>
             </div>
           </div>
           
           <div class="premium-feature">
             <div class="premium-feature-icon">📊</div>
             <div class="premium-feature-text">
-              <h3>Usage Analytics</h3>
-              <p>See how the extension saves you time</p>
+              <h3>Аналитика использования</h3>
+              <p>Узнайте, сколько времени экономит расширение</p>
             </div>
           </div>
           
           <div class="premium-feature">
             <div class="premium-feature-icon">🔑</div>
             <div class="premium-feature-text">
-              <h3>Custom Key Bindings</h3>
-              <p>Configure your own keyboard shortcuts</p>
+              <h3>Настраиваемые комбинации клавиш</h3>
+              <p>Настройте свои собственные сочетания клавиш</p>
             </div>
           </div>
         </div>
         
-        <button id="upgrade-button" class="upgrade-button">Upgrade to Premium</button>
+        <button id="upgrade-button" class="upgrade-button">Перейти на Премиум</button>
       </section>
     </main>
     
     <footer>
       <div class="status-message" id="status-message"></div>
       <div class="action-buttons">
-        <button id="reset-button">Reset to Default</button>
-        <button id="save-button">Save Changes</button>
+        <button id="reset-button">Сбросить настройки</button>
+        <button id="save-button">Сохранить изменения</button>
       </div>
     </footer>
   </div>
   
+  <script src="../common/config.js"></script>
   <script src="options.js"></script>
 </body>
 </html> 
