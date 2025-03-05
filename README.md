@@ -1,6 +1,6 @@
 # Triple Submit - Chrome Extension
 
-Triple Submit is a Chrome extension designed to prevent accidental form submissions by requiring multiple Enter key presses before actually submitting forms. It also remaps Shift+Enter to act as a regular Enter key.
+Triple Submit is a Chrome Extension designed to prevent accidental form submissions by requiring multiple Enter key presses before actually submitting forms. It also remaps Shift+Enter to act as a regular Enter key.
 
 ## Features
 
@@ -13,8 +13,8 @@ Triple Submit is a Chrome extension designed to prevent accidental form submissi
 - **Multi-Language Support**: Available in English, Spanish, Chinese, Arabic, Portuguese, French, German, Japanese, Italian, and Russian
 
 ### Operation Modes
-- **Normal Mode**: Requires multiple Enter presses, Shift+Enter acts as Enter
-- **Alternative Mode**: Uses regular Enter behavior (useful for specific sites)
+- **Normal Mode**: Counts consecutive Enter key presses and only allows submission when the required number is reached. Best for most websites and compatible with standard forms.
+- **Alternative Mode**: Uses a different technique to detect and prevent form submissions, blocking standard Enter key submissions until the required number is reached. Better for complex web applications and recommended for Shift+Enter key combinations.
 
 ## Installation
 
@@ -122,6 +122,7 @@ triple_submit/
 3. For testing changes to content scripts, you may need to reload the extension and refresh the page
 
 ### Recent Updates
+- **v1.3.0**: Added detailed mode descriptions, improved theme button UX, and added compatibility for Arc browser
 - **v1.2.0**: Added multi-language support with 10 languages
 - **v1.1.1**: Fixed issues with domain whitelist/blacklist management
 - **v1.1.0**: Added dark/light theme support

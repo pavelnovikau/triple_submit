@@ -5,7 +5,7 @@ const DEFAULT_SETTINGS = {
   isEnabled: true,
   mode: 'normal', // 'normal' or 'alternative'
   pressCount: 3,
-  timeWindow: 2000, // ms
+  timeWindow: 200, // ms
   visualFeedback: true,
   domains: {
     whitelist: [],

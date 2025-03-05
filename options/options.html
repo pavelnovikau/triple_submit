@@ -11,10 +11,8 @@
     <header>
       <h1>Triple Submit Options</h1>
       <div class="theme-toggle">
-        <label class="switch">
-          <input type="checkbox" id="theme-switch">
-          <span class="slider round"></span>
-        </label>
+        <button id="light-theme-button" class="theme-button" title="Светлая тема">☀️</button>
+        <button id="dark-theme-button" class="theme-button" title="Темная тема">🌙</button>
       </div>
     </header>
     
@@ -44,6 +42,29 @@
           </select>
         </div>
         
+        <div class="mode-descriptions">
+          <div class="mode-description" id="normal-mode-description">
+            <h4>Normal Mode</h4>
+            <p>In Normal mode, the extension counts consecutive Enter key presses and only allows form submission when the required number is reached. The form submits normally using the browser's default behavior.</p>
+            <ul>
+              <li>Best for most websites</li>
+              <li>Compatible with standard forms</li>
+              <li>Works with regular input fields and textareas</li>
+            </ul>
+          </div>
+          
+          <div class="mode-description" id="alternative-mode-description">
+            <h4>Alternative Mode</h4>
+            <p>In Alternative mode, the extension uses a different technique to detect and prevent form submissions. The extension blocks all standard Enter key submissions and only allows submission after the required number of presses.</p>
+            <ul>
+              <li>Better compatibility with complex web applications</li>
+              <li>Suitable for sites where normal mode doesn't work</li>
+              <li>More aggressive interception of form submissions</li>
+              <li>Recommended for Shift+Enter key combinations</li>
+            </ul>
+          </div>
+        </div>
+        
         <div class="setting-item">
           <div class="setting-label">
             <h3>Required Enter Presses</h3>
@@ -61,7 +82,7 @@
             <h3>Time Window (ms)</h3>
             <p>Maximum time between key presses to count as sequence</p>
           </div>
-          <input type="number" id="time-window" min="500" max="5000" step="100" value="2000">
+          <input type="number" id="time-window" min="100" max="5000" step="50" value="200">
         </div>
         
         <div class="setting-item">

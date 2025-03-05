@@ -4,39 +4,123 @@
 let enterPressCount = 0;
 let lastEnterPressTime = 0;
 let domainSettings = null;
+let initializationAttempts = 0;
+const MAX_INIT_ATTEMPTS = 3;
+
+// Detect browser type
+function detectBrowser() {
+  const userAgent = navigator.userAgent;
+  
+  // Проверка Arc браузера (основан на Chromium)
+  if (userAgent.includes('Chrome') && userAgent.includes('Arc/')) {
+    return 'arc';
+  }
+  
+  // Другие браузеры основанные на Chromium
+  if (userAgent.includes('Chrome')) {
+    return 'chrome';
+  }
+  
+  return 'unknown';
+}
+
+const browserType = detectBrowser();
+console.log('Triple Submit: Running in browser type:', browserType);
 
 // Get settings from background script
 function getSettings() {
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage({ action: 'checkDomain' }, (response) => {
-      if (response && response.domainSettings) {
-        domainSettings = response.domainSettings;
-        resolve(domainSettings);
-      } else {
-        // Default fallback settings if we can't get from background
-        domainSettings = {
-          isEnabled: true,
-          mode: 'normal',
-          pressCount: 3,
-          timeWindow: 2000,
-          visualFeedback: true
-        };
-        resolve(domainSettings);
-      }
-    });
+    try {
+      chrome.runtime.sendMessage({ action: 'checkDomain' }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('Triple Submit: Error getting settings:', chrome.runtime.lastError);
+          useDefaultSettings(resolve);
+          return;
+        }
+        
+        if (response && response.domainSettings) {
+          domainSettings = response.domainSettings;
+          console.log('Triple Submit: Received settings:', domainSettings);
+          resolve(domainSettings);
+        } else {
+          console.warn('Triple Submit: No settings received, using defaults');
+          useDefaultSettings(resolve);
+        }
+      });
+    } catch (error) {
+      console.error('Triple Submit: Exception in getSettings:', error);
+      useDefaultSettings(resolve);
+    }
   });
 }
 
-// Initialize settings
-getSettings().then(initKeyListeners);
+// Use default settings as fallback
+function useDefaultSettings(resolve) {
+  // Default fallback settings if we can't get from background
+  domainSettings = {
+    isEnabled: true,
+    mode: 'alternative',  // Используем alternative как безопасный режим по умолчанию
+    pressCount: 3,
+    timeWindow: 200,
+    visualFeedback: true
+  };
+  
+  if (browserType === 'arc') {
+    // Специальные настройки для Arc браузера
+    domainSettings.mode = 'alternative';
+    console.log('Triple Submit: Using Arc-specific settings');
+  }
+  
+  resolve(domainSettings);
+}
+
+// Initialize settings with retry mechanism
+function initializeWithRetry() {
+  initializationAttempts++;
+  console.log(`Triple Submit: Initialization attempt ${initializationAttempts}`);
+  
+  getSettings()
+    .then(initKeyListeners)
+    .catch(error => {
+      console.error('Triple Submit: Failed to initialize:', error);
+      
+      if (initializationAttempts < MAX_INIT_ATTEMPTS) {
+        // Retry initialization after delay
+        setTimeout(initializeWithRetry, 1000);
+      } else {
+        // Fall back to default settings after max attempts
+        console.error('Triple Submit: Max initialization attempts reached, using defaults');
+        initKeyListeners(domainSettings || {
+          isEnabled: true,
+          mode: 'alternative',
+          pressCount: 3,
+          timeWindow: 200,
+          visualFeedback: true
+        });
+      }
+    });
+}
+
+// Start initialization
+initializeWithRetry();
 
 // Handle key events
 function initKeyListeners(settings) {
   if (!settings.isEnabled) {
+    console.log('Triple Submit: Extension disabled for this domain');
     return; // Extension disabled for this domain
   }
 
-  document.addEventListener('keydown', handleKeyDown, true);
+  try {
+    // Удаляем существующий обработчик, чтобы избежать дублирования
+    document.removeEventListener('keydown', handleKeyDown, true);
+    
+    // Добавляем новый обработчик
+    document.addEventListener('keydown', handleKeyDown, true);
+    console.log('Triple Submit: Key listeners initialized with settings:', settings);
+  } catch (error) {
+    console.error('Triple Submit: Error initializing key listeners:', error);
+  }
 }
 
 // Handle key down events
@@ -57,24 +141,44 @@ function handleKeyDown(event) {
   // Alternative mode: Require multiple Enter, convert Shift+Enter to single Enter
   else if (domainSettings.mode === 'alternative') {
     if (isShiftEnterKey) {
-      // Convert Shift+Enter to regular Enter
-      const newEvent = new KeyboardEvent('keydown', { 
-        key: 'Enter',
-        code: 'Enter',
-        keyCode: 13,
-        which: 13,
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        shiftKey: false // Remove the shift key modifier
-      });
-      
-      // Prevent original event
-      event.preventDefault();
-      event.stopPropagation();
-      
-      // Dispatch new event without shift key
-      event.target.dispatchEvent(newEvent);
+      try {
+        // Convert Shift+Enter to regular Enter
+        let newEvent;
+        
+        // Специальный код для Arc браузера
+        if (browserType === 'arc') {
+          // Используем более простой подход для Arc
+          newEvent = new KeyboardEvent('keydown', { 
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            bubbles: true
+          });
+        } else {
+          // Стандартный подход для других браузеров
+          newEvent = new KeyboardEvent('keydown', { 
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            shiftKey: false // Remove the shift key modifier
+          });
+        }
+        
+        // Prevent original event
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Dispatch new event without shift key
+        event.target.dispatchEvent(newEvent);
+      } catch (error) {
+        console.error('Triple Submit: Error handling Shift+Enter:', error);
+        // Позволяем оригинальному событию пройти в случае ошибки
+      }
       return;
     }
     else if (isEnterKey && !event.shiftKey) {
@@ -100,8 +204,12 @@ function handleKeyDown(event) {
       
       // If we haven't reached the required count, prevent the Enter key
       if (enterPressCount < domainSettings.pressCount) {
-        event.preventDefault();
-        event.stopPropagation();
+        try {
+          event.preventDefault();
+          event.stopPropagation();
+        } catch (error) {
+          console.error('Triple Submit: Error preventing Enter key:', error);
+        }
       } else {
         // Reset counter after successful submission
         enterPressCount = 0;

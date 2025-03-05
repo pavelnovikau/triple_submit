@@ -1,35 +1,37 @@
 /* Options page styles for Triple Submit extension */
 
 :root {
-  --primary-color: #4a6cf7;
-  --secondary-color: #f76c6c;
-  --text-color: #333;
-  --text-secondary: #666;
-  --background-color: #f5f5f5;
-  --card-background: #fff;
-  --border-color: #e0e0e0;
-  --success-color: #6cf7a0;
-  --error-color: #f76c6c;
-  --toggle-off-color: #ccc;
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --premium-gradient: linear-gradient(45deg, #f7d35c, #f7bd5c);
+  --primary-color: #a5307c;    /* Умэ (сливовый цвет) */
+  --secondary-color: #4c8c4a;  /* Мосс (зеленый мох) */
+  --text-color: #33322e;       /* Темный сумиэ (почти черный с оттенком) */
+  --text-secondary: #7c7b78;   /* Средний серый */
+  --background-color: #f7f4ed; /* Цвет washi (рисовой бумаги) */
+  --card-background: #ffffff;  /* Белый с легким оттенком */
+  --border-color: #d8d3c8;     /* Светлый песочный */
+  --success-color: #4c8c4a;    /* Мосс (зеленый мох) */
+  --error-color: #c1392b;      /* Хи (огненно-красный) */
+  --toggle-off-color: #d8d3c8; /* Светлый песочный */
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --premium-gradient: linear-gradient(45deg, #bd9b60, #d4bc85); /* Кин (золотой) */
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --hover-bg: rgba(165, 48, 124, 0.1); /* Прозрачный умэ для ховера */
 }
 
 /* Dark theme variables */
 .dark-theme {
-  --primary-color: #6e8eff;
-  --secondary-color: #ff8e8e;
-  --text-color: #e0e0e0;
-  --text-secondary: #aaa;
-  --background-color: #1f1f1f;
-  --card-background: #2d2d2d;
-  --border-color: #444;
-  --success-color: #8eff9a;
-  --error-color: #ff8e8e;
-  --toggle-off-color: #555;
-  --shadow-color: rgba(0, 0, 0, 0.3);
-  --premium-gradient: linear-gradient(45deg, #f7d35c, #f7bd5c);
+  --primary-color: #c7b446;    /* Ямабуки (золотисто-желтый) */
+  --secondary-color: #6fae6c;  /* Светлый мосс */
+  --text-color: #f5f2e9;       /* Почти белый с оттенком washi */
+  --text-secondary: #bfbcb2;   /* Светло-серый с бежевым оттенком */
+  --background-color: #2a2d39; /* Индиго (темно-синий с серым) */
+  --card-background: #363a49;  /* Чуть светлее индиго */
+  --border-color: #4a4e5c;     /* Темно-серый с оттенком индиго */
+  --success-color: #6fae6c;    /* Светлый мосс */
+  --error-color: #e55a4a;      /* Яркий хи для темного фона */
+  --toggle-off-color: #4a4e5c; /* Темно-серый с оттенком индиго */
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  --premium-gradient: linear-gradient(45deg, #d6b062, #e9cd81); /* Светлый кин для темной темы */
+  --hover-bg: rgba(199, 180, 70, 0.2); /* Прозрачный ямабуки для ховера */
 }
 
 /* Base styles */
@@ -73,8 +75,9 @@ header h1 {
 .switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 26px;
+  width: 40px;
+  height: 22px;
+  margin-left: 10px;
 }
 
 .switch input {
@@ -91,18 +94,22 @@ header h1 {
   right: 0;
   bottom: 0;
   background-color: var(--toggle-off-color);
-  transition: .4s;
+  -webkit-transition: .3s;
+  transition: .3s;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 20px;
-  width: 20px;
+  height: 16px;
+  width: 16px;
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: .4s;
+  -webkit-transition: .3s;
+  transition: .3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 input:checked + .slider {
@@ -114,24 +121,88 @@ input:focus + .slider {
 }
 
 input:checked + .slider:before {
-  transform: translateX(24px);
+  -webkit-transform: translateX(18px);
+  -ms-transform: translateX(18px);
+  transform: translateX(18px);
 }
 
 .slider.round {
-  border-radius: 26px;
+  border-radius: 11px;
 }
 
 .slider.round:before {
   border-radius: 50%;
 }
 
+/* Theme Toggle Styles */
+.theme-toggle {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.theme-button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  color: var(--text-secondary);
+  background-color: var(--card-background);
+}
+
+.theme-button:hover {
+  background-color: var(--hover-bg);
+}
+
+#light-theme-button {
+  color: var(--primary-color);
+}
+
+#light-theme-button:hover {
+  color: var(--primary-color);
+}
+
+#light-theme-button.active {
+  color: var(--primary-color);
+}
+
+#dark-theme-button {
+  color: var(--primary-color);
+}
+
+#dark-theme-button:hover {
+  color: var(--primary-color);
+}
+
+#dark-theme-button.active {
+  background-color: #2c3e50;
+  color: white;
+}
+
+/* Скрываем активную кнопку темы */
+:root:not(.dark-theme) #light-theme-button {
+  display: none;
+}
+
+:root.dark-theme #dark-theme-button {
+  display: none;
+}
+
 /* Card sections */
 .card {
   background-color: var(--card-background);
-  border-radius: 8px;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
   box-shadow: 0 2px 8px var(--shadow-color);
-  padding: 24px;
-  margin-bottom: 24px;
+  border: 1px solid var(--border-color);
 }
 
 .card h2 {
@@ -274,25 +345,26 @@ select, input[type="number"], input[type="text"] {
 
 /* Premium section */
 .premium-card {
-  border: 2px solid #f7d35c;
-  position: relative;
+  background: var(--premium-gradient);
+  color: var(--text-color);
+  border: none;
   overflow: hidden;
+  position: relative;
 }
 
 .premium-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--premium-gradient);
-  color: #333;
-  padding: 12px 24px;
-  margin: -24px -24px 24px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .premium-banner h2 {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-color);
 }
 
 .crown-icon {
@@ -329,23 +401,27 @@ select, input[type="number"], input[type="text"] {
 }
 
 .upgrade-button {
-  background: var(--premium-gradient);
-  color: #333;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 4px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
   display: block;
   width: 100%;
+  padding: 12px 0;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
   text-align: center;
-  transition: all 0.3s ease;
+  margin-top: 20px;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .upgrade-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: var(--primary-color);
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Footer */
@@ -378,21 +454,28 @@ footer {
 
 .action-buttons button {
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 #reset-button {
-  background-color: var(--background-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
   border: 1px solid var(--border-color);
-  color: var(--text-color);
 }
 
 #save-button {
   background-color: var(--primary-color);
-  border: none;
   color: white;
+  border: none;
+  margin-left: 10px;
+}
+
+#save-button:hover {
+  background-color: var(--primary-color);
+  opacity: 0.9;
 }
 
 /* Responsive adjustments */
@@ -409,4 +492,62 @@ footer {
   .setting-label {
     margin-bottom: 12px;
   }
+}
+
+/* Описания режимов */
+.mode-descriptions {
+  padding: 10px 0 15px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 15px;
+}
+
+.mode-description {
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mode-description h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--accent-color);
+  font-size: 16px;
+}
+
+.mode-description p {
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.mode-description ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.mode-description li {
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+
+.mode-description li:last-child {
+  margin-bottom: 0;
+}
+
+/* Добавляем стили для кнопок */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+button:hover {
+  background-color: var(--primary-color);
+  opacity: 0.9;
 } 

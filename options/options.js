@@ -1,7 +1,9 @@
 // Options page script for Triple Submit extension
 
 // DOM elements
-const themeSwitchEl = document.getElementById('theme-switch');
+// const themeSwitchEl = document.getElementById('theme-switch');
+const lightThemeButtonEl = document.getElementById('light-theme-button');
+const darkThemeButtonEl = document.getElementById('dark-theme-button');
 const extensionToggleEl = document.getElementById('extension-toggle');
 const modeSelectEl = document.getElementById('mode-select');
 const pressCountEl = document.getElementById('press-count');
@@ -18,13 +20,15 @@ const upgradeButtonEl = document.getElementById('upgrade-button');
 const resetButtonEl = document.getElementById('reset-button');
 const saveButtonEl = document.getElementById('save-button');
 const statusMessageEl = document.getElementById('status-message');
+const normalModeDescriptionEl = document.getElementById('normal-mode-description');
+const alternativeModeDescriptionEl = document.getElementById('alternative-mode-description');
 
 // Default settings
 const DEFAULT_SETTINGS = {
   isEnabled: true,
   mode: 'normal',
   pressCount: 3,
-  timeWindow: 2000,
+  timeWindow: 200,
   visualFeedback: true,
   domains: {
     whitelist: [],
@@ -43,6 +47,7 @@ function initOptions() {
   loadSettings().then(() => {
     applyTheme();
     populateDomainList();
+    updateModeDescriptions();
     
     // Focus on domain input for better UX
     setTimeout(() => {
@@ -53,9 +58,16 @@ function initOptions() {
   // Add event listeners
   saveButtonEl.addEventListener('click', saveSettings);
   
-  // Theme listener
-  themeSwitchEl.addEventListener('change', () => {
-    currentSettings.theme = themeSwitchEl.checked ? 'dark' : 'light';
+  // Theme buttons
+  lightThemeButtonEl.addEventListener('click', () => {
+    currentSettings.theme = 'light';
+    applyTheme();
+    hasChanges = true;
+    updateSaveButton();
+  });
+  
+  darkThemeButtonEl.addEventListener('click', () => {
+    currentSettings.theme = 'dark';
     applyTheme();
     hasChanges = true;
     updateSaveButton();
@@ -71,6 +83,7 @@ function initOptions() {
   // Mode select listener
   modeSelectEl.addEventListener('change', () => {
     currentSettings.mode = modeSelectEl.value;
+    updateModeDescriptions();
     hasChanges = true;
     updateSaveButton();
   });
@@ -173,7 +186,6 @@ async function loadSettings() {
     timeWindowEl.value = currentSettings.timeWindow;
     feedbackToggleEl.checked = currentSettings.visualFeedback;
     domainModeSelectEl.value = currentSettings.domains.mode;
-    themeSwitchEl.checked = currentSettings.theme === 'dark';
     
     domainListTitleEl.textContent = currentSettings.domains.mode === 'whitelist' ? 'Whitelist' : 'Blacklist';
     
@@ -186,12 +198,29 @@ async function loadSettings() {
   }
 }
 
-// Apply theme
+// Функция для применения выбранной темы
 function applyTheme() {
   if (currentSettings.theme === 'dark') {
-    document.body.classList.add('dark-theme');
+    document.documentElement.classList.add('dark-theme');
+    lightThemeButtonEl.classList.remove('active');
+    darkThemeButtonEl.classList.add('active');
   } else {
-    document.body.classList.remove('dark-theme');
+    document.documentElement.classList.remove('dark-theme');
+    lightThemeButtonEl.classList.add('active');
+    darkThemeButtonEl.classList.remove('active');
+  }
+}
+
+// Функция для обновления видимости описаний режимов
+function updateModeDescriptions() {
+  const selectedMode = modeSelectEl.value;
+  
+  if (selectedMode === 'normal') {
+    normalModeDescriptionEl.style.display = 'block';
+    alternativeModeDescriptionEl.style.display = 'none';
+  } else {
+    normalModeDescriptionEl.style.display = 'none';
+    alternativeModeDescriptionEl.style.display = 'block';
   }
 }
 
@@ -362,7 +391,8 @@ function resetSettings() {
     timeWindowEl.value = currentSettings.timeWindow;
     feedbackToggleEl.checked = currentSettings.visualFeedback;
     domainModeSelectEl.value = currentSettings.domains.mode;
-    themeSwitchEl.checked = currentSettings.theme === 'dark';
+    lightThemeButtonEl.classList.add(currentSettings.theme === 'light' ? 'active' : '');
+    darkThemeButtonEl.classList.add(currentSettings.theme === 'dark' ? 'active' : '');
     
     domainListTitleEl.textContent = 'Whitelist';
     

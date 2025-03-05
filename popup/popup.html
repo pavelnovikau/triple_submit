@@ -11,10 +11,8 @@
     <header>
       <h1>Triple Submit</h1>
       <div class="theme-toggle">
-        <label class="switch">
-          <input type="checkbox" id="theme-switch">
-          <span class="slider round"></span>
-        </label>
+        <button id="light-theme-button" class="theme-button" title="Светлая тема">☀️</button>
+        <button id="dark-theme-button" class="theme-button" title="Темная тема">🌙</button>
       </div>
     </header>
     
@@ -64,6 +62,10 @@
           <option value="normal" id="mode-normal">Обычный (стандартная работа)</option>
           <option value="alternative" id="mode-alternative">Защищенный (многократный ввод)</option>
         </select>
+      </div>
+      
+      <div class="setting-note">
+        <span id="settings-note">* Дополнительные настройки доступны в расширенных опциях</span>
       </div>
       
       <div class="setting-item">

@@ -47,6 +47,7 @@ function updateUITexts() {
   document.getElementById('visual-feedback-label').textContent = getTranslation('visual_feedback');
   document.getElementById('options-button').textContent = getTranslation('advanced_options');
   document.getElementById('premium-label').textContent = getTranslation('upgrade_premium');
+  document.getElementById('settings-note').textContent = getTranslation('settings_note');
   
   // Устанавливаем направление текста для языков с RTL (справа налево)
   document.documentElement.setAttribute('dir', 
@@ -73,7 +74,9 @@ async function changeLanguage(lang) {
 }
 
 // DOM elements
-const themeSwitchEl = document.getElementById('theme-switch');
+// const themeSwitchEl = document.getElementById('theme-switch');
+const lightThemeButtonEl = document.getElementById('light-theme-button');
+const darkThemeButtonEl = document.getElementById('dark-theme-button');
 const extensionToggleEl = document.getElementById('extension-toggle');
 const domainToggleEl = document.getElementById('domain-toggle');
 const currentDomainTextEl = document.getElementById('current-domain-text');
@@ -153,7 +156,7 @@ async function loadSettings() {
         isEnabled: true,
         mode: 'normal',
         pressCount: 3,
-        timeWindow: 2000,
+        timeWindow: 200,
         visualFeedback: true,
         domains: {
           whitelist: [],
@@ -204,7 +207,8 @@ async function loadSettings() {
     modeSelectEl.value = currentSettings.mode;
     pressCountEl.textContent = currentSettings.pressCount;
     feedbackToggleEl.checked = currentSettings.visualFeedback;
-    themeSwitchEl.checked = currentSettings.theme === 'dark';
+    lightThemeButtonEl.classList.toggle('active', currentSettings.theme === 'light');
+    darkThemeButtonEl.classList.toggle('active', currentSettings.theme === 'dark');
     
   } catch (error) {
     console.error('Error loading settings:', error);
@@ -214,9 +218,13 @@ async function loadSettings() {
 // Apply theme
 function applyTheme() {
   if (currentSettings.theme === 'dark') {
-    document.body.classList.add('dark-theme');
+    document.documentElement.classList.add('dark-theme');
+    lightThemeButtonEl.classList.remove('active');
+    darkThemeButtonEl.classList.add('active');
   } else {
-    document.body.classList.remove('dark-theme');
+    document.documentElement.classList.remove('dark-theme');
+    lightThemeButtonEl.classList.add('active');
+    darkThemeButtonEl.classList.remove('active');
   }
 }
 
@@ -338,10 +346,14 @@ async function updateIcon() {
 
 // Attach event listeners
 function attachEventListeners() {
-  // Theme toggle
-  themeSwitchEl.addEventListener('change', () => {
-    const theme = themeSwitchEl.checked ? 'dark' : 'light';
-    saveSettings({ theme });
+  // Theme buttons
+  lightThemeButtonEl.addEventListener('click', () => {
+    saveSettings({ theme: 'light' });
+    applyTheme();
+  });
+  
+  darkThemeButtonEl.addEventListener('click', () => {
+    saveSettings({ theme: 'dark' });
     applyTheme();
   });
   
