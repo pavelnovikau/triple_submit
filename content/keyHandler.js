@@ -289,34 +289,10 @@ function initKeyListeners(settings) {
             const submitHandler = (event) => {
               // Проверяем, включено ли расширение для этого домена
               if (domainSettings && domainSettings.domainEnabled) {
-                // Проверяем режим работы
-                if (domainSettings.mode === '3mode') {
-                  // В режиме 3mode всегда предотвращаем отправку формы
-                  Logger.info('Preventing form submission in 3mode (force handler)');
-                  event.preventDefault();
-                  event.stopPropagation();
-                  
-                  // Показываем визуальный отклик
-                  if (domainSettings.showFeedback) {
-                    const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-                      detail: {
-                        currentCount: 1,
-                        requiredCount: 1,
-                        isComplete: false,
-                        isFormSubmit: true,
-                        is3Mode: true,
-                        isForceActivated: true
-                      }
-                    });
-                    document.dispatchEvent(feedbackEvent);
-                  }
-                  
-                  return false;
-                }
-                
-                // Если количество нажатий меньше требуемого, предотвращаем отправку
+                // Проверяем, достигнуто ли необходимое количество нажатий
                 if (enterPressCount < domainSettings.pressCount) {
-                  Logger.info(`Preventing form submission (force handler): enterPressCount=${enterPressCount}, required=${domainSettings.pressCount}`);
+                  // Если количество нажатий недостаточно, предотвращаем отправку формы
+                  Logger.info(`Preventing form submission: ${enterPressCount} < ${domainSettings.pressCount}`);
                   event.preventDefault();
                   event.stopPropagation();
                   
@@ -359,10 +335,10 @@ function initKeyListeners(settings) {
             if (event.key === 'Enter' && domainSettings && domainSettings.domainEnabled) {
               Logger.debug('Global force-activated Enter key handler triggered');
               
-              // Проверяем режим работы
-              if (domainSettings.mode === '3mode') {
-                // В режиме 3mode всегда вставляем новую строку
-                Logger.info('3mode active in global handler: inserting line break');
+              // Проверяем, достигнуто ли необходимое количество нажатий
+              if (enterPressCount < domainSettings.pressCount) {
+                // Если количество нажатий недостаточно, предотвращаем отправку формы
+                Logger.info(`Preventing form submission in global handler: ${enterPressCount} < ${domainSettings.pressCount}`);
                 
                 // Предотвращаем стандартное действие
                 event.preventDefault();
@@ -378,10 +354,9 @@ function initKeyListeners(settings) {
                 if (domainSettings.showFeedback) {
                   const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
                     detail: {
-                      currentCount: 1,
-                      requiredCount: 1,
-                      isComplete: true,
-                      is3Mode: true
+                      currentCount: enterPressCount,
+                      requiredCount: domainSettings.pressCount,
+                      isComplete: false
                     }
                   });
                   document.dispatchEvent(feedbackEvent);
@@ -549,34 +524,40 @@ function handleKeyDown(event) {
     return;
   }
   
-  // Проверяем, активирован ли режим "3mode" (всегда вставлять новую строку)
-  if (domainSettings.mode === '3mode' && event.key === 'Enter') {
-    Logger.info('3mode active: Enter key will insert line break instead of submitting form');
+  // Проверяем, является ли элемент текстовым полем
+  if (event.key === 'Enter' && isTextInput(event.target)) {
+    // Обрабатываем нажатие Enter
+    Logger.debug('Enter key pressed in text input');
     
-    // Prevent default action
-    event.preventDefault();
-    event.stopPropagation();
-    
-    // Insert line break
-    if (isTextInput(event.target)) {
+    // Проверяем, достигнуто ли необходимое количество нажатий
+    if (enterPressCount < domainSettings.pressCount - 1) {
+      // Если количество нажатий недостаточно, вставляем перенос строки
+      Logger.info(`Inserting line break: ${enterPressCount + 1} < ${domainSettings.pressCount}`);
+      
+      // Prevent default action
+      event.preventDefault();
+      event.stopPropagation();
+      
+      // Insert line break
       alternativeAction(event);
+      
+      // Increment counter
+      enterPressCount++;
+      lastEnterPressTime = Date.now();
+      
+      // Show visual feedback
+      if (domainSettings.showFeedback) {
+        const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
+          detail: {
+            currentCount: enterPressCount,
+            requiredCount: domainSettings.pressCount,
+            isComplete: false,
+            isLineBreakInserted: true
+          }
+        });
+        document.dispatchEvent(feedbackEvent);
+      }
     }
-    
-    // Show visual feedback
-    if (domainSettings.showFeedback) {
-      const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-        detail: {
-          currentCount: 1,
-          requiredCount: 1,
-          isComplete: false,
-          is3Mode: true,
-          isLineBreakInserted: true
-        }
-      });
-      document.dispatchEvent(feedbackEvent);
-    }
-    
-    return;
   }
   
   // For enter key only - add extra logs
@@ -985,33 +966,10 @@ function addFormSubmitHandlers() {
     form.addEventListener('submit', (event) => {
       // Проверяем, включено ли расширение для этого домена
       if (domainSettings && domainSettings.domainEnabled) {
-        // Проверяем режим работы
-        if (domainSettings.mode === '3mode') {
-          // В режиме 3mode всегда предотвращаем отправку формы
-          Logger.info('Preventing form submission in 3mode');
-          event.preventDefault();
-          event.stopPropagation();
-          
-          // Показываем визуальный отклик
-          if (domainSettings.showFeedback) {
-            const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-              detail: {
-                currentCount: 1,
-                requiredCount: 1,
-                isComplete: false,
-                isFormSubmit: true,
-                is3Mode: true
-              }
-            });
-            document.dispatchEvent(feedbackEvent);
-          }
-          
-          return false;
-        }
-        
-        // Если количество нажатий меньше требуемого, предотвращаем отправку
+        // Проверяем, достигнуто ли необходимое количество нажатий
         if (enterPressCount < domainSettings.pressCount) {
-          Logger.info(`Preventing form submission: enterPressCount=${enterPressCount}, required=${domainSettings.pressCount}`);
+          // Если количество нажатий недостаточно, предотвращаем отправку формы
+          Logger.info(`Preventing form submission: ${enterPressCount} < ${domainSettings.pressCount}`);
           event.preventDefault();
           event.stopPropagation();
           
@@ -1029,8 +987,6 @@ function addFormSubmitHandlers() {
           }
           
           return false;
-        } else {
-          Logger.info(`Form submission allowed after ${enterPressCount} Enter presses`);
         }
       }
       

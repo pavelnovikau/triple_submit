@@ -330,14 +330,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Обновляем опции селектора режима
       const modeNormalOption = document.getElementById('mode-normal-option');
-      const mode3modeOption = document.getElementById('mode-3mode-option');
       
       if (modeNormalOption) {
         modeNormalOption.textContent = getLocalizedMessage('modeNormal', 'Multiple Enter');
-      }
-      
-      if (mode3modeOption) {
-        mode3modeOption.textContent = getLocalizedMessage('mode3mode', 'Always Line Break');
       }
       
       // Update modal texts
@@ -569,17 +564,6 @@ document.addEventListener('DOMContentLoaded', function() {
     modeSelect.addEventListener('change', function() {
       currentSettings.mode = this.value;
       Logger.info(`Mode changed to: ${currentSettings.mode}`);
-      
-      // Если выбран режим "3mode", скрываем настройку количества нажатий, так как она не используется
-      const pressCountContainer = document.querySelector('.setting-item:has(#press-count)');
-      if (pressCountContainer) {
-        if (currentSettings.mode === '3mode') {
-          pressCountContainer.style.display = 'none';
-        } else {
-          pressCountContainer.style.display = 'flex';
-        }
-      }
-      
       saveSettings();
     });
   }

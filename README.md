@@ -4,15 +4,13 @@ A browser extension that enhances online form safety with AI-powered protection 
 
 ## Overview
 
-Safe Enter AI-helper is a Chrome extension designed to safeguard against accidental form submissions. It offers two operation modes: requiring multiple Enter key presses before form submission or always inserting line breaks instead of submitting forms, helping to prevent premature submission of important data.
+Safe Enter AI-helper is a Chrome extension designed to safeguard against accidental form submissions. It requires multiple Enter key presses before form submission, helping to prevent premature submission of important data.
 
 ## Key Features
 
-- **Two Operation Modes**:
-  - **Multiple Enter**: Forms are only submitted after pressing Enter multiple times (default: 3)
-  - **Always Line Break**: Enter key always inserts a line break, never submits forms
+- **Multiple Enter Mode**: Forms are only submitted after pressing Enter multiple times (default: 3)
 - **Per-Site Control**: Enable or disable the extension for specific websites
-- **Visual Feedback**: Optional visual indicator showing progress toward form submission
+- **Visual Feedback**: Visual indicator showing progress toward form submission with clear symbols for line breaks (↵) and form submission (✓)
 - **Configurable Delay**: Adjust the maximum time between Enter presses (200-2000ms)
 - **Multilingual Support**: Available in 10 languages: English, Spanish, Russian, Chinese, Arabic, Portuguese, French, German, Japanese, and Italian
 - **Premium Functionality**: 20 free submissions, then $2.99/month subscription
@@ -31,20 +29,14 @@ Safe Enter AI-helper is a Chrome extension designed to safeguard against acciden
 
 1. Browse to any website with a form
 2. Enable the extension for that site in the popup
-3. Choose your preferred mode:
-   - **Multiple Enter Mode**: 
-     - For the first N-1 presses: A newline character is inserted (in text areas)
-     - On the Nth press: The form is submitted normally
-   - **Always Line Break Mode**:
-     - Every Enter press inserts a newline character
-     - Forms are never submitted with Enter key
+3. For the first N-1 presses: A newline character is inserted (in text areas)
+4. On the Nth press: The form is submitted normally
 
 ### Configuration Options
 
 - **Enable Safe Enter AI-helper**: Master switch to enable/disable the extension
 - **Enable for this site**: Control whether the extension works on the current website
-- **Mode**: Choose between "Multiple Enter" or "Always Line Break"
-- **Enter presses**: Set how many Enter presses are required (2-5) in Multiple Enter mode
+- **Enter presses**: Set how many Enter presses are required (2-5)
 - **Delay**: Adjust the maximum time between presses (200-2000ms)
 - **Visual feedback**: Enable/disable on-screen indicators showing submit progress
 - **Language**: Choose from 10 available languages
@@ -83,7 +75,8 @@ safe_enter_ai_helper/
 
 ## Recent Updates
 
-- **v1.3.0**: Added "Always Line Break" mode, renamed to "Safe Enter AI-helper", improved handling of complex websites
+- **v1.4.0**: Enhanced visual feedback with symbols for line breaks (↵) and form submission (✓), improved support for chatgpt.com
+- **v1.3.0**: Renamed to "Safe Enter AI-helper", improved handling of complex websites
 - **v1.2.0**: Added language selector with 10 languages
 - **v1.1.0**: Simplified interface, added delay slider (200-2000ms), updated color scheme (gray steel with bright orange accent), improved paywall logic (20 free submissions, $2.99/month)
 - **v1.0.0**: Initial release

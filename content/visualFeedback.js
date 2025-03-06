@@ -140,7 +140,6 @@ function updateFeedback(detail) {
   const currentCount = detail.currentCount || 0;
   const requiredCount = detail.requiredCount || 3;
   const isComplete = detail.isComplete || false;
-  const is3Mode = detail.is3Mode || false;
   const isLineBreakInserted = detail.isLineBreakInserted || false;
   
   // Show container
@@ -154,61 +153,23 @@ function updateFeedback(detail) {
   // Clear existing dots
   progress.innerHTML = '';
   
-  // Если это режим 3mode, показываем специальный индикатор
-  if (is3Mode) {
-    // Create single dot for 3mode
-    const dot = document.createElement('div');
-    dot.className = 'progress-dot complete newline';
-    progress.appendChild(dot);
-    
-    // Update message
-    const message = document.getElementById('triple-submit-message');
-    if (message) {
-      message.textContent = 'Line break inserted!';
-    }
-    
-    // Hide instruction for 3mode
-    const instruction = container.querySelector('.progress-instruction');
-    if (instruction) {
-      instruction.style.display = 'none';
-    }
-    
-    // Hide after delay
-    setTimeout(() => {
-      container.style.opacity = '0';
-      setTimeout(() => {
-        container.style.display = 'none';
-      }, 300);
-    }, 1500);
-    
-    return;
-  }
-  
-  // Show instruction for multiple enter mode
-  const instruction = container.querySelector('.progress-instruction');
-  if (instruction) {
-    instruction.style.display = 'block';
-  }
-  
   // Create dots based on required count
   for (let i = 0; i < requiredCount; i++) {
     const dot = document.createElement('div');
     dot.className = 'progress-dot';
     
-    // Mark active dots
+    // Mark dots as complete based on current count
     if (i < currentCount) {
-      dot.classList.add('active');
-    }
-    
-    // Mark all dots as complete if submission is complete
-    if (isComplete) {
       dot.classList.add('complete');
+      
+      // Add special class for line break dots
+      if (isLineBreakInserted && i === currentCount - 1) {
+        dot.classList.add('newline');
+      }
     }
     
-    // Add newline indicator for all dots except the last one
-    if (i < requiredCount - 1) {
-      dot.classList.add('newline');
-    } else {
+    // Add special class for the last dot (form submission)
+    if (i === requiredCount - 1) {
       dot.classList.add('submit');
     }
     
