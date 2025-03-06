@@ -695,47 +695,46 @@ function alternativeAction(event) {
       
       // Special handling for Arc browser
       if (browserType === 'arc') {
-        Logger.debug('Using Arc-specific paragraph break insertion');
+        Logger.debug('Using Arc-specific line break insertion');
         
         if (element.matches('[contenteditable="true"], [contenteditable=""]')) {
-          // Для contenteditable в Arc браузере
+          // For contenteditable elements in Arc browser
           try {
-            // Пробуем использовать insertHTML для вставки явного тега параграфа
-            element.ownerDocument.execCommand('insertHTML', false, '</p><p>&nbsp;</p>');
+            // Try to insert a line break using execCommand
+            element.ownerDocument.execCommand('insertLineBreak', false);
           } catch (e) {
-            Logger.debug('execCommand insertHTML failed for Arc, trying alternative method');
+            Logger.debug('execCommand insertLineBreak failed for Arc, trying alternative method');
             
-            // Альтернативный метод - вставка HTML-разметки для нового параграфа
+            // Alternative method - insert a single <br> element
             const selection = window.getSelection();
             if (selection.rangeCount > 0) {
               const range = selection.getRangeAt(0);
               
-              // Создаем новый параграф с пробелом
-              const newParagraph = document.createElement('p');
-              newParagraph.innerHTML = '&nbsp;'; // Неразрывный пробел для сохранения пустого параграфа
+              // Create a single <br> element
+              const br = document.createElement('br');
               
               range.deleteContents();
-              range.insertNode(newParagraph);
+              range.insertNode(br);
               
-              // Перемещаем курсор в новый параграф
-              range.selectNodeContents(newParagraph);
-              range.collapse(false); // Коллапсируем в конец
+              // Move cursor after the <br>
+              range.setStartAfter(br);
+              range.setEndAfter(br);
               selection.removeAllRanges();
               selection.addRange(range);
             }
           }
         } else {
-          // For textarea in Arc - insert special line breaks
+          // For textarea in Arc - insert a single line break
           const start = element.selectionStart;
           const end = element.selectionEnd;
-          element.value = element.value.substring(0, start) + '\r\n\r\n' + element.value.substring(end);
-          element.selectionStart = element.selectionEnd = start + 4;
+          element.value = element.value.substring(0, start) + '\n' + element.value.substring(end);
+          element.selectionStart = element.selectionEnd = start + 1;
           
-          // Имитируем событие ввода для обновления UI
+          // Dispatch input event to update UI
           element.dispatchEvent(new Event('input', { bubbles: true }));
         }
       } else {
-        // Универсальный метод вставки переноса строки
+        // Universal method for line break insertion
         insertLineBreak(element);
       }
     } else if (element.matches('input')) {
@@ -807,55 +806,45 @@ function findClosestContentEditable(element) {
 // Универсальная функция вставки переноса строки
 function insertLineBreak(element) {
   try {
-    // Для contenteditable элементов
+    // For contenteditable elements
     if (element.isContentEditable || element.matches('[contenteditable="true"], [contenteditable=""]')) {
-      // Пробуем использовать более надежный метод вставки параграфа
+      // Try to use execCommand
       try {
-        // Пробуем использовать insertHTML для вставки явного тега параграфа
-        element.ownerDocument.execCommand('insertHTML', false, '</p><p>&nbsp;</p>');
+        // Insert a single line break
+        element.ownerDocument.execCommand('insertLineBreak', false);
         return;
       } catch (e) {
-        Logger.debug('execCommand insertHTML failed, trying alternative method');
-        
-        try {
-          // Пробуем использовать formatBlock для создания нового параграфа
-          element.ownerDocument.execCommand('insertParagraph', false);
-          return;
-        } catch (e2) {
-          Logger.debug('execCommand insertParagraph failed, trying next method');
-        }
+        Logger.debug('execCommand insertLineBreak failed, trying alternative method');
       }
       
-      // Альтернативный метод - вставка HTML-разметки для нового параграфа
+      // Alternative method - insert a single <br> element
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         
-        // Создаем новый параграф с пробелом
-        const newParagraph = document.createElement('p');
-        newParagraph.innerHTML = '&nbsp;'; // Неразрывный пробел для сохранения пустого параграфа
+        // Create a single <br> element
+        const br = document.createElement('br');
         
         range.deleteContents();
-        range.insertNode(newParagraph);
+        range.insertNode(br);
         
-        // Перемещаем курсор в новый параграф
-        range.selectNodeContents(newParagraph);
-        range.collapse(false); // Коллапсируем в конец
+        // Move cursor after the <br>
+        range.setStartAfter(br);
+        range.setEndAfter(br);
         selection.removeAllRanges();
         selection.addRange(range);
       }
     } 
-    // Для textarea
+    // For textarea
     else if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
       const start = element.selectionStart;
       const end = element.selectionEnd;
       
-      // Используем специальные символы переноса строки и пробелы для создания нового параграфа
-      // Комбинация \r\n\r\n обычно интерпретируется как новый параграф в большинстве систем
-      element.value = element.value.substring(0, start) + '\r\n\r\n' + element.value.substring(end);
-      element.selectionStart = element.selectionEnd = start + 4;
+      // Insert a single line break
+      element.value = element.value.substring(0, start) + '\n' + element.value.substring(end);
+      element.selectionStart = element.selectionEnd = start + 1;
       
-      // Имитируем событие ввода для обновления UI
+      // Dispatch input event to update UI
       element.dispatchEvent(new Event('input', { bubbles: true }));
     }
   } catch (error) {
@@ -866,56 +855,55 @@ function insertLineBreak(element) {
 // Специальная обработка для ChatGPT
 function handleChatGPT(element) {
   try {
-    // Находим текстовое поле ChatGPT
+    // Find the ChatGPT input field
     const chatInput = findChatGPTInput(element);
     if (!chatInput) {
       Logger.warn('Could not find ChatGPT input element');
       return;
     }
     
-    Logger.info('Found ChatGPT input element, inserting paragraph break');
+    Logger.info('Found ChatGPT input element, inserting line break');
     
-    // Вставляем перенос строки
+    // Insert line break
     if (chatInput.isContentEditable) {
-      // Для contenteditable
+      // For contenteditable elements
       try {
-        // Пробуем использовать insertHTML для вставки явного тега параграфа
-        chatInput.ownerDocument.execCommand('insertHTML', false, '</p><p>&nbsp;</p>');
+        // Try to insert a line break using execCommand
+        chatInput.ownerDocument.execCommand('insertLineBreak', false);
       } catch (e) {
-        Logger.debug('execCommand insertHTML failed for ChatGPT, trying alternative method');
+        Logger.debug('execCommand insertLineBreak failed for ChatGPT, trying alternative method');
         
-        // Альтернативный метод - вставка HTML-разметки для нового параграфа
+        // Alternative method - insert a single <br> element
         const selection = window.getSelection();
         if (selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           
-          // Создаем новый параграф с пробелом
-          const newParagraph = document.createElement('p');
-          newParagraph.innerHTML = '&nbsp;'; // Неразрывный пробел для сохранения пустого параграфа
+          // Create a single <br> element
+          const br = document.createElement('br');
           
           range.deleteContents();
-          range.insertNode(newParagraph);
+          range.insertNode(br);
           
-          // Перемещаем курсор в новый параграф
-          range.selectNodeContents(newParagraph);
-          range.collapse(false); // Коллапсируем в конец
+          // Move cursor after the <br>
+          range.setStartAfter(br);
+          range.setEndAfter(br);
           selection.removeAllRanges();
           selection.addRange(range);
         }
       }
       
-      // Имитируем событие ввода для обновления UI
+      // Dispatch input event to update UI
       chatInput.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
-      // Для textarea
+      // For textarea elements
       const start = chatInput.selectionStart;
       const end = chatInput.selectionEnd;
       
-      // Используем специальные символы переноса строки для создания нового параграфа
-      chatInput.value = chatInput.value.substring(0, start) + '\r\n\r\n' + chatInput.value.substring(end);
-      chatInput.selectionStart = chatInput.selectionEnd = start + 4;
+      // Insert a single line break
+      chatInput.value = chatInput.value.substring(0, start) + '\n' + chatInput.value.substring(end);
+      chatInput.selectionStart = chatInput.selectionEnd = start + 1;
       
-      // Имитируем событие ввода для обновления UI
+      // Dispatch input event to update UI
       chatInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
     

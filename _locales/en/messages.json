@@ -75,10 +75,6 @@
     "message": "Multiple Enter",
     "description": "Label for normal mode (multiple Enter presses)"
   },
-  "mode3mode": {
-    "message": "Always Line Break",
-    "description": "Label for 3mode (Enter always inserts line break)"
-  },
   "advanced_options": {
     "message": "Advanced settings",
     "description": "Label for advanced options button"

@@ -55,10 +55,6 @@
     "message": "Множественный Enter",
     "description": "Метка для обычного режима (множественные нажатия Enter)"
   },
-  "mode3mode": {
-    "message": "Всегда новая строка",
-    "description": "Метка для режима 3mode (Enter всегда вставляет новую строку)"
-  },
   "premiumLabel": {
     "message": "Обновиться до Premium",
     "description": "Текст для обновления до Premium"
