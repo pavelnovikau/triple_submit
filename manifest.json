@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "__MSG_extName__",
+  "name": "Safe Enter AI-Helper",
   "version": "1.2.0",
-  "description": "__MSG_extDescription__",
+  "description": "Prevents accidental form submissions by intercepting Enter key presses and requiring multiple presses before allowing form submission",
   "default_locale": "en",
   "permissions": [
     "storage",
