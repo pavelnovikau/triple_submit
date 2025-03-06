@@ -4,17 +4,17 @@ A browser extension that enhances online form safety with AI-powered protection 
 
 ## Overview
 
-Safe Enter AI-helper is a Chrome extension designed to safeguard against accidental form submissions. It requires multiple Enter key presses before form submission, helping to prevent premature submission of important data.
+Safe Enter AI-helper is a Chrome extension designed to safeguard against accidental form submissions by intercepting Enter key presses and requiring multiple presses before allowing form submission.
 
 ## Key Features
 
-- **Multiple Enter Mode**: Forms are only submitted after pressing Enter multiple times (default: 3)
+- **Multiple Enter Requirement**: Forms are only submitted after pressing Enter multiple times (default: 3)
 - **Per-Site Control**: Enable or disable the extension for specific websites
-- **Visual Feedback**: Visual indicator showing progress toward form submission with clear symbols for line breaks (↵) and form submission (✓)
+- **Visual Feedback**: Simple visual indicator showing progress toward form submission
 - **Configurable Delay**: Adjust the maximum time between Enter presses (200-2000ms)
 - **Multilingual Support**: Available in 10 languages: English, Spanish, Russian, Chinese, Arabic, Portuguese, French, German, Japanese, and Italian
 - **Premium Functionality**: 20 free submissions, then $2.99/month subscription
-- **AI-powered Protection**: Smart detection of form elements across various websites
+- **Universal Compatibility**: Works consistently across all websites
 
 ## Installation
 
@@ -29,8 +29,8 @@ Safe Enter AI-helper is a Chrome extension designed to safeguard against acciden
 
 1. Browse to any website with a form
 2. Enable the extension for that site in the popup
-3. For the first N-1 presses: A newline character is inserted (in text areas)
-4. On the Nth press: The form is submitted normally
+3. Every time you press Enter, the extension shows your progress
+4. After the required number of Enter presses, the form is submitted
 
 ### Configuration Options
 
@@ -75,7 +75,8 @@ safe_enter_ai_helper/
 
 ## Recent Updates
 
-- **v1.4.0**: Enhanced visual feedback with symbols for line breaks (↵) and form submission (✓), improved support for chatgpt.com
+- **v1.5.0**: Simplified behavior to focus only on intercepting Enter key presses, improved universal compatibility
+- **v1.4.0**: Enhanced visual feedback, improved support for chatgpt.com
 - **v1.3.0**: Renamed to "Safe Enter AI-helper", improved handling of complex websites
 - **v1.2.0**: Added language selector with 10 languages
 - **v1.1.0**: Simplified interface, added delay slider (200-2000ms), updated color scheme (gray steel with bright orange accent), improved paywall logic (20 free submissions, $2.99/month)

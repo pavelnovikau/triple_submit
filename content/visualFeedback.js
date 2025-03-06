@@ -54,32 +54,11 @@ function createFeedbackContainer() {
       background-color: rgba(255, 255, 255, 0.3);
       margin: 0 4px;
       transition: all 0.3s ease;
-      position: relative;
     }
     
     .progress-dot.active {
       background-color: rgba(255, 255, 255, 1);
       transform: scale(1.1);
-    }
-    
-    .progress-dot.newline::after {
-      content: "↵";
-      position: absolute;
-      top: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 14px;
-      color: #4CAF50;
-    }
-    
-    .progress-dot.submit::after {
-      content: "✓";
-      position: absolute;
-      top: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 14px;
-      color: #FF9800;
     }
     
     .progress-dot.complete {
@@ -101,32 +80,30 @@ function createFeedbackContainer() {
     }
   `;
   
-  document.head.appendChild(style);
-  
-  // Create container element
+  // Create container
   const container = document.createElement('div');
   container.id = 'triple-submit-feedback';
   
-  // Create content
+  // Add message
   const message = document.createElement('div');
   message.id = 'triple-submit-message';
-  message.textContent = 'Press Enter again to submit';
+  message.textContent = 'Press Enter to continue';
+  container.appendChild(message);
   
+  // Add progress indicator
   const progress = document.createElement('div');
   progress.id = 'triple-submit-progress';
+  container.appendChild(progress);
   
+  // Add instruction
   const instruction = document.createElement('div');
   instruction.className = 'progress-instruction';
-  instruction.textContent = '↵ = new line, ✓ = submit form';
-  
-  container.appendChild(message);
-  container.appendChild(progress);
+  instruction.textContent = 'Multiple Enter presses required to submit';
   container.appendChild(instruction);
   
+  // Add elements to the page
+  document.body.appendChild(style);
   document.body.appendChild(container);
-  
-  // Store reference to container
-  window.feedbackContainer = container;
 }
 
 // Update the feedback display
@@ -140,7 +117,6 @@ function updateFeedback(detail) {
   const currentCount = detail.currentCount || 0;
   const requiredCount = detail.requiredCount || 3;
   const isComplete = detail.isComplete || false;
-  const isLineBreakInserted = detail.isLineBreakInserted || false;
   
   // Show container
   container.style.opacity = '1';
@@ -161,16 +137,6 @@ function updateFeedback(detail) {
     // Mark dots as complete based on current count
     if (i < currentCount) {
       dot.classList.add('complete');
-      
-      // Add special class for line break dots
-      if (isLineBreakInserted && i === currentCount - 1) {
-        dot.classList.add('newline');
-      }
-    }
-    
-    // Add special class for the last dot (form submission)
-    if (i === requiredCount - 1) {
-      dot.classList.add('submit');
     }
     
     progress.appendChild(dot);
@@ -180,36 +146,24 @@ function updateFeedback(detail) {
   const message = document.getElementById('triple-submit-message');
   if (message) {
     if (isComplete) {
-      message.textContent = 'Form submitted!';
-    } else if (isLineBreakInserted) {
-      message.textContent = 'Line break inserted!';
-      
-      // For line break, show briefly
-      setTimeout(() => {
-        container.style.opacity = '0';
-        setTimeout(() => {
-          container.style.display = 'none';
-        }, 300);
-      }, 1500);
-      
-      return;
+      message.textContent = 'Form submission allowed!';
     } else {
-      const remaining = requiredCount - currentCount;
-      message.textContent = `Press Enter ${remaining} more time${remaining !== 1 ? 's' : ''} to submit form`;
+      message.textContent = `Press Enter ${requiredCount - currentCount} more time${requiredCount - currentCount !== 1 ? 's' : ''}`;
     }
   }
   
   // Hide after delay
+  const hideDelay = isComplete ? 2000 : 3000;
   setTimeout(() => {
     container.style.opacity = '0';
     setTimeout(() => {
       container.style.display = 'none';
     }, 300);
-  }, isComplete ? 3000 : 2000);
+  }, hideDelay);
 }
 
-// Listen for feedback events from keyHandler.js
-document.addEventListener('tripleSubmitFeedback', (event) => {
+// Listen for events from keyHandler.js
+document.addEventListener('tripleSubmitFeedback', function(event) {
   updateFeedback(event.detail);
 });
 
