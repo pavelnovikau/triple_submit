@@ -50,8 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
     pressCount: 3,
     showFeedback: true,
     delay: 600,
-    language: 'en',
-    mode: 'normal'
+    language: 'en'
   };
   
   let isPremium = false;
@@ -248,12 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     updateDelayLabel(currentSettings.delay);
     
-    // Update mode select
-    const modeSelect = document.getElementById('mode-select');
-    if (modeSelect) {
-      modeSelect.value = currentSettings.mode || 'normal';
-    }
-    
     // Update usage count
     usageCountEl.textContent = usageCount;
     
@@ -325,16 +318,6 @@ document.addEventListener('DOMContentLoaded', function() {
       updateElementText('normal-label', 'normalLabel', 'Normal');
       updateElementText('slow-label', 'slowLabel', 'Slow');
       
-      // Обновляем тексты для режима
-      updateElementText('mode-label', 'modeLabel', 'Mode:');
-      
-      // Обновляем опции селектора режима
-      const modeNormalOption = document.getElementById('mode-normal-option');
-      
-      if (modeNormalOption) {
-        modeNormalOption.textContent = getLocalizedMessage('modeNormal', 'Multiple Enter');
-      }
-      
       // Update modal texts
       const modalTitle = document.querySelector('.modal-content h2');
       if (modalTitle) {
@@ -392,8 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
         settings: {
           pressCount: currentSettings.pressCount,
           showFeedback: currentSettings.showFeedback,
-          delay: currentSettings.delay,
-          mode: currentSettings.mode || 'normal'
+          delay: currentSettings.delay
         },
         language: currentSettings.language
       });
@@ -496,8 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
         settings: {
           pressCount: currentSettings.pressCount,
           showFeedback: currentSettings.showFeedback,
-          delay: currentSettings.delay,
-          mode: currentSettings.mode || 'normal'
+          delay: currentSettings.delay
         },
         language: currentSettings.language
       });
@@ -557,16 +538,6 @@ document.addEventListener('DOMContentLoaded', function() {
     currentSettings.showFeedback = this.checked;
     saveSettings();
   });
-  
-  // Mode select
-  const modeSelect = document.getElementById('mode-select');
-  if (modeSelect) {
-    modeSelect.addEventListener('change', function() {
-      currentSettings.mode = this.value;
-      Logger.info(`Mode changed to: ${currentSettings.mode}`);
-      saveSettings();
-    });
-  }
   
   // Delay slider
   delaySlider.addEventListener('input', function() {
