@@ -217,6 +217,10 @@ function initKeyListeners(settings) {
     if (message.action === 'settingsUpdated') {
       Logger.info('Settings updated:', message);
       
+      // Удаляем существующие обработчики событий клавиатуры
+      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('keyup', handleKeyUp, true);
+      
       // Update settings
       domainSettings = { ...domainSettings, ...message.settings };
       
@@ -229,6 +233,19 @@ function initKeyListeners(settings) {
       enterPressCount = 0;
       lastEnterPressTime = 0;
       enterPresses = [];
+      
+      // Если расширение включено для этого домена, устанавливаем обработчики клавиш снова
+      if (domainSettings.domainEnabled) {
+        Logger.info('Re-adding key event listeners after settings update');
+        // Небольшая задержка для обеспечения корректной инициализации
+        setTimeout(() => {
+          document.addEventListener('keydown', handleKeyDown, true);
+          document.addEventListener('keyup', handleKeyUp, true);
+          Logger.info('Key event listeners successfully reinstalled');
+        }, 50);
+      } else {
+        Logger.info('Extension disabled for this domain, not adding key listeners');
+      }
       
       sendResponse({ status: 'ok' });
     }
