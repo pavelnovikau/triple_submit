@@ -50,7 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {
     pressCount: 3,
     showFeedback: true,
     delay: 600,
-    language: 'en'
+    language: 'en',
+    mode: 'normal'
   };
   
   let isPremium = false;
@@ -63,9 +64,9 @@ document.addEventListener('DOMContentLoaded', function() {
     return new Promise(async (resolve) => {
       try {
         const tabs = await chrome.tabs.query({active: true, currentWindow: true});
-        if (tabs && tabs.length > 0) {
-          const url = new URL(tabs[0].url);
-          currentDomain = url.hostname;
+      if (tabs && tabs.length > 0) {
+        const url = new URL(tabs[0].url);
+        currentDomain = url.hostname;
           resolve(currentDomain);
         } else {
           Logger.error('Error getting active tab');
@@ -247,6 +248,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     updateDelayLabel(currentSettings.delay);
     
+    // Update mode select
+    const modeSelect = document.getElementById('mode-select');
+    if (modeSelect) {
+      modeSelect.value = currentSettings.mode || 'normal';
+    }
+    
     // Update usage count
     usageCountEl.textContent = usageCount;
     
@@ -318,6 +325,21 @@ document.addEventListener('DOMContentLoaded', function() {
       updateElementText('normal-label', 'normalLabel', 'Normal');
       updateElementText('slow-label', 'slowLabel', 'Slow');
       
+      // Обновляем тексты для режима
+      updateElementText('mode-label', 'modeLabel', 'Mode:');
+      
+      // Обновляем опции селектора режима
+      const modeNormalOption = document.getElementById('mode-normal-option');
+      const mode3modeOption = document.getElementById('mode-3mode-option');
+      
+      if (modeNormalOption) {
+        modeNormalOption.textContent = getLocalizedMessage('modeNormal', 'Multiple Enter');
+      }
+      
+      if (mode3modeOption) {
+        mode3modeOption.textContent = getLocalizedMessage('mode3mode', 'Always Line Break');
+      }
+      
       // Update modal texts
       const modalTitle = document.querySelector('.modal-content h2');
       if (modalTitle) {
@@ -367,12 +389,16 @@ document.addEventListener('DOMContentLoaded', function() {
    */
   async function saveSettings() {
     try {
+      // Определяем, является ли это переключением домена
+      const isDomainToggle = currentDomain && currentSettings.domainEnabled !== undefined;
+      
       // Save general settings
       await chrome.storage.sync.set({
         settings: {
           pressCount: currentSettings.pressCount,
           showFeedback: currentSettings.showFeedback,
           delay: currentSettings.delay,
+          mode: currentSettings.mode || 'normal'
         },
         language: currentSettings.language
       });
@@ -397,10 +423,19 @@ document.addEventListener('DOMContentLoaded', function() {
         await chrome.storage.sync.set({ domains });
       }
       
-      // Notify background script about settings update
-      chrome.runtime.sendMessage({ action: 'settings_updated' });
-      
-      Logger.info('Settings saved:', currentSettings);
+      // Notify background script about settings update with confirmation callback
+      return new Promise((resolve) => {
+        chrome.runtime.sendMessage({ 
+          action: 'settings_updated',
+          isToggle: isDomainToggle, // Флаг, что это переключение настроек (особенно важно при включении/выключении)
+          forceActivation: true, // Всегда принудительно активируем обработчики
+          timestamp: Date.now() // Добавляем временную метку для отслеживания
+        }, (response) => {
+          Logger.info('Settings update notification confirmed by background script:', response);
+          Logger.info('Settings saved:', currentSettings);
+          resolve(response);
+        });
+      });
     } catch (error) {
       Logger.error('Error saving settings:', error);
     }
@@ -446,10 +481,72 @@ document.addEventListener('DOMContentLoaded', function() {
     
   // Toggle for enabling/disabling for current domain
   domainToggle.addEventListener('change', function() {
+    const oldValue = currentSettings.domainEnabled;
     currentSettings.domainEnabled = this.checked;
+    
+    Logger.info(`Domain toggle changed from ${oldValue} to ${currentSettings.domainEnabled} for domain ${currentDomain}`);
+    
+    // Обновляем UI
     updateUIAvailability();
-    saveSettings();
+    
+    // Сохраняем настройки с явным указанием, что это переключение домена
+    saveSettingsWithDomainToggle();
   });
+  
+  // Функция для сохранения настроек с явным указанием, что это переключение домена
+  async function saveSettingsWithDomainToggle() {
+    try {
+      // Save general settings
+      await chrome.storage.sync.set({
+        settings: {
+          pressCount: currentSettings.pressCount,
+          showFeedback: currentSettings.showFeedback,
+          delay: currentSettings.delay,
+          mode: currentSettings.mode || 'normal'
+        },
+        language: currentSettings.language
+      });
+      
+      // Save domain-specific settings
+      if (currentDomain) {
+        const domainData = await chrome.storage.sync.get(['domains']);
+        let domains = {};
+        
+        if (domainData && domainData.domains) {
+          domains = domainData.domains;
+        }
+        
+        // If enabled, add domain to list, otherwise remove it
+        if (currentSettings.domainEnabled) {
+          domains[currentDomain] = true;
+        } else {
+          delete domains[currentDomain];
+        }
+        
+        // Save updated domains
+        await chrome.storage.sync.set({ domains });
+      }
+      
+      // Notify background script about settings update with confirmation callback
+      return new Promise((resolve) => {
+        chrome.runtime.sendMessage({ 
+          action: 'settings_updated',
+          isToggle: true, // Явно указываем, что это переключение домена
+          isDomainToggle: true, // Дополнительный флаг для ясности
+          forceActivation: true, // Принудительно активируем обработчики
+          timestamp: Date.now(), // Временная метка для отслеживания
+          domain: currentDomain, // Передаем текущий домен
+          enabled: currentSettings.domainEnabled // Передаем новое состояние
+        }, (response) => {
+          Logger.info('Domain toggle update confirmed by background script:', response);
+          Logger.info('Domain settings saved:', { domain: currentDomain, enabled: currentSettings.domainEnabled });
+          resolve(response);
+        });
+      });
+    } catch (error) {
+      Logger.error('Error saving domain toggle settings:', error);
+    }
+  }
   
   // Press count control
   decreaseCountBtn.addEventListener('click', function() {
@@ -465,6 +562,27 @@ document.addEventListener('DOMContentLoaded', function() {
     currentSettings.showFeedback = this.checked;
     saveSettings();
   });
+  
+  // Mode select
+  const modeSelect = document.getElementById('mode-select');
+  if (modeSelect) {
+    modeSelect.addEventListener('change', function() {
+      currentSettings.mode = this.value;
+      Logger.info(`Mode changed to: ${currentSettings.mode}`);
+      
+      // Если выбран режим "3mode", скрываем настройку количества нажатий, так как она не используется
+      const pressCountContainer = document.querySelector('.setting-item:has(#press-count)');
+      if (pressCountContainer) {
+        if (currentSettings.mode === '3mode') {
+          pressCountContainer.style.display = 'none';
+        } else {
+          pressCountContainer.style.display = 'flex';
+        }
+      }
+      
+      saveSettings();
+    });
+  }
   
   // Delay slider
   delaySlider.addEventListener('input', function() {
@@ -494,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   closeModalBtn.addEventListener('click', function() {
-    closePremiumModal();
+        closePremiumModal();
   });
   
   payButton.addEventListener('click', function() {

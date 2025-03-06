@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Triple Submit",
+    "message": "Safe Enter AI-helper",
     "description": "Название расширения"
   },
   "extDescription": {
-    "message": "Предотвращает случайные отправки форм, требуя многократного нажатия клавиши Enter",
+    "message": "Повышает безопасность онлайн-форм с помощью защиты на базе ИИ от случайных отправок, требуя многократного нажатия клавиши Enter",
     "description": "Описание расширения"
   },
   "languageLabel": {
@@ -46,6 +46,18 @@
   "slowLabel": {
     "message": "Медленно",
     "description": "Метка для медленной задержки"
+  },
+  "modeLabel": {
+    "message": "Режим:",
+    "description": "Метка для выбора режима"
+  },
+  "modeNormal": {
+    "message": "Множественный Enter",
+    "description": "Метка для обычного режима (множественные нажатия Enter)"
+  },
+  "mode3mode": {
+    "message": "Всегда новая строка",
+    "description": "Метка для режима 3mode (Enter всегда вставляет новую строку)"
   },
   "premiumLabel": {
     "message": "Обновиться до Premium",

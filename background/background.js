@@ -116,8 +116,78 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
         
       case 'settings_updated':
-        Logger.info('Received settings update notification from popup');
-        notifyAllTabsAboutSettingsUpdate(sendResponse);
+        Logger.info('Received settings update notification from popup', message);
+        
+        // Если это переключение настроек, сначала обновляем активную вкладку
+        if (message.isToggle) {
+          Logger.info('This is a toggle update, prioritizing active tab');
+          
+          // Сначала обновляем активную вкладку
+          chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            if (tabs && tabs.length > 0) {
+              const activeTab = tabs[0];
+              
+              // Получаем настройки для активной вкладки
+              chrome.storage.sync.get(['settings', 'domains'], (data) => {
+                if (chrome.runtime.lastError) {
+                  Logger.error('Error getting settings for active tab:', chrome.runtime.lastError);
+                  return;
+                }
+                
+                const settings = data.settings || {
+                  domainEnabled: false,
+                  pressCount: 3,
+                  showFeedback: true,
+                  delay: 600,
+                  mode: 'normal' // Добавляем режим по умолчанию
+                };
+                
+                try {
+                  if (activeTab.url && activeTab.url.startsWith('http')) {
+                    const hostname = new URL(activeTab.url).hostname;
+                    const domains = data.domains || {};
+                    const domainEnabled = domains[hostname] === true;
+                    
+                    Logger.info(`Sending priority update to active tab (${hostname}), domainEnabled=${domainEnabled}`);
+                    
+                    // Отправляем обновленные настройки в активную вкладку с флагом forceActivation
+                    chrome.tabs.sendMessage(activeTab.id, { 
+                      action: 'settingsUpdated',
+                      settings: settings,
+                      domainEnabled: domainEnabled,
+                      isPriorityUpdate: true,
+                      forceActivation: true, // Новый флаг для принудительной активации
+                      timestamp: Date.now() // Добавляем временную метку для отслеживания
+                    }).then(() => {
+                      Logger.info('Priority update sent to active tab');
+                      
+                      // Затем обновляем остальные вкладки
+                      setTimeout(() => {
+                        notifyAllTabsAboutSettingsUpdate(sendResponse);
+                      }, 100);
+                    }).catch((error) => {
+                      Logger.error('Error sending priority update to active tab:', error);
+                      // Если не удалось отправить в активную вкладку, обновляем все вкладки
+                      notifyAllTabsAboutSettingsUpdate(sendResponse);
+                    });
+                  } else {
+                    // Если активная вкладка не HTTP, обновляем все вкладки
+                    notifyAllTabsAboutSettingsUpdate(sendResponse);
+                  }
+                } catch (error) {
+                  Logger.error('Error processing active tab for priority update:', error);
+                  notifyAllTabsAboutSettingsUpdate(sendResponse);
+                }
+              });
+            } else {
+              // Если нет активной вкладки, обновляем все вкладки
+              notifyAllTabsAboutSettingsUpdate(sendResponse);
+            }
+          });
+        } else {
+          // Обычное обновление всех вкладок
+          notifyAllTabsAboutSettingsUpdate(sendResponse);
+        }
         break;
         
       case 'checkDomain':
@@ -148,18 +218,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Handle getSettings request
 function handleGetSettings(sendResponse) {
   chrome.storage.sync.get(['settings', 'isPremium'], (data) => {
-    if (chrome.runtime.lastError) {
+      if (chrome.runtime.lastError) {
       Logger.error('Error getting settings:', chrome.runtime.lastError);
-      sendResponse({ error: chrome.runtime.lastError.message });
-      return;
-    }
-    
+        sendResponse({ error: chrome.runtime.lastError.message });
+        return;
+      }
+      
     // If settings don't exist yet, use defaults
     const settings = data.settings || {
       domainEnabled: false,
       pressCount: 3,
       showFeedback: true,
-      delay: 600
+      delay: 600,
+      mode: 'normal' // Добавляем режим по умолчанию
     };
     
     // Add premium status
@@ -197,9 +268,9 @@ function handleCheckDomain(domain, sendResponse) {
     if (chrome.runtime.lastError) {
       Logger.error('Error checking domain:', chrome.runtime.lastError);
       sendResponse({ isEnabled: false });
-      return;
-    }
-    
+        return;
+      }
+      
     // Check if domain is in enabled list
     const domains = data.domains || {};
     const isEnabled = domains[domain] === true;
@@ -212,12 +283,12 @@ function handleCheckDomain(domain, sendResponse) {
 // Handle incrementUsage request
 function handleIncrementUsage(sendResponse) {
   chrome.storage.sync.get(['usageCount', 'isPremium'], (data) => {
-    if (chrome.runtime.lastError) {
+        if (chrome.runtime.lastError) {
       Logger.error('Error getting usage count:', chrome.runtime.lastError);
-      sendResponse({ error: chrome.runtime.lastError.message });
-      return;
-    }
-    
+          sendResponse({ error: chrome.runtime.lastError.message });
+          return;
+        }
+        
     // Bypass counting for premium users
     if (data.isPremium) {
       Logger.info('Premium user, not incrementing usage');
@@ -245,7 +316,7 @@ function handleIncrementUsage(sendResponse) {
         Logger.error('Error saving usage count:', error);
         sendResponse({ error: error.message });
       });
-  });
+    });
 }
 
 // Handle setPremium request
@@ -283,7 +354,7 @@ function notifyTabsAboutSettingsUpdate() {
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
       if (tab.url && tab.url.startsWith('http')) {
-        chrome.tabs.sendMessage(tab.id, { action: 'settingsUpdated' })
+      chrome.tabs.sendMessage(tab.id, { action: 'settingsUpdated' })
           .catch((error) => {
             console.log(`Error sending message to tab ${tab.id}:`, error);
           });
@@ -306,7 +377,8 @@ function notifyAllTabsAboutSettingsUpdate(sendResponse) {
       domainEnabled: false,
       pressCount: 3,
       showFeedback: true,
-      delay: 600
+      delay: 600,
+      mode: 'normal' // Добавляем режим по умолчанию
     };
     
     Logger.info('Sending updated settings to all tabs:', settings);
@@ -328,7 +400,9 @@ function notifyAllTabsAboutSettingsUpdate(sendResponse) {
               chrome.tabs.sendMessage(tab.id, { 
                 action: 'settingsUpdated',
                 settings: settings,
-                domainEnabled: domainEnabled 
+                domainEnabled: domainEnabled,
+                forceActivation: true, // Добавляем флаг для принудительной активации
+                timestamp: Date.now() // Добавляем временную метку для отслеживания
               }).catch((error) => {
                 Logger.warn(`Error sending settings update to tab ${tab.id}:`, error);
                 // Игнорируем ошибки при отправке сообщений, поскольку не все вкладки могут быть готовы

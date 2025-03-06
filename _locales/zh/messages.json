@@ -1,25 +1,25 @@
 {
   "extName": {
-    "message": "Triple Submit",
+    "message": "Safe Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "通过要求多次按回车键来防止意外提交表单",
+    "message": "通过人工智能驱动的保护和要求多次按回车键来提高在线表单安全性，防止意外提交表单",
     "description": "Extension description"
   },
-  "language_label": {
+  "languageLabel": {
     "message": "语言：",
     "description": "Label for language selection"
   },
-  "enable_extension": {
+  "enableExtensionLabel": {
     "message": "启用 Triple Submit",
     "description": "Label for enabling the extension"
   },
-  "current_site": {
+  "currentSiteLabel": {
     "message": "当前网站：",
     "description": "Label for current website"
   },
-  "enable_for_site": {
+  "enableForSiteLabel": {
     "message": "在此站点启用",
     "description": "Label for enabling extension on current site"
   },
@@ -43,11 +43,11 @@
     "message": "单次回车换行，多次回车提交表单",
     "description": "Description for alternative mode"
   },
-  "enter_presses": {
+  "enterPressesLabel": {
     "message": "回车键按压次数：",
     "description": "Label for Enter key press count"
   },
-  "visual_feedback": {
+  "visualFeedbackLabel": {
     "message": "视觉反馈：",
     "description": "Label for visual feedback toggle"
   },
@@ -62,5 +62,53 @@
   "settings_note": {
     "message": "* 高级选项中提供更多设置",
     "description": "Note about additional settings in advanced options"
+  },
+  "delayLabel": {
+    "message": "延迟：",
+    "description": "Label for delay slider"
+  },
+  "fastLabel": {
+    "message": "快速",
+    "description": "Label for fast delay setting"
+  },
+  "normalLabel": {
+    "message": "正常",
+    "description": "Label for normal delay setting"
+  },
+  "slowLabel": {
+    "message": "慢速",
+    "description": "Label for slow delay setting"
+  },
+  "premiumLabel": {
+    "message": "升级到高级版",
+    "description": "Label for premium upgrade banner"
+  },
+  "usageLabel": {
+    "message": "剩余免费提交次数：",
+    "description": "Text for remaining free uses"
+  },
+  "limitReachedTitle": {
+    "message": "已达使用限制",
+    "description": "Title for usage limit modal"
+  },
+  "usageLimitText": {
+    "message": "您已使用 Triple Submit 免费版 20 次。",
+    "description": "Message about reaching usage limit"
+  },
+  "upgradeText": {
+    "message": "要继续使用，请升级到高级版。",
+    "description": "Message about need to upgrade"
+  },
+  "perMonth": {
+    "message": "/ 月",
+    "description": "Payment period"
+  },
+  "payNowButton": {
+    "message": "立即支付",
+    "description": "Text for payment button"
+  },
+  "processing_payment": {
+    "message": "处理付款中...",
+    "description": "Text during payment processing"
   }
 } 

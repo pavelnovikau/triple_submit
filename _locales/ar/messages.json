@@ -1,25 +1,25 @@
 {
   "extName": {
-    "message": "Triple Submit",
+    "message": "Safe Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "يمنع إرسال النماذج عن طريق الخطأ من خلال طلب ضغطات متعددة على مفتاح الإدخال",
+    "message": "يحسن أمان النماذج عبر الإنترنت من خلال حماية مدعومة بالذكاء الاصطناعي ضد الإرسال العرضي من خلال طلب ضغطات متعددة على مفتاح الإدخال",
     "description": "Extension description"
   },
-  "language_label": {
+  "languageLabel": {
     "message": "اللغة:",
     "description": "Label for language selection"
   },
-  "enable_extension": {
+  "enableExtensionLabel": {
     "message": "تمكين Triple Submit",
     "description": "Label for enabling the extension"
   },
-  "current_site": {
+  "currentSiteLabel": {
     "message": "الموقع الحالي:",
     "description": "Label for current website"
   },
-  "enable_for_site": {
+  "enableForSiteLabel": {
     "message": "تمكين لهذا الموقع",
     "description": "Label for enabling extension on current site"
   },
@@ -43,11 +43,11 @@
     "message": "فواصل الأسطر بضغطة Enter واحدة، إرسال النموذج بضغطات متعددة",
     "description": "Description for alternative mode"
   },
-  "enter_presses": {
+  "enterPressesLabel": {
     "message": "ضغطات الإدخال:",
     "description": "Label for Enter key press count"
   },
-  "visual_feedback": {
+  "visualFeedbackLabel": {
     "message": "تغذية راجعة بصرية:",
     "description": "Label for visual feedback toggle"
   },
@@ -62,5 +62,53 @@
   "settings_note": {
     "message": "* إعدادات إضافية متوفرة في الخيارات المتقدمة",
     "description": "Note about additional settings in advanced options"
+  },
+  "delayLabel": {
+    "message": "التأخير:",
+    "description": "Label for delay slider"
+  },
+  "fastLabel": {
+    "message": "سريع",
+    "description": "Label for fast delay setting"
+  },
+  "normalLabel": {
+    "message": "عادي",
+    "description": "Label for normal delay setting"
+  },
+  "slowLabel": {
+    "message": "بطيء",
+    "description": "Label for slow delay setting"
+  },
+  "premiumLabel": {
+    "message": "الترقية إلى النسخة المميزة",
+    "description": "Label for premium upgrade banner"
+  },
+  "usageLabel": {
+    "message": "عمليات الإرسال المجانية المتبقية:",
+    "description": "Text for remaining free uses"
+  },
+  "limitReachedTitle": {
+    "message": "تم الوصول إلى حد الاستخدام",
+    "description": "Title for usage limit modal"
+  },
+  "usageLimitText": {
+    "message": "لقد استخدمت النسخة المجانية من Triple Submit 20 مرة.",
+    "description": "Message about reaching usage limit"
+  },
+  "upgradeText": {
+    "message": "للاستمرار في الاستخدام، يرجى الترقية إلى النسخة المميزة.",
+    "description": "Message about need to upgrade"
+  },
+  "perMonth": {
+    "message": "/ شهر",
+    "description": "Payment period"
+  },
+  "payNowButton": {
+    "message": "ادفع الآن",
+    "description": "Text for payment button"
+  },
+  "processing_payment": {
+    "message": "جاري معالجة الدفع...",
+    "description": "Text during payment processing"
   }
 } 

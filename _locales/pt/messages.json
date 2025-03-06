@@ -1,25 +1,25 @@
 {
   "extName": {
-    "message": "Triple Submit",
+    "message": "Safe Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Evita envios acidentais de formulários exigindo múltiplos pressionamentos da tecla Enter",
+    "message": "Melhora a segurança de formulários online com proteção baseada em IA contra envios acidentais exigindo múltiplos pressionamentos da tecla Enter",
     "description": "Extension description"
   },
-  "language_label": {
+  "languageLabel": {
     "message": "Idioma:",
     "description": "Label for language selection"
   },
-  "enable_extension": {
+  "enableExtensionLabel": {
     "message": "Ativar Triple Submit",
     "description": "Label for enabling the extension"
   },
-  "current_site": {
+  "currentSiteLabel": {
     "message": "Site atual:",
     "description": "Label for current website"
   },
-  "enable_for_site": {
+  "enableForSiteLabel": {
     "message": "Ativar para este site",
     "description": "Label for enabling extension on current site"
   },
@@ -43,11 +43,11 @@
     "message": "Quebras de linha com um único Enter, envio de formulário com múltiplos pressionamentos",
     "description": "Description for alternative mode"
   },
-  "enter_presses": {
+  "enterPressesLabel": {
     "message": "Pressionar Enter:",
     "description": "Label for Enter key press count"
   },
-  "visual_feedback": {
+  "visualFeedbackLabel": {
     "message": "Feedback visual:",
     "description": "Label for visual feedback toggle"
   },
@@ -62,5 +62,53 @@
   "settings_note": {
     "message": "* Configurações adicionais disponíveis em opções avançadas",
     "description": "Note about additional settings in advanced options"
+  },
+  "delayLabel": {
+    "message": "Atraso:",
+    "description": "Label for delay slider"
+  },
+  "fastLabel": {
+    "message": "Rápido",
+    "description": "Label for fast delay setting"
+  },
+  "normalLabel": {
+    "message": "Normal",
+    "description": "Label for normal delay setting"
+  },
+  "slowLabel": {
+    "message": "Lento",
+    "description": "Label for slow delay setting"
+  },
+  "premiumLabel": {
+    "message": "Atualizar para Premium",
+    "description": "Label for premium upgrade banner"
+  },
+  "usageLabel": {
+    "message": "Envios gratuitos restantes:",
+    "description": "Text for remaining free uses"
+  },
+  "limitReachedTitle": {
+    "message": "Limite de uso atingido",
+    "description": "Title for usage limit modal"
+  },
+  "usageLimitText": {
+    "message": "Você usou a versão gratuita do Triple Submit 20 vezes.",
+    "description": "Message about reaching usage limit"
+  },
+  "upgradeText": {
+    "message": "Para continuar usando, atualize para a versão Premium.",
+    "description": "Message about need to upgrade"
+  },
+  "perMonth": {
+    "message": "/ mês",
+    "description": "Payment period"
+  },
+  "payNowButton": {
+    "message": "Pagar agora",
+    "description": "Text for payment button"
+  },
+  "processing_payment": {
+    "message": "Processando pagamento...",
+    "description": "Text during payment processing"
   }
 } 

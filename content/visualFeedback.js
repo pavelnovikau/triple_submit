@@ -82,59 +82,89 @@ function createFeedbackContainer() {
 }
 
 // Update the feedback display
-function updateFeedback(currentCount, requiredCount, isComplete) {
-  const container = document.getElementById('triple-submit-feedback');
-  if (!container) {
-    createFeedbackContainer();
-  }
+function updateFeedback(detail) {
+  if (!feedbackContainer) return;
   
-  const progress = document.getElementById('triple-submit-progress');
-  progress.innerHTML = '';
+  const currentCount = detail.currentCount || 0;
+  const requiredCount = detail.requiredCount || 3;
+  const isComplete = detail.isComplete || false;
+  const is3Mode = detail.is3Mode || false; // Новый флаг для режима 3mode
   
-  // Create progress dots based on required count
-  for (let i = 0; i < requiredCount; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'progress-dot';
+  // Показываем контейнер
+  feedbackContainer.style.display = 'flex';
+  
+  // Обновляем прогресс
+  const progressDots = feedbackContainer.querySelectorAll('.progress-dot');
+  
+  // Если это режим 3mode, показываем специальный индикатор
+  if (is3Mode) {
+    // Скрываем все точки кроме первой
+    progressDots.forEach((dot, index) => {
+      if (index === 0) {
+        dot.classList.add('complete');
+        dot.classList.add('pulse');
+      } else {
+        dot.style.display = 'none';
+      }
+    });
     
-    // Always activate dots up to current count (inclusive)
-    if (i < currentCount) {
-      dot.classList.add('active');
+    // Обновляем сообщение
+    const messageElement = feedbackContainer.querySelector('.feedback-message');
+    if (messageElement) {
+      messageElement.textContent = 'Line break inserted!';
     }
     
-    progress.appendChild(dot);
+    // Скрываем контейнер через короткое время
+    setTimeout(() => {
+      feedbackContainer.style.display = 'none';
+    }, 1500);
+    
+    return;
   }
   
-  // If complete, mark all dots as complete for the success animation
-  if (isComplete) {
-    const dots = progress.querySelectorAll('.progress-dot');
-    dots.forEach(dot => {
+  // Стандартная логика для обычного режима
+  progressDots.forEach((dot, index) => {
+    // Показываем все точки
+    dot.style.display = 'block';
+    
+    // Активируем точки в зависимости от текущего счетчика
+    if (index < currentCount) {
+      dot.classList.add('active');
+    } else {
+      dot.classList.remove('active');
+    }
+    
+    // Если отправка завершена, отмечаем все точки как завершенные
+    if (isComplete) {
       dot.classList.add('complete');
-    });
+      dot.classList.add('pulse');
+    } else {
+      dot.classList.remove('complete');
+      dot.classList.remove('pulse');
+    }
+  });
+  
+  // Обновляем сообщение
+  const messageElement = feedbackContainer.querySelector('.feedback-message');
+  if (messageElement) {
+    if (isComplete) {
+      messageElement.textContent = 'Form submitted!';
+    } else {
+      const remaining = requiredCount - currentCount;
+      messageElement.textContent = `Press Enter ${remaining} more time${remaining !== 1 ? 's' : ''} to submit`;
+    }
   }
   
-  // Update message
-  const message = document.getElementById('triple-submit-message');
-  if (isComplete) {
-    message.textContent = 'Form submitted!';
-  } else {
-    const remaining = requiredCount - currentCount;
-    message.textContent = `Press Enter ${remaining} more ${remaining === 1 ? 'time' : 'times'} to submit`;
-  }
-  
-  // Show the feedback
-  container.classList.add('visible');
-  
-  // Hide after a delay
-  clearTimeout(window.feedbackTimeout);
-  window.feedbackTimeout = setTimeout(() => {
-    container.classList.remove('visible');
-  }, isComplete ? 3000 : 2000); // Show success message longer
+  // Скрываем контейнер через некоторое время
+  setTimeout(() => {
+    feedbackContainer.style.display = 'none';
+  }, isComplete ? 3000 : 2000); // Показываем дольше при успешной отправке
 }
 
 // Listen for feedback events from keyHandler.js
 document.addEventListener('tripleSubmitFeedback', (event) => {
   const { currentCount, requiredCount, isComplete } = event.detail;
-  updateFeedback(currentCount, requiredCount, isComplete || currentCount >= requiredCount);
+  updateFeedback(event.detail);
 });
 
 // Initialize the feedback container when the script loads

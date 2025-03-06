@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Triple Submit",
+    "message": "Safe Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "複数回のEnterキー押下を要求することで、フォームの誤送信を防止します",
+    "message": "AIを活用した保護機能と複数回のEnterキー押下を要求することで、オンラインフォームの安全性を高め、誤送信を防止します",
     "description": "Extension description"
   },
   "languageLabel": {

@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Triple Submit",
+    "message": "Safe Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Prevents accidental form submissions by requiring multiple Enter key presses",
+    "message": "Enhances online form safety with AI-powered protection against accidental submissions by requiring multiple Enter key presses",
     "description": "Extension description"
   },
   "languageLabel": {
@@ -12,7 +12,7 @@
     "description": "Label for language selection"
   },
   "enableExtensionLabel": {
-    "message": "Enable Triple Submit",
+    "message": "Enable Safe Enter AI-helper",
     "description": "Label for enabling the extension"
   },
   "currentSiteLabel": {
@@ -67,6 +67,18 @@
     "message": "Slow",
     "description": "Label for slow delay setting"
   },
+  "modeLabel": {
+    "message": "Mode:",
+    "description": "Label for mode selection"
+  },
+  "modeNormal": {
+    "message": "Multiple Enter",
+    "description": "Label for normal mode (multiple Enter presses)"
+  },
+  "mode3mode": {
+    "message": "Always Line Break",
+    "description": "Label for 3mode (Enter always inserts line break)"
+  },
   "advanced_options": {
     "message": "Advanced settings",
     "description": "Label for advanced options button"
@@ -88,7 +100,7 @@
     "description": "Title for usage limit modal"
   },
   "usageLimitText": {
-    "message": "You have used the free version of Triple Submit 20 times.",
+    "message": "You have used the free version of Safe Enter AI-helper 20 times.",
     "description": "Message about reaching usage limit"
   },
   "upgradeText": {

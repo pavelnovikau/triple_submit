@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Triple Submit",
+    "message": "Safe Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Previene invii accidentali di moduli richiedendo più pressioni del tasto Invio",
+    "message": "Migliora la sicurezza dei moduli online con protezione basata su IA contro invii accidentali richiedendo più pressioni del tasto Invio",
     "description": "Extension description"
   },
   "languageLabel": {

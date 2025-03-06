@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Triple Submit</title>
+  <title>Safe Enter AI-helper</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Triple Submit</h1>
+      <h1>Safe Enter AI-helper</h1>
     </header>
     
     <section class="language-selector">
@@ -82,6 +82,14 @@
           <span class="slider round"></span>
         </label>
       </div>
+      
+      <div class="setting-item">
+        <span id="mode-label">Mode:</span>
+        <select id="mode-select" class="mode-select">
+          <option value="normal" id="mode-normal-option">Multiple Enter</option>
+          <option value="3mode" id="mode-3mode-option">Always Line Break</option>
+        </select>
+      </div>
     </section>
   </div>
   
@@ -90,7 +98,7 @@
     <div class="modal-content">
       <span class="close-modal">&times;</span>
       <h2>Usage Limit Reached</h2>
-      <p>You have used the free version of Triple Submit 20 times.</p>
+      <p>You have used the free version of Safe Enter AI-helper 20 times.</p>
       <p>To continue using, please upgrade to the Premium version.</p>
       <div class="price-container">
         <div class="price">

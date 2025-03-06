@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Triple Submit",
+    "message": "Safe Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Empêche les soumissions accidentelles de formulaires en exigeant plusieurs pressions sur la touche Entrée",
+    "message": "Améliore la sécurité des formulaires en ligne avec une protection basée sur l'IA contre les soumissions accidentelles en exigeant plusieurs pressions sur la touche Entrée",
     "description": "Extension description"
   },
   "languageLabel": {
