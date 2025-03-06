@@ -485,13 +485,13 @@ function logKeyEvent(event, source) {
   }
 }
 
-// Список сайтов, требующих специальной обработки
+// Список специальных сайтов, требующих особой обработки
 const specialSites = [
-  { domain: 'chat.openai.com', selector: '.stretch' }, // ChatGPT
-  { domain: 'chatgpt.com', selector: '.stretch' },     // ChatGPT альтернативный домен
-  { domain: 'bard.google.com', selector: '.ql-editor' }, // Google Bard
-  { domain: 'claude.ai', selector: '[contenteditable]' }, // Claude AI
-  { domain: 'github.com', selector: '.comment-form-textarea' } // GitHub комментарии
+  { domain: 'chat.openai.com', selector: '.stretch' },
+  { domain: 'chatgpt.com', selector: '[role="textbox"], [contenteditable], .text-input, [data-testid="text-input"]' },
+  { domain: 'bard.google.com', selector: '.ql-editor' },
+  { domain: 'claude.ai', selector: '[contenteditable]' },
+  { domain: 'github.com', selector: '.comment-form-textarea' }
 ];
 
 // Проверка, является ли текущий сайт специальным
@@ -553,24 +553,24 @@ function handleKeyDown(event) {
   if (domainSettings.mode === '3mode' && event.key === 'Enter') {
     Logger.info('3mode active: Enter key will insert line break instead of submitting form');
     
-    // Предотвращаем стандартное действие
+    // Prevent default action
     event.preventDefault();
     event.stopPropagation();
     
-    // Проверяем, является ли элемент текстовым полем
+    // Insert line break
     if (isTextInput(event.target)) {
-      // Вставляем перенос строки как если бы был нажат Shift+Enter
       alternativeAction(event);
     }
     
-    // Показываем визуальный отклик, если включен
+    // Show visual feedback
     if (domainSettings.showFeedback) {
       const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
         detail: {
           currentCount: 1,
           requiredCount: 1,
-          isComplete: true,
-          is3Mode: true
+          isComplete: false,
+          is3Mode: true,
+          isLineBreakInserted: true
         }
       });
       document.dispatchEvent(feedbackEvent);
@@ -649,7 +649,8 @@ function handleKeyDown(event) {
           detail: {
             currentCount: enterPressCount,
             requiredCount: domainSettings.pressCount,
-            isComplete: false
+            isComplete: false,
+            isLineBreakInserted: true
           }
         });
         document.dispatchEvent(feedbackEvent);
@@ -872,6 +873,9 @@ function handleChatGPT(element) {
         range.setEndAfter(br);
         selection.removeAllRanges();
         selection.addRange(range);
+        
+        // Имитируем событие ввода для обновления UI
+        chatInput.dispatchEvent(new Event('input', { bubbles: true }));
       }
     } else {
       // Для textarea
@@ -883,8 +887,11 @@ function handleChatGPT(element) {
       // Имитируем событие ввода для обновления UI
       chatInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    
+    return true;
   } catch (error) {
     Logger.error('Error in handleChatGPT:', error);
+    return false;
   }
 }
 
@@ -896,7 +903,11 @@ function findChatGPTInput(element) {
     'textarea',
     '[contenteditable="true"]',
     '[role="textbox"]',
-    '.ProseMirror'
+    '.ProseMirror',
+    // Дополнительные селекторы для chatgpt.com
+    '[data-testid="send-button"]',
+    '[data-message-author-role]',
+    '.text-input'
   ];
   
   // Проверяем сам элемент
@@ -920,6 +931,25 @@ function findChatGPTInput(element) {
     if (closest) {
       return closest;
     }
+  }
+  
+  // Для chatgpt.com пробуем найти текстовое поле по атрибутам
+  if (window.location.hostname === 'chatgpt.com') {
+    // Ищем по роли
+    const textboxByRole = document.querySelector('[role="textbox"]');
+    if (textboxByRole) return textboxByRole;
+    
+    // Ищем по data-testid
+    const textboxByTestId = document.querySelector('[data-testid="text-input"]');
+    if (textboxByTestId) return textboxByTestId;
+    
+    // Ищем по классу
+    const textboxByClass = document.querySelector('.text-input');
+    if (textboxByClass) return textboxByClass;
+    
+    // Ищем любой contenteditable
+    const anyContentEditable = document.querySelector('[contenteditable]');
+    if (anyContentEditable) return anyContentEditable;
   }
   
   return null;

@@ -1,4 +1,4 @@
-// Visual feedback for Triple Submit extension
+// Visual feedback for Safe Enter AI-helper extension
 
 // Create and inject the feedback container
 function createFeedbackContainer() {
@@ -14,44 +14,84 @@ function createFeedbackContainer() {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0, 0, 0, 0.8);
       color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
+      padding: 15px 20px;
+      border-radius: 8px;
       z-index: 9999;
       font-family: Arial, sans-serif;
       transition: opacity 0.3s ease-in-out;
       display: flex;
+      flex-direction: column;
       align-items: center;
       opacity: 0;
       pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      max-width: 300px;
     }
     
     #triple-submit-feedback.visible {
       opacity: 1;
     }
     
+    #triple-submit-message {
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    
     #triple-submit-progress {
       display: flex;
-      margin-left: 10px;
+      margin: 5px 0;
+      align-items: center;
     }
     
     .progress-dot {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background-color: rgba(255, 255, 255, 0.3);
-      margin: 0 3px;
-      transition: background-color 0.2s ease;
+      margin: 0 4px;
+      transition: all 0.3s ease;
+      position: relative;
     }
     
     .progress-dot.active {
       background-color: rgba(255, 255, 255, 1);
+      transform: scale(1.1);
+    }
+    
+    .progress-dot.newline::after {
+      content: "↵";
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: #4CAF50;
+    }
+    
+    .progress-dot.submit::after {
+      content: "✓";
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: #FF9800;
     }
     
     .progress-dot.complete {
       background-color: #4CAF50;
       animation: pulse 1s infinite;
+    }
+    
+    .progress-instruction {
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      text-align: center;
     }
     
     @keyframes pulse {
@@ -75,95 +115,140 @@ function createFeedbackContainer() {
   const progress = document.createElement('div');
   progress.id = 'triple-submit-progress';
   
+  const instruction = document.createElement('div');
+  instruction.className = 'progress-instruction';
+  instruction.textContent = '↵ = new line, ✓ = submit form';
+  
   container.appendChild(message);
   container.appendChild(progress);
+  container.appendChild(instruction);
   
   document.body.appendChild(container);
+  
+  // Store reference to container
+  window.feedbackContainer = container;
 }
 
 // Update the feedback display
 function updateFeedback(detail) {
-  if (!feedbackContainer) return;
+  const container = document.getElementById('triple-submit-feedback');
+  if (!container) {
+    createFeedbackContainer();
+    return updateFeedback(detail);
+  }
   
   const currentCount = detail.currentCount || 0;
   const requiredCount = detail.requiredCount || 3;
   const isComplete = detail.isComplete || false;
-  const is3Mode = detail.is3Mode || false; // Новый флаг для режима 3mode
+  const is3Mode = detail.is3Mode || false;
+  const isLineBreakInserted = detail.isLineBreakInserted || false;
   
-  // Показываем контейнер
-  feedbackContainer.style.display = 'flex';
+  // Show container
+  container.style.opacity = '1';
+  container.style.display = 'flex';
   
-  // Обновляем прогресс
-  const progressDots = feedbackContainer.querySelectorAll('.progress-dot');
+  // Get progress element
+  const progress = document.getElementById('triple-submit-progress');
+  if (!progress) return;
+  
+  // Clear existing dots
+  progress.innerHTML = '';
   
   // Если это режим 3mode, показываем специальный индикатор
   if (is3Mode) {
-    // Скрываем все точки кроме первой
-    progressDots.forEach((dot, index) => {
-      if (index === 0) {
-        dot.classList.add('complete');
-        dot.classList.add('pulse');
-      } else {
-        dot.style.display = 'none';
-      }
-    });
+    // Create single dot for 3mode
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot complete newline';
+    progress.appendChild(dot);
     
-    // Обновляем сообщение
-    const messageElement = feedbackContainer.querySelector('.feedback-message');
-    if (messageElement) {
-      messageElement.textContent = 'Line break inserted!';
+    // Update message
+    const message = document.getElementById('triple-submit-message');
+    if (message) {
+      message.textContent = 'Line break inserted!';
     }
     
-    // Скрываем контейнер через короткое время
+    // Hide instruction for 3mode
+    const instruction = container.querySelector('.progress-instruction');
+    if (instruction) {
+      instruction.style.display = 'none';
+    }
+    
+    // Hide after delay
     setTimeout(() => {
-      feedbackContainer.style.display = 'none';
+      container.style.opacity = '0';
+      setTimeout(() => {
+        container.style.display = 'none';
+      }, 300);
     }, 1500);
     
     return;
   }
   
-  // Стандартная логика для обычного режима
-  progressDots.forEach((dot, index) => {
-    // Показываем все точки
-    dot.style.display = 'block';
+  // Show instruction for multiple enter mode
+  const instruction = container.querySelector('.progress-instruction');
+  if (instruction) {
+    instruction.style.display = 'block';
+  }
+  
+  // Create dots based on required count
+  for (let i = 0; i < requiredCount; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot';
     
-    // Активируем точки в зависимости от текущего счетчика
-    if (index < currentCount) {
+    // Mark active dots
+    if (i < currentCount) {
       dot.classList.add('active');
-    } else {
-      dot.classList.remove('active');
     }
     
-    // Если отправка завершена, отмечаем все точки как завершенные
+    // Mark all dots as complete if submission is complete
     if (isComplete) {
       dot.classList.add('complete');
-      dot.classList.add('pulse');
-    } else {
-      dot.classList.remove('complete');
-      dot.classList.remove('pulse');
     }
-  });
+    
+    // Add newline indicator for all dots except the last one
+    if (i < requiredCount - 1) {
+      dot.classList.add('newline');
+    } else {
+      dot.classList.add('submit');
+    }
+    
+    progress.appendChild(dot);
+  }
   
-  // Обновляем сообщение
-  const messageElement = feedbackContainer.querySelector('.feedback-message');
-  if (messageElement) {
+  // Update message
+  const message = document.getElementById('triple-submit-message');
+  if (message) {
     if (isComplete) {
-      messageElement.textContent = 'Form submitted!';
+      message.textContent = 'Form submitted!';
+    } else if (isLineBreakInserted) {
+      message.textContent = 'Line break inserted!';
+      
+      // For line break, show briefly
+      setTimeout(() => {
+        container.style.opacity = '0';
+        setTimeout(() => {
+          container.style.display = 'none';
+        }, 300);
+      }, 1500);
+      
+      return;
     } else {
       const remaining = requiredCount - currentCount;
-      messageElement.textContent = `Press Enter ${remaining} more time${remaining !== 1 ? 's' : ''} to submit`;
+      message.textContent = `Press Enter ${remaining} more time${remaining !== 1 ? 's' : ''} to submit form`;
     }
   }
   
-  // Скрываем контейнер через некоторое время
+  // Hide after delay
   setTimeout(() => {
-    feedbackContainer.style.display = 'none';
-  }, isComplete ? 3000 : 2000); // Показываем дольше при успешной отправке
+    container.style.opacity = '0';
+    setTimeout(() => {
+      container.style.display = 'none';
+    }, 300);
+  }, isComplete ? 3000 : 2000);
 }
 
 // Listen for feedback events from keyHandler.js
 document.addEventListener('tripleSubmitFeedback', (event) => {
-  const { currentCount, requiredCount, isComplete } = event.detail;
   updateFeedback(event.detail);
 });
 
