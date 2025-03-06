@@ -695,27 +695,34 @@ function alternativeAction(event) {
       
       // Special handling for Arc browser
       if (browserType === 'arc') {
-        Logger.debug('Using Arc-specific line break insertion');
+        Logger.debug('Using Arc-specific paragraph break insertion');
         
         if (element.matches('[contenteditable="true"], [contenteditable=""]')) {
-          // Insert br element directly for Arc browser
+          // Insert two br elements directly for Arc browser to create a paragraph
           const selection = window.getSelection();
           const range = selection.getRangeAt(0);
-          const br = document.createElement('br');
-          range.deleteContents();
-          range.insertNode(br);
+          const fragment = document.createDocumentFragment();
           
-          // Move cursor after the br
-          range.setStartAfter(br);
-          range.setEndAfter(br);
+          // Создаем два <br> для формирования нового параграфа
+          const br1 = document.createElement('br');
+          const br2 = document.createElement('br');
+          fragment.appendChild(br1);
+          fragment.appendChild(br2);
+          
+          range.deleteContents();
+          range.insertNode(fragment);
+          
+          // Move cursor after the second br
+          range.setStartAfter(br2);
+          range.setEndAfter(br2);
           selection.removeAllRanges();
           selection.addRange(range);
         } else {
-          // For textarea in Arc
+          // For textarea in Arc - insert double newline
           const start = element.selectionStart;
           const end = element.selectionEnd;
-          element.value = element.value.substring(0, start) + '\n' + element.value.substring(end);
-          element.selectionStart = element.selectionEnd = start + 1;
+          element.value = element.value.substring(0, start) + '\n\n' + element.value.substring(end);
+          element.selectionStart = element.selectionEnd = start + 2;
         }
       } else {
         // Универсальный метод вставки переноса строки
@@ -794,23 +801,31 @@ function insertLineBreak(element) {
     if (element.isContentEditable || element.matches('[contenteditable="true"], [contenteditable=""]')) {
       // Пробуем использовать execCommand
       try {
-        element.ownerDocument.execCommand('insertLineBreak');
+        // Вставляем два переноса строки для создания нового параграфа
+        element.ownerDocument.execCommand('insertParagraph');
         return;
       } catch (e) {
         Logger.debug('execCommand failed, trying alternative method');
       }
       
-      // Альтернативный метод - вставка <br> элемента
+      // Альтернативный метод - вставка двух <br> элементов для создания нового параграфа
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        const br = document.createElement('br');
-        range.deleteContents();
-        range.insertNode(br);
+        const fragment = document.createDocumentFragment();
         
-        // Перемещаем курсор после <br>
-        range.setStartAfter(br);
-        range.setEndAfter(br);
+        // Создаем два <br> для формирования нового параграфа
+        const br1 = document.createElement('br');
+        const br2 = document.createElement('br');
+        fragment.appendChild(br1);
+        fragment.appendChild(br2);
+        
+        range.deleteContents();
+        range.insertNode(fragment);
+        
+        // Перемещаем курсор после второго <br>
+        range.setStartAfter(br2);
+        range.setEndAfter(br2);
         selection.removeAllRanges();
         selection.addRange(range);
       }
@@ -819,8 +834,9 @@ function insertLineBreak(element) {
     else if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
       const start = element.selectionStart;
       const end = element.selectionEnd;
-      element.value = element.value.substring(0, start) + '\n' + element.value.substring(end);
-      element.selectionStart = element.selectionEnd = start + 1;
+      // Вставляем двойной перенос строки для создания нового параграфа
+      element.value = element.value.substring(0, start) + '\n\n' + element.value.substring(end);
+      element.selectionStart = element.selectionEnd = start + 2;
     }
   } catch (error) {
     Logger.error('Error in insertLineBreak:', error);
@@ -837,7 +853,7 @@ function handleChatGPT(element) {
       return;
     }
     
-    Logger.info('Found ChatGPT input element, inserting line break');
+    Logger.info('Found ChatGPT input element, inserting paragraph break');
     
     // Вставляем перенос строки
     if (chatInput.isContentEditable) {
@@ -845,13 +861,20 @@ function handleChatGPT(element) {
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        const br = document.createElement('br');
-        range.deleteContents();
-        range.insertNode(br);
+        const fragment = document.createDocumentFragment();
         
-        // Перемещаем курсор после <br>
-        range.setStartAfter(br);
-        range.setEndAfter(br);
+        // Создаем два <br> для формирования нового параграфа
+        const br1 = document.createElement('br');
+        const br2 = document.createElement('br');
+        fragment.appendChild(br1);
+        fragment.appendChild(br2);
+        
+        range.deleteContents();
+        range.insertNode(fragment);
+        
+        // Перемещаем курсор после второго <br>
+        range.setStartAfter(br2);
+        range.setEndAfter(br2);
         selection.removeAllRanges();
         selection.addRange(range);
         
@@ -862,8 +885,9 @@ function handleChatGPT(element) {
       // Для textarea
       const start = chatInput.selectionStart;
       const end = chatInput.selectionEnd;
-      chatInput.value = chatInput.value.substring(0, start) + '\n' + chatInput.value.substring(end);
-      chatInput.selectionStart = chatInput.selectionEnd = start + 1;
+      // Вставляем двойной перенос строки для создания нового параграфа
+      chatInput.value = chatInput.value.substring(0, start) + '\n\n' + chatInput.value.substring(end);
+      chatInput.selectionStart = chatInput.selectionEnd = start + 2;
       
       // Имитируем событие ввода для обновления UI
       chatInput.dispatchEvent(new Event('input', { bubbles: true }));
