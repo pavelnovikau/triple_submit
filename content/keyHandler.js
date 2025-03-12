@@ -161,12 +161,12 @@ function getDomainSettings() {
 function useDefaultSettings(resolve) {
   Logger.warn('Using default settings due to error');
   domainSettings = {
-    domainEnabled: false, // Disabled by default
+    domainEnabled: true, // Enabled by default
     pressCount: 3,
     showFeedback: true,
     isPremium: false,
     delay: 200,
-    mode: 'normal' // Добавляем режим по умолчанию
+    mode: 'normal'
   };
   resolve(domainSettings);
 }
@@ -185,7 +185,7 @@ function initializeWithRetry() {
   if (initializationAttempts === 1) {
     // Временные настройки для первой инициализации
     const tempSettings = {
-      domainEnabled: false, // Начинаем с выключенного состояния
+      domainEnabled: true, // Начинаем с включенного состояния
       pressCount: 3,
       showFeedback: true,
       delay: 600
@@ -349,42 +349,8 @@ function initKeyListeners(settings) {
               if (event.key === 'Enter' && domainSettings && domainSettings.domainEnabled) {
                 Logger.debug('Global force-activated Enter key handler triggered');
                 
-                Logger.info('EnterPressCount in globalKeyHandler: ' + enterPressCount);
-                enterPressCount++;
-                Logger.info('EnterPressCount in globalKeyHandle 2: ' + enterPressCount);
-
-                // Проверяем, достигнуто ли необходимое количество нажатий
-                if (enterPressCount < domainSettings.pressCount) {
-                  // Если количество нажатий недостаточно, предотвращаем отправку формы
-                  Logger.info(`Preventing form submission in global handler: ${enterPressCount} < ${domainSettings.pressCount}`);
-                  
-                  // Предотвращаем стандартное действие
-                  event.preventDefault();
-                  event.stopPropagation();
-                  
-                  // Проверяем, является ли элемент текстовым полем
-                  if (isTextInput(event.target)) {
-                    // Вставляем перенос строки
-                    alternativeAction(event);
-                  }
-                  
-                  // Показываем визуальный отклик
-                  if (domainSettings.showFeedback) {
-                    const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-                      detail: {
-                        currentCount: enterPressCount,
-                        requiredCount: domainSettings.pressCount,
-                        isComplete: false
-                      }
-                    });
-                    document.dispatchEvent(feedbackEvent);
-                  }
-                  
-                  return false;
-                }
-                
-                // НЕ используем стандартный обработчик, так как он тоже увеличивает счетчик
-                // handleKeyDown(event);
+                // Пропускаем обработку, так как она уже происходит в handleKeyDown
+                return;
               }
             };
             
@@ -644,6 +610,7 @@ function handleKeyDown(event) {
       // Reset counter after successful submission
       enterPressCount = 0;
       enterPresses = [];
+      lastEnterPressTime = 0;
       
       // Track usage
       if (!usageTracked) {

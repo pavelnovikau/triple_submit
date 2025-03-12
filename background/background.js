@@ -24,7 +24,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     
     // Initialize default settings
     const defaultSettings = {
-      domainEnabled: false,  // Each site should be enabled individually
+      domainEnabled: true,  // Enable by default for all sites
       pressCount: 3,        // Default required press count
       showFeedback: true,   // Visual feedback enabled by default
       delay: 600           // Default delay between presses (ms) - Normal
@@ -72,7 +72,7 @@ function migrateSettings() {
         Logger.info('Migrating settings from older version');
         
         const migratedSettings = {
-          domainEnabled: data.settings.domainEnabled !== undefined ? data.settings.domainEnabled : false,
+          domainEnabled: data.settings.domainEnabled !== undefined ? data.settings.domainEnabled : true,
           pressCount: data.settings.pressCount !== undefined ? data.settings.pressCount : 3,
           showFeedback: data.settings.showFeedback !== undefined ? data.settings.showFeedback : true,
           delay: data.settings.delay !== undefined ? data.settings.delay : 600
@@ -135,7 +135,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
                 
                 const settings = data.settings || {
-                  domainEnabled: false,
+                  domainEnabled: true,  // Enable by default
                   pressCount: 3,
                   showFeedback: true,
                   delay: 600,
@@ -226,11 +226,11 @@ function handleGetSettings(sendResponse) {
       
     // If settings don't exist yet, use defaults
     const settings = data.settings || {
-      domainEnabled: false,
+      domainEnabled: true,  // Enable by default
       pressCount: 3,
       showFeedback: true,
       delay: 600,
-      mode: 'normal' // Добавляем режим по умолчанию
+      mode: 'normal'
     };
     
     // Add premium status
@@ -260,22 +260,28 @@ function handleSaveSettings(newSettings, sendResponse) {
 function handleCheckDomain(domain, sendResponse) {
   if (!domain) {
     Logger.warn('Empty domain in checkDomain request');
-    sendResponse({ isEnabled: false });
+    sendResponse({ isEnabled: true }); // Default to enabled
     return;
   }
   
-  chrome.storage.sync.get(['domains'], (data) => {
+  chrome.storage.sync.get(['domains', 'settings'], (data) => {
     if (chrome.runtime.lastError) {
       Logger.error('Error checking domain:', chrome.runtime.lastError);
-      sendResponse({ isEnabled: false });
-        return;
-      }
-      
-    // Check if domain is in enabled list
-    const domains = data.domains || {};
-    const isEnabled = domains[domain] === true;
+      sendResponse({ isEnabled: true }); // Default to enabled on error
+      return;
+    }
     
-    Logger.info(`Domain ${domain} enabled: ${isEnabled}`);
+    // Get global setting
+    const settings = data.settings || { domainEnabled: true };
+    
+    // Check if domain is explicitly disabled in the domains list
+    const domains = data.domains || {};
+    const isExplicitlyDisabled = domains[domain] === false;
+    
+    // Domain is enabled by default unless explicitly disabled
+    const isEnabled = !isExplicitlyDisabled;
+    
+    Logger.info(`Domain ${domain} enabled: ${isEnabled} (explicitly disabled: ${isExplicitlyDisabled})`);
     sendResponse({ isEnabled: isEnabled });
   });
 }
@@ -374,11 +380,11 @@ function notifyAllTabsAboutSettingsUpdate(sendResponse) {
     }
     
     const settings = data.settings || {
-      domainEnabled: false,
+      domainEnabled: true,  // Enable by default
       pressCount: 3,
       showFeedback: true,
       delay: 600,
-      mode: 'normal' // Добавляем режим по умолчанию
+      mode: 'normal'
     };
     
     Logger.info('Sending updated settings to all tabs:', settings);
