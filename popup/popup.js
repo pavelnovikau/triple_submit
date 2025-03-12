@@ -131,15 +131,12 @@ document.addEventListener('DOMContentLoaded', function() {
       // Check domain status
       if (currentDomain) {
         const domainData = await chrome.storage.sync.get(['domains']);
-        if (domainData && domainData.domains) {
-          // Domain is disabled by default
-          currentSettings.domainEnabled = false;
-          
-          // Check if domain is in enabled list
-          if (domainData.domains[currentDomain]) {
-            currentSettings.domainEnabled = true;
-          }
-        }
+        const domains = domainData.domains || {};
+        // Domain is enabled by default unless explicitly disabled
+        const isExplicitlyDisabled = domains[currentDomain] === false;
+        currentSettings.domainEnabled = !isExplicitlyDisabled;
+        
+        Logger.info(`Domain ${currentDomain} enabled status: ${currentSettings.domainEnabled} (explicitly disabled: ${isExplicitlyDisabled})`);
       }
       
       // Load localized strings first, then update UI
@@ -473,54 +470,35 @@ document.addEventListener('DOMContentLoaded', function() {
   // Функция для сохранения настроек с явным указанием, что это переключение домена
   async function saveSettingsWithDomainToggle() {
     try {
-      // Save general settings
-      await chrome.storage.sync.set({
-        settings: {
-          pressCount: currentSettings.pressCount,
-          showFeedback: currentSettings.showFeedback,
-          delay: currentSettings.delay
-        },
-        language: currentSettings.language
-      });
+      // Get current domains list
+      const data = await chrome.storage.sync.get(['domains']);
+      const domains = data.domains || {};
       
-      // Save domain-specific settings
-      if (currentDomain) {
-        const domainData = await chrome.storage.sync.get(['domains']);
-        let domains = {};
-        
-        if (domainData && domainData.domains) {
-          domains = domainData.domains;
-        }
-        
-        // If enabled, add domain to list, otherwise remove it
-        if (currentSettings.domainEnabled) {
-          domains[currentDomain] = true;
-        } else {
-          delete domains[currentDomain];
-        }
-        
-        // Save updated domains
-        await chrome.storage.sync.set({ domains });
+      // If domain is enabled (toggle is on), remove it from disabled list
+      // If domain is disabled (toggle is off), add it to disabled list
+      if (currentSettings.domainEnabled) {
+        delete domains[currentDomain];
+      } else {
+        domains[currentDomain] = false; // Explicitly disable domain
       }
       
-      // Notify background script about settings update with confirmation callback
-      return new Promise((resolve) => {
-        chrome.runtime.sendMessage({ 
-          action: 'settings_updated',
-          isToggle: true, // Явно указываем, что это переключение домена
-          isDomainToggle: true, // Дополнительный флаг для ясности
-          forceActivation: true, // Принудительно активируем обработчики
-          timestamp: Date.now(), // Временная метка для отслеживания
-          domain: currentDomain, // Передаем текущий домен
-          enabled: currentSettings.domainEnabled // Передаем новое состояние
-        }, (response) => {
-          Logger.info('Domain toggle update confirmed by background script:', response);
-          Logger.info('Domain settings saved:', { domain: currentDomain, enabled: currentSettings.domainEnabled });
-          resolve(response);
-        });
+      Logger.info(`Saving domain ${currentDomain} status: ${currentSettings.domainEnabled}`);
+      
+      // Save updated domains list
+      await chrome.storage.sync.set({ domains: domains });
+      
+      // Save other settings
+      await chrome.storage.sync.set({ settings: currentSettings });
+      
+      // Notify background script about settings update
+      chrome.runtime.sendMessage({ 
+        action: 'settings_updated',
+        isToggle: true
       });
+      
+      Logger.info('Settings saved successfully');
     } catch (error) {
-      Logger.error('Error saving domain toggle settings:', error);
+      Logger.error('Error saving settings:', error);
     }
   }
   

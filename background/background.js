@@ -146,9 +146,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   if (activeTab.url && activeTab.url.startsWith('http')) {
                     const hostname = new URL(activeTab.url).hostname;
                     const domains = data.domains || {};
-                    const domainEnabled = domains[hostname] === true;
+                    // Домен включен по умолчанию, если не отключен явно
+                    const isExplicitlyDisabled = domains[hostname] === false;
+                    const domainEnabled = !isExplicitlyDisabled;
                     
-                    Logger.info(`Sending priority update to active tab (${hostname}), domainEnabled=${domainEnabled}`);
+                    Logger.info(`Sending priority update to active tab (${hostname}), domainEnabled=${domainEnabled} (explicitly disabled: ${isExplicitlyDisabled})`);
                     
                     // Отправляем обновленные настройки в активную вкладку с флагом forceActivation
                     chrome.tabs.sendMessage(activeTab.id, { 
@@ -156,16 +158,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                       settings: settings,
                       domainEnabled: domainEnabled,
                       isPriorityUpdate: true,
-                      forceActivation: true, // Новый флаг для принудительной активации
-                      timestamp: Date.now() // Добавляем временную метку для отслеживания
-                    }).then(() => {
+                      forceActivation: true,
+                      timestamp: Date.now()
+                    })
+                    .then(() => {
                       Logger.info('Priority update sent to active tab');
                       
                       // Затем обновляем остальные вкладки
                       setTimeout(() => {
                         notifyAllTabsAboutSettingsUpdate(sendResponse);
                       }, 100);
-                    }).catch((error) => {
+                    })
+                    .catch((error) => {
                       Logger.error('Error sending priority update to active tab:', error);
                       // Если не удалось отправить в активную вкладку, обновляем все вкладки
                       notifyAllTabsAboutSettingsUpdate(sendResponse);
@@ -399,7 +403,11 @@ function notifyAllTabsAboutSettingsUpdate(sendResponse) {
             const hostname = new URL(tab.url).hostname;
             // Проверяем, включено ли расширение для данного домена
             const domains = data.domains || {};
-            const domainEnabled = domains[hostname] === true;
+            // Домен включен по умолчанию, если не отключен явно
+            const isExplicitlyDisabled = domains[hostname] === false;
+            const domainEnabled = !isExplicitlyDisabled;
+            
+            Logger.info(`Domain ${hostname} enabled status: ${domainEnabled} (explicitly disabled: ${isExplicitlyDisabled})`);
             
             // Отправляем обновленные настройки и статус для домена
             updatePromises.push(
@@ -407,11 +415,10 @@ function notifyAllTabsAboutSettingsUpdate(sendResponse) {
                 action: 'settingsUpdated',
                 settings: settings,
                 domainEnabled: domainEnabled,
-                forceActivation: true, // Добавляем флаг для принудительной активации
-                timestamp: Date.now() // Добавляем временную метку для отслеживания
+                forceActivation: true,
+                timestamp: Date.now()
               }).catch((error) => {
                 Logger.warn(`Error sending settings update to tab ${tab.id}:`, error);
-                // Игнорируем ошибки при отправке сообщений, поскольку не все вкладки могут быть готовы
               })
             );
           } catch (error) {
@@ -420,7 +427,7 @@ function notifyAllTabsAboutSettingsUpdate(sendResponse) {
         }
       });
       
-      // Отвечаем, когда все сообщения отправлены (или попытались отправить)
+      // Отвечаем, когда все сообщения отправлены
       Promise.allSettled(updatePromises).then(() => {
         Logger.info('Finished sending settings updates to all tabs');
         if (sendResponse) sendResponse({ success: true });
