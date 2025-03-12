@@ -279,7 +279,6 @@ function initKeyListeners(settings) {
             const forms = document.querySelectorAll('form');
             Logger.info(`Found ${forms.length} forms on the page for force activation`);
             
-            // Добавляем обработчики для всех форм с высоким приоритетом
             forms.forEach((form, index) => {
               // Удаляем предыдущий обработчик, если он был
               if (form.dataset.tripleSubmitHandled) {
@@ -309,20 +308,6 @@ function initKeyListeners(settings) {
                     Logger.info(`Preventing form submission: ${enterPressCount} < ${domainSettings.pressCount}`);
                     event.preventDefault();
                     event.stopPropagation();
-                    
-                    // Показываем визуальный отклик
-                    if (domainSettings.showFeedback) {
-                      const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-                        detail: {
-                          currentCount: enterPressCount,
-                          requiredCount: domainSettings.pressCount,
-                          isComplete: false,
-                          isFormSubmit: true,
-                          isForceActivated: true
-                        }
-                      });
-                      document.dispatchEvent(feedbackEvent);
-                    }
                     
                     return false;
                   } else {
@@ -525,21 +510,6 @@ function handleKeyDown(event) {
     enterPressCount = 0;
     enterPresses = [];
     lastEnterPressTime = 0;
-    
-    // Show visual feedback about reset
-    if (domainSettings.showFeedback) {
-      const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-        detail: {
-          currentCount: 0,
-          requiredCount: domainSettings.pressCount,
-          isComplete: false,
-          isReset: true,
-          resetReason: 'non_enter_key'
-        }
-      });
-      document.dispatchEvent(feedbackEvent);
-    }
-    return;
   }
   
   // For enter key only - add extra logs
@@ -600,35 +570,23 @@ function handleKeyDown(event) {
       // Если это текстовое поле, вставляем перенос строки
       if (isTextInput(event.target)) {
         alternativeAction(event);
-      }
-      
-      // Show visual feedback
-      if (domainSettings.showFeedback) {
-        const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-          detail: {
-            currentCount: enterPressCount,
-            requiredCount: domainSettings.pressCount,
-            isComplete: false,
-            isLineBreakInserted: isTextInput(event.target)
-          }
-        });
-        document.dispatchEvent(feedbackEvent);
+        
+        // Show visual feedback for line break
+        if (domainSettings.showFeedback) {
+          const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
+            detail: {
+              currentCount: enterPressCount,
+              requiredCount: domainSettings.pressCount,
+              isComplete: false,
+              isLineBreakInserted: true
+            }
+          });
+          document.dispatchEvent(feedbackEvent);
+        }
       }
     } else {
       // Enough Enter presses, allow form submission
       Logger.info(`Form submission allowed after ${enterPressCount} Enter presses`);
-      
-      // Show completion feedback
-      if (domainSettings.showFeedback) {
-        const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-          detail: {
-            currentCount: enterPressCount,
-            requiredCount: domainSettings.pressCount,
-            isComplete: true
-          }
-        });
-        document.dispatchEvent(feedbackEvent);
-      }
       
       // Reset counter after successful submission
       enterPressCount = 0;
@@ -988,32 +946,17 @@ function addFormSubmitHandlers() {
         Logger.info('EnterPressCount in addFormSubmitHandlers: ' + enterPressCount);
 
         if (enterPressCount < domainSettings.pressCount) {
-
           Logger.info('EnterPressCount in form submit handler: ' + enterPressCount);
           // Если количество нажатий недостаточно, предотвращаем отправку формы
           Logger.info(`Preventing form submission: ${enterPressCount} < ${domainSettings.pressCount}`);
           event.preventDefault();
           event.stopPropagation();
-          
-          // Показываем визуальный отклик
-          if (domainSettings.showFeedback) {
-            const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-              detail: {
-                currentCount: enterPressCount,
-                requiredCount: domainSettings.pressCount,
-                isComplete: false,
-                isFormSubmit: true
-              }
-            });
-            document.dispatchEvent(feedbackEvent);
-          }
-          
           return false;
         }
       }
       
       return true;
-    }, true); // Используем capture phase для перехвата события до других обработчиков
+    }, true);
   });
 }
 
@@ -1281,19 +1224,6 @@ function scheduleCounterReset() {
         Logger.debug('Auto-reset: time between presses exceeded delay, resetting counter');
         enterPressCount = 0;
         enterPresses = [];
-        
-        // Show visual feedback about reset
-        if (domainSettings.showFeedback) {
-          const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-            detail: {
-              currentCount: 0,
-              requiredCount: domainSettings.pressCount,
-              isComplete: false,
-              isReset: true
-            }
-          });
-          document.dispatchEvent(feedbackEvent);
-        }
       }
     }
   }, domainSettings ? domainSettings.delay : 600);
