@@ -516,13 +516,36 @@ function handleKeyDown(event) {
     return;
   }
   
+  // Ignore repeat events from key holding
+  if (event.repeat) return;
+  
+  // Reset counter if any non-Enter key is pressed
+  if (event.key !== 'Enter' && enterPressCount > 0) {
+    Logger.debug(`Non-Enter key pressed (${event.key}), resetting counter from ${enterPressCount} to 0`);
+    enterPressCount = 0;
+    enterPresses = [];
+    lastEnterPressTime = 0;
+    
+    // Show visual feedback about reset
+    if (domainSettings.showFeedback) {
+      const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
+        detail: {
+          currentCount: 0,
+          requiredCount: domainSettings.pressCount,
+          isComplete: false,
+          isReset: true,
+          resetReason: 'non_enter_key'
+        }
+      });
+      document.dispatchEvent(feedbackEvent);
+    }
+    return;
+  }
+  
   // For enter key only - add extra logs
   if (event.key === 'Enter') {
     Logger.info(`Enter key detected with domain enabled=${domainSettings.domainEnabled}, pressCount=${domainSettings.pressCount}, mode=${domainSettings.mode || 'normal'}`);
   }
-  
-  // Ignore repeat events from key holding
-  if (event.repeat) return;
   
   // Special handling for Arc browser
   if (browserType === 'arc') {
