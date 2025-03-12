@@ -110,5 +110,9 @@
   "processing_payment": {
     "message": "جاري معالجة الدفع...",
     "description": "Text during payment processing"
+  },
+  "extensionName": {
+    "message": "3x Enter",
+    "description": "Name of the extension"
   }
 } 

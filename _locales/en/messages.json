@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Safe Enter AI-helper",
+    "message": "3x Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
@@ -114,5 +114,13 @@
   "processing_payment": {
     "message": "Processing payment...",
     "description": "Text during payment processing"
+  },
+  "enableExtension": {
+    "message": "Enable 3x Enter",
+    "description": "Text for the main toggle switch"
+  },
+  "usageLimitMessage": {
+    "message": "You have used the free version of 3x Enter 20 times.",
+    "description": "Message shown when usage limit is reached"
   }
 } 

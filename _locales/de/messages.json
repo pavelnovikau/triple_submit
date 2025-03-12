@@ -62,5 +62,9 @@
   "settings_note": {
     "message": "* Zusätzliche Einstellungen in den erweiterten Optionen verfügbar",
     "description": "Note about additional settings in advanced options"
+  },
+  "extensionName": {
+    "message": "3x Enter",
+    "description": "Name of the extension"
   }
 } 

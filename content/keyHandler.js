@@ -1311,7 +1311,7 @@ function scheduleCounterReset() {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-  Logger.info('DOM content loaded, initializing Safe Enter AI-helper');
+  Logger.info('DOM content loaded, initializing 3x Enter');
   
   // Инициализация с задержкой для обеспечения стабильной загрузки расширения
   setTimeout(() => {
@@ -1345,7 +1345,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Alternative initialization for Chrome extensions on already loaded pages
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  Logger.info('Page already loaded, initializing Safe Enter AI-helper immediately');
+  Logger.info('Page already loaded, initializing 3x Enter immediately');
   initializeWithRetry();
   
   // Добавляем обработчики для форм

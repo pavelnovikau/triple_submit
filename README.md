@@ -1,10 +1,10 @@
-# Safe Enter AI-helper Chrome Extension
+# 3x Enter Chrome Extension
 
 A browser extension that enhances online form safety with AI-powered protection against accidental submissions by requiring multiple Enter key presses.
 
 ## Overview
 
-Safe Enter AI-helper is a Chrome extension designed to safeguard against accidental form submissions. It requires multiple Enter key presses before form submission, helping to prevent premature submission of important data.
+3x Enter is a Chrome extension designed to safeguard against accidental form submissions. It requires multiple Enter key presses before form submission, helping to prevent premature submissions and providing a more deliberate submission process.
 
 ## Key Features
 
@@ -34,7 +34,7 @@ Safe Enter AI-helper is a Chrome extension designed to safeguard against acciden
 
 ### Configuration Options
 
-- **Enable Safe Enter AI-helper**: Master switch to enable/disable the extension
+- **Enable 3x Enter**: Master switch to enable/disable the extension
 - **Enable for this site**: Control whether the extension works on the current website
 - **Enter presses**: Set how many Enter presses are required (2-5)
 - **Delay**: Adjust the maximum time between presses (200-2000ms)
@@ -76,14 +76,14 @@ safe_enter_ai_helper/
 ## Recent Updates
 
 - **v1.4.0**: Enhanced visual feedback with symbols for line breaks (↵) and form submission (✓), improved support for chatgpt.com
-- **v1.3.0**: Renamed to "Safe Enter AI-helper", improved handling of complex websites
+- **v1.3.0**: Renamed to "3x Enter", improved handling of complex websites
 - **v1.2.0**: Added language selector with 10 languages
 - **v1.1.0**: Simplified interface, added delay slider (200-2000ms), updated color scheme (gray steel with bright orange accent), improved paywall logic (20 free submissions, $2.99/month)
 - **v1.0.0**: Initial release
 
 ## Privacy Policy
 
-Safe Enter AI-helper respects your privacy and does not collect any personal information. The extension only stores:
+3x Enter respects your privacy and does not collect any personal information. The extension only stores:
 
 - Your settings and preferences
 - Domain-specific configurations

@@ -1,4 +1,4 @@
-// Visual feedback for Safe Enter AI-helper extension
+// Visual feedback for 3x Enter extension
 
 // Create and inject the feedback container
 function createFeedbackContainer() {
