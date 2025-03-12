@@ -23,6 +23,7 @@ let domainSettings = null;
 let initializationAttempts = 0;
 const MAX_INIT_ATTEMPTS = 5;
 let usageTracked = false; // Flag to track if usage was counted
+let resetTimeoutId = null; // Timer ID for auto-reset
 
 // Array to store Enter key press times
 let enterPresses = [];
@@ -213,88 +214,159 @@ function initializeWithRetry() {
 
 // Initialize key listeners
 function initKeyListeners(settings) {
-  // Reset press counter
-  enterPressCount = 0;
-  lastEnterPressTime = 0;
-  enterPresses = [];
-  
-  // Save settings globally for immediate use
-  domainSettings = settings;
-  
-  // Log the current state
-  Logger.info(`Extension ${settings.domainEnabled ? 'enabled' : 'disabled'} for this domain with settings:`, settings);
-  
-  // We always add the listeners, but they will check domainSettings.domainEnabled before taking action
-  document.addEventListener('keydown', handleKeyDown, true);
-  document.addEventListener('keyup', handleKeyUp, true);
-  
-  // Add handler for settings updates
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'settingsUpdated') {
-      Logger.info('Settings updated:', message);
-      
-      // Update settings
+  try {
+    // Reset press counter
+    enterPressCount = 0;
+    lastEnterPressTime = 0;
+    enterPresses = [];
+    
+    // Save settings globally for immediate use
+    domainSettings = settings;
+    
+    // Log the current state
+    Logger.info(`Extension ${settings.domainEnabled ? 'enabled' : 'disabled'} for this domain with settings:`, settings);
+    
+    // Удаляем старые обработчики, если они есть
+    if (document._tripleSubmitGlobalHandler) {
+      document.removeEventListener('keydown', document._tripleSubmitGlobalHandler, true);
+    }
+    
+    // Создаем и сохраняем новый обработчик
+    document._tripleSubmitGlobalHandler = handleKeyDown;
+    
+    // Добавляем только один обработчик на уровне document
+    document.addEventListener('keydown', document._tripleSubmitGlobalHandler, true);
+    
+    // Add handler for settings updates
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      // Сохраняем текущее состояние enabled до обновления настроек
       const oldEnabled = domainSettings ? domainSettings.domainEnabled : false;
-      domainSettings = { ...domainSettings, ...message.settings };
       
-      // Update domain enable status
-      if (message.domainEnabled !== undefined) {
-        domainSettings.domainEnabled = message.domainEnabled;
-      }
-      
-      // Reset press counter
-      enterPressCount = 0;
-      lastEnterPressTime = 0;
-      enterPresses = [];
-      
-      // Log the change for debugging
-      Logger.info(`Domain enable status changed from ${oldEnabled} to ${domainSettings.domainEnabled}`);
-      
-      // Проверяем флаг принудительной активации
-      if (message.forceActivation) {
-        Logger.info(`Received forceActivation flag with timestamp ${message.timestamp}`);
+      if (message.action === 'settingsUpdated') {
+        Logger.info('Settings updated:', message);
         
-        // Если расширение включено для этого домена, немедленно активируем все обработчики
-        if (domainSettings.domainEnabled) {
-          Logger.info('Force activating all handlers for immediate effect');
+        // Update settings
+        domainSettings = { ...domainSettings, ...message.settings };
+        
+        // Update domain enable status
+        if (message.domainEnabled !== undefined) {
+          domainSettings.domainEnabled = message.domainEnabled;
+        }
+        
+        // Reset press counter
+        enterPressCount = 0;
+        lastEnterPressTime = 0;
+        enterPresses = [];
+        
+        // Log the change for debugging
+        Logger.info(`Domain enable status changed from ${oldEnabled} to ${domainSettings.domainEnabled}`);
+        
+        // Проверяем флаг принудительной активации
+        if (message.forceActivation) {
+          Logger.info(`Received forceActivation flag with timestamp ${message.timestamp}`);
           
-          // Принудительно активируем обработчики форм
-          addFormSubmitHandlers();
-          
-          // Принудительно активируем обработчики Shadow DOM
-          addShadowDomHandlers();
-          
-          // Принудительно проверяем все формы на странице
-          const forms = document.querySelectorAll('form');
-          Logger.info(`Found ${forms.length} forms on the page for force activation`);
-          
-          // Добавляем обработчики для всех форм с высоким приоритетом
-          forms.forEach((form, index) => {
-            // Удаляем предыдущий обработчик, если он был
-            if (form.dataset.tripleSubmitHandled) {
-              // Пытаемся удалить старый обработчик, чтобы избежать дублирования
-              try {
-                const oldHandler = form._tripleSubmitHandler;
-                if (oldHandler) {
-                  form.removeEventListener('submit', oldHandler, true);
+          // Если расширение включено для этого домена, немедленно активируем все обработчики
+          if (domainSettings.domainEnabled) {
+            Logger.info('Force activating all handlers for immediate effect');
+            
+            // Принудительно активируем обработчики форм
+            addFormSubmitHandlers();
+            
+            // Принудительно активируем обработчики Shadow DOM
+            addShadowDomHandlers();
+            
+            // Принудительно проверяем все формы на странице
+            const forms = document.querySelectorAll('form');
+            Logger.info(`Found ${forms.length} forms on the page for force activation`);
+            
+            // Добавляем обработчики для всех форм с высоким приоритетом
+            forms.forEach((form, index) => {
+              // Удаляем предыдущий обработчик, если он был
+              if (form.dataset.tripleSubmitHandled) {
+                // Пытаемся удалить старый обработчик, чтобы избежать дублирования
+                try {
+                  const oldHandler = form._tripleSubmitHandler;
+                  if (oldHandler) {
+                    form.removeEventListener('submit', oldHandler, true);
+                  }
+                } catch (e) {
+                  Logger.debug(`Could not remove old handler for form #${index}: ${e.message}`);
                 }
-              } catch (e) {
-                Logger.debug(`Could not remove old handler for form #${index}: ${e.message}`);
               }
-            }
+              
+              Logger.debug(`Force adding submit handler for form #${index}`);
+              
+              // Создаем новый обработчик
+              const submitHandler = (event) => {
+                // Проверяем, включено ли расширение для этого домена
+                if (domainSettings && domainSettings.domainEnabled) {
+                  // Проверяем, достигнуто ли необходимое количество нажатий
+                  
+                  Logger.info('EnterPressCount in chrome.runtime.onMessage: ' + enterPressCount);
+
+                  if (enterPressCount < domainSettings.pressCount) {
+                    // Если количество нажатий недостаточно, предотвращаем отправку формы
+                    Logger.info(`Preventing form submission: ${enterPressCount} < ${domainSettings.pressCount}`);
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    // Показываем визуальный отклик
+                    if (domainSettings.showFeedback) {
+                      const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
+                        detail: {
+                          currentCount: enterPressCount,
+                          requiredCount: domainSettings.pressCount,
+                          isComplete: false,
+                          isFormSubmit: true,
+                          isForceActivated: true
+                        }
+                      });
+                      document.dispatchEvent(feedbackEvent);
+                    }
+                    
+                    return false;
+                  } else {
+                    Logger.info(`Form submission allowed after ${enterPressCount} Enter presses (force handler)`);
+                  }
+                }
+                
+                return true;
+              };
+              
+              // Сохраняем ссылку на обработчик для возможного удаления в будущем
+              form._tripleSubmitHandler = submitHandler;
+              
+              // Отмечаем форму как обработанную
+              form.dataset.tripleSubmitHandled = 'true';
+              form.dataset.tripleSubmitForceActivated = 'true';
+              
+              // Добавляем обработчик события submit с высоким приоритетом
+              form.addEventListener('submit', submitHandler, true);
+            });
             
-            Logger.debug(`Force adding submit handler for form #${index}`);
-            
-            // Создаем новый обработчик
-            const submitHandler = (event) => {
-              // Проверяем, включено ли расширение для этого домена
-              if (domainSettings && domainSettings.domainEnabled) {
+            // Добавляем глобальный обработчик клавиш с высоким приоритетом
+            const globalKeyHandler = (event) => {
+              if (event.key === 'Enter' && domainSettings && domainSettings.domainEnabled) {
+                Logger.debug('Global force-activated Enter key handler triggered');
+                
+                Logger.info('EnterPressCount in globalKeyHandler: ' + enterPressCount);
+                enterPressCount++;
+                Logger.info('EnterPressCount in globalKeyHandle 2: ' + enterPressCount);
+
                 // Проверяем, достигнуто ли необходимое количество нажатий
                 if (enterPressCount < domainSettings.pressCount) {
                   // Если количество нажатий недостаточно, предотвращаем отправку формы
-                  Logger.info(`Preventing form submission: ${enterPressCount} < ${domainSettings.pressCount}`);
+                  Logger.info(`Preventing form submission in global handler: ${enterPressCount} < ${domainSettings.pressCount}`);
+                  
+                  // Предотвращаем стандартное действие
                   event.preventDefault();
                   event.stopPropagation();
+                  
+                  // Проверяем, является ли элемент текстовым полем
+                  if (isTextInput(event.target)) {
+                    // Вставляем перенос строки
+                    alternativeAction(event);
+                  }
                   
                   // Показываем визуальный отклик
                   if (domainSettings.showFeedback) {
@@ -302,106 +374,56 @@ function initKeyListeners(settings) {
                       detail: {
                         currentCount: enterPressCount,
                         requiredCount: domainSettings.pressCount,
-                        isComplete: false,
-                        isFormSubmit: true,
-                        isForceActivated: true
+                        isComplete: false
                       }
                     });
                     document.dispatchEvent(feedbackEvent);
                   }
                   
                   return false;
-                } else {
-                  Logger.info(`Form submission allowed after ${enterPressCount} Enter presses (force handler)`);
                 }
+                
+                // НЕ используем стандартный обработчик, так как он тоже увеличивает счетчик
+                // handleKeyDown(event);
               }
-              
-              return true;
             };
             
-            // Сохраняем ссылку на обработчик для возможного удаления в будущем
-            form._tripleSubmitHandler = submitHandler;
+            // Удаляем старые обработчики, если они есть
+            if (document._tripleSubmitGlobalHandler) {
+              document.removeEventListener('keydown', document._tripleSubmitGlobalHandler, true);
+            }
             
-            // Отмечаем форму как обработанную
-            form.dataset.tripleSubmitHandled = 'true';
-            form.dataset.tripleSubmitForceActivated = 'true';
+            // Сохраняем ссылку на новый обработчик
+            document._tripleSubmitGlobalHandler = globalKeyHandler;
             
-            // Добавляем обработчик события submit с высоким приоритетом
-            form.addEventListener('submit', submitHandler, true);
-          });
-          
-          // Добавляем глобальный обработчик клавиш с высоким приоритетом
-          const globalKeyHandler = (event) => {
-            if (event.key === 'Enter' && domainSettings && domainSettings.domainEnabled) {
-              Logger.debug('Global force-activated Enter key handler triggered');
-              
-              // Проверяем, достигнуто ли необходимое количество нажатий
-              if (enterPressCount < domainSettings.pressCount) {
-                // Если количество нажатий недостаточно, предотвращаем отправку формы
-                Logger.info(`Preventing form submission in global handler: ${enterPressCount} < ${domainSettings.pressCount}`);
-                
-                // Предотвращаем стандартное действие
-                event.preventDefault();
-                event.stopPropagation();
-                
-                // Проверяем, является ли элемент текстовым полем
-                if (isTextInput(event.target)) {
-                  // Вставляем перенос строки
-                  alternativeAction(event);
-                }
-                
-                // Показываем визуальный отклик
-                if (domainSettings.showFeedback) {
-                  const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-                    detail: {
-                      currentCount: enterPressCount,
-                      requiredCount: domainSettings.pressCount,
-                      isComplete: false
-                    }
+            // Добавляем только один глобальный обработчик на уровне document
+            document.addEventListener('keydown', globalKeyHandler, true);
+            
+            // Добавляем обработчики для всех iframe на странице
+            const iframes = document.querySelectorAll('iframe');
+            Logger.info(`Found ${iframes.length} iframes on the page for force activation`);
+            
+            iframes.forEach((iframe, index) => {
+              try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                if (iframeDoc) {
+                  Logger.debug(`Adding force handlers to iframe #${index}`);
+                  iframeDoc.addEventListener('keydown', globalKeyHandler, true);
+                  
+                  // Также добавляем обработчики для форм внутри iframe
+                  const iframeForms = iframeDoc.querySelectorAll('form');
+                  Logger.debug(`Found ${iframeForms.length} forms in iframe #${index}`);
+                  
+                  iframeForms.forEach((form, formIndex) => {
+                    form.addEventListener('submit', submitHandler, true);
                   });
-                  document.dispatchEvent(feedbackEvent);
                 }
-                
-                return false;
+              } catch (e) {
+                // Ошибка доступа к iframe из-за Same-Origin Policy
+                Logger.debug(`Could not access iframe #${index}: ${e.message}`);
               }
-              
-              // Для обычного режима используем стандартный обработчик
-              handleKeyDown(event);
-            }
-          };
-          
-          // Добавляем глобальный обработчик с высоким приоритетом
-          document.addEventListener('keydown', globalKeyHandler, true);
-          
-          // Добавляем обработчик для document.body, чтобы перехватить события до того, как они достигнут форм
-          if (document.body) {
-            document.body.addEventListener('keydown', globalKeyHandler, true);
+            });
           }
-          
-          // Добавляем обработчики для всех iframe на странице
-          const iframes = document.querySelectorAll('iframe');
-          Logger.info(`Found ${iframes.length} iframes on the page for force activation`);
-          
-          iframes.forEach((iframe, index) => {
-            try {
-              const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-              if (iframeDoc) {
-                Logger.debug(`Adding force handlers to iframe #${index}`);
-                iframeDoc.addEventListener('keydown', globalKeyHandler, true);
-                
-                // Также добавляем обработчики для форм внутри iframe
-                const iframeForms = iframeDoc.querySelectorAll('form');
-                Logger.debug(`Found ${iframeForms.length} forms in iframe #${index}`);
-                
-                iframeForms.forEach((form, formIndex) => {
-                  form.addEventListener('submit', submitHandler, true);
-                });
-              }
-            } catch (e) {
-              // Ошибка доступа к iframe из-за Same-Origin Policy
-              Logger.debug(`Could not access iframe #${index}: ${e.message}`);
-            }
-          });
         }
       }
       
@@ -423,6 +445,8 @@ function initKeyListeners(settings) {
             
             // Предотвращаем стандартную отправку формы
             form.addEventListener('submit', (event) => {
+              Logger.info('EnterPressCount in priority update: ' + enterPressCount);
+
               if (domainSettings.domainEnabled && enterPressCount < domainSettings.pressCount) {
                 Logger.info(`Preventing form submission: enterPressCount=${enterPressCount}, required=${domainSettings.pressCount}`);
                 event.preventDefault();
@@ -436,8 +460,10 @@ function initKeyListeners(settings) {
       }
       
       sendResponse({ status: 'ok' });
-    }
-  });
+    });
+  } catch (error) {
+    Logger.error('Error setting up key listeners:', error);
+  }
 }
 
 // Debug key events
@@ -524,42 +550,6 @@ function handleKeyDown(event) {
     return;
   }
   
-  // Проверяем, является ли элемент текстовым полем
-  if (event.key === 'Enter' && isTextInput(event.target)) {
-    // Обрабатываем нажатие Enter
-    Logger.debug('Enter key pressed in text input');
-    
-    // Проверяем, достигнуто ли необходимое количество нажатий
-    if (enterPressCount < domainSettings.pressCount - 1) {
-      // Если количество нажатий недостаточно, вставляем перенос строки
-      Logger.info(`Inserting line break: ${enterPressCount + 1} < ${domainSettings.pressCount}`);
-      
-      // Prevent default action
-      event.preventDefault();
-      event.stopPropagation();
-      
-      // Insert line break
-      alternativeAction(event);
-      
-      // Increment counter
-      enterPressCount++;
-      lastEnterPressTime = Date.now();
-      
-      // Show visual feedback
-      if (domainSettings.showFeedback) {
-        const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
-          detail: {
-            currentCount: enterPressCount,
-            requiredCount: domainSettings.pressCount,
-            isComplete: false,
-            isLineBreakInserted: true
-          }
-        });
-        document.dispatchEvent(feedbackEvent);
-      }
-    }
-  }
-  
   // For enter key only - add extra logs
   if (event.key === 'Enter') {
     Logger.info(`Enter key detected with domain enabled=${domainSettings.domainEnabled}, pressCount=${domainSettings.pressCount}, mode=${domainSettings.mode || 'normal'}`);
@@ -609,29 +599,28 @@ function handleKeyDown(event) {
     
     // Update counter and last press time
     enterPressCount++;
+    Logger.info('Enter press count: ' + enterPressCount);
     lastEnterPressTime = now;
+    scheduleCounterReset(); // Schedule auto-reset after this press
     
-    Logger.debug(`Enter key pressed. Count: ${enterPressCount}/${domainSettings.pressCount}. Current settings: `, { pressCount: domainSettings.pressCount, delay: domainSettings.delay });
-    
-    // Extended mode is always active - insert line break instead of form submission
+    // Если количество нажатий меньше требуемого
     if (enterPressCount < domainSettings.pressCount) {
       event.preventDefault();
       event.stopPropagation();
       
-      // Проверяем, является ли элемент текстовым полем с улучшенной функцией
+      // Если это текстовое поле, вставляем перенос строки
       if (isTextInput(event.target)) {
         alternativeAction(event);
       }
       
       // Show visual feedback
       if (domainSettings.showFeedback) {
-        // Send event to visualFeedback.js
         const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
           detail: {
             currentCount: enterPressCount,
             requiredCount: domainSettings.pressCount,
             isComplete: false,
-            isLineBreakInserted: true
+            isLineBreakInserted: isTextInput(event.target)
           }
         });
         document.dispatchEvent(feedbackEvent);
@@ -1005,7 +994,12 @@ function addFormSubmitHandlers() {
       // Проверяем, включено ли расширение для этого домена
       if (domainSettings && domainSettings.domainEnabled) {
         // Проверяем, достигнуто ли необходимое количество нажатий
+        
+        Logger.info('EnterPressCount in addFormSubmitHandlers: ' + enterPressCount);
+
         if (enterPressCount < domainSettings.pressCount) {
+
+          Logger.info('EnterPressCount in form submit handler: ' + enterPressCount);
           // Если количество нажатий недостаточно, предотвращаем отправку формы
           Logger.info(`Preventing form submission: ${enterPressCount} < ${domainSettings.pressCount}`);
           event.preventDefault();
@@ -1160,6 +1154,9 @@ function addShadowDomHandlers() {
         // Проверяем, включено ли расширение для этого домена
         if (domainSettings && domainSettings.domainEnabled) {
           // Если количество нажатий меньше требуемого, предотвращаем отправку
+          
+          Logger.info('EnterPressCount in addShadowDomHandlers: ' + enterPressCount);
+          
           if (enterPressCount < domainSettings.pressCount) {
             Logger.info(`Preventing form submission in Shadow DOM: enterPressCount=${enterPressCount}, required=${domainSettings.pressCount}`);
             event.preventDefault();
@@ -1277,6 +1274,39 @@ function setupShadowDomObserver() {
   });
   
   return observer;
+}
+
+// Function to schedule counter reset
+function scheduleCounterReset() {
+  // Clear existing timeout if any
+  if (resetTimeoutId) {
+    clearTimeout(resetTimeoutId);
+  }
+  
+  // Set new timeout
+  resetTimeoutId = setTimeout(() => {
+    if (enterPressCount > 0 && domainSettings) {
+      const now = Date.now();
+      if (now - lastEnterPressTime > domainSettings.delay) {
+        Logger.debug('Auto-reset: time between presses exceeded delay, resetting counter');
+        enterPressCount = 0;
+        enterPresses = [];
+        
+        // Show visual feedback about reset
+        if (domainSettings.showFeedback) {
+          const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
+            detail: {
+              currentCount: 0,
+              requiredCount: domainSettings.pressCount,
+              isComplete: false,
+              isReset: true
+            }
+          });
+          document.dispatchEvent(feedbackEvent);
+        }
+      }
+    }
+  }, domainSettings ? domainSettings.delay : 600);
 }
 
 // Initialize on load
