@@ -110,5 +110,19 @@
   "processing_payment": {
     "message": "Traitement du paiement...",
     "description": "Text during payment processing"
+  },
+  "usageLimitMessage": {
+    "message": "Vous avez utilisé la version gratuite de 3x Enter 20 fois.",
+    "description": "Message shown when usage limit is reached"
+  },
+  "pressEnterMoreTimes": {
+    "message": "Appuyez sur Entrée encore $COUNT$ fois",
+    "description": "Message shown after Enter key press",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
   }
 } 

@@ -66,5 +66,19 @@
   "extensionName": {
     "message": "3x Enter",
     "description": "Name of the extension"
+  },
+  "usageLimitMessage": {
+    "message": "Sie haben die kostenlose Version von 3x Enter 20 Mal verwendet.",
+    "description": "Message shown when usage limit is reached"
+  },
+  "pressEnterMoreTimes": {
+    "message": "Drücken Sie noch $COUNT$ Mal die Eingabetaste",
+    "description": "Message shown after Enter key press",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
   }
 } 

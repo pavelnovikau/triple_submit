@@ -578,7 +578,9 @@ function handleKeyDown(event) {
               currentCount: enterPressCount,
               requiredCount: domainSettings.pressCount,
               isComplete: false,
-              isLineBreakInserted: true
+              isLineBreakInserted: true,
+              remainingCount: domainSettings.pressCount - enterPressCount,
+              messageId: 'pressEnterMoreTimes'
             }
           });
           document.dispatchEvent(feedbackEvent);

@@ -122,5 +122,15 @@
   "usageLimitMessage": {
     "message": "You have used the free version of 3x Enter 20 times.",
     "description": "Message shown when usage limit is reached"
+  },
+  "pressEnterMoreTimes": {
+    "message": "Press Enter $COUNT$ more times",
+    "description": "Message shown after Enter key press",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
   }
 } 

@@ -110,5 +110,19 @@
   "processing_payment": {
     "message": "处理付款中...",
     "description": "Text during payment processing"
+  },
+  "usageLimitMessage": {
+    "message": "您已使用3x Enter免费版20次。",
+    "description": "Message shown when usage limit is reached"
+  },
+  "pressEnterMoreTimes": {
+    "message": "还需按$COUNT$次回车键",
+    "description": "Message shown after Enter key press",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
   }
 } 

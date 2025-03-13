@@ -82,5 +82,19 @@
   "payNowButton": {
     "message": "Оплатить сейчас",
     "description": "Текст кнопки оплаты"
+  },
+  "usageLimitMessage": {
+    "message": "Вы использовали бесплатную версию 3x Enter 20 раз.",
+    "description": "Message shown when usage limit is reached"
+  },
+  "pressEnterMoreTimes": {
+    "message": "Нажмите Enter ещё $COUNT$ раз",
+    "description": "Message shown after Enter key press",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
   }
 } 

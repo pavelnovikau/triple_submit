@@ -181,8 +181,9 @@ function updateFeedback(detail) {
   if (message) {
     if (isComplete) {
       message.textContent = 'Form submitted!';
-    } else if (isLineBreakInserted) {
-      message.textContent = 'Line break inserted!';
+    } else if (detail.messageId) {
+      // Use localized message if messageId is provided
+      message.textContent = chrome.i18n.getMessage(detail.messageId, [detail.remainingCount]);
       
       // For line break, show briefly
       setTimeout(() => {
@@ -195,7 +196,7 @@ function updateFeedback(detail) {
       return;
     } else {
       const remaining = requiredCount - currentCount;
-      message.textContent = `Press Enter ${remaining} more time${remaining !== 1 ? 's' : ''} to submit form`;
+      message.textContent = chrome.i18n.getMessage('pressEnterMoreTimes', [remaining]);
     }
   }
   

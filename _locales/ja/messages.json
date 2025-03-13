@@ -110,5 +110,19 @@
   "processing_payment": {
     "message": "支払い処理中...",
     "description": "Text during payment processing"
+  },
+  "usageLimitMessage": {
+    "message": "3x Enterの無料版を20回使用しました。",
+    "description": "Message shown when usage limit is reached"
+  },
+  "pressEnterMoreTimes": {
+    "message": "あと$COUNT$回Enterを押してください",
+    "description": "Message shown after Enter key press",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
   }
 } 
