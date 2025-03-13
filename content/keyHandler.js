@@ -215,6 +215,9 @@ function initializeWithRetry() {
 // Initialize key listeners
 function initKeyListeners(settings) {
   try {
+    Logger.info('=== Initializing Key Listeners ===');
+    Logger.info('Current settings:', settings);
+    
     // Reset press counter
     enterPressCount = 0;
     lastEnterPressTime = 0;
@@ -228,6 +231,7 @@ function initKeyListeners(settings) {
     
     // Удаляем старые обработчики, если они есть
     if (document._tripleSubmitGlobalHandler) {
+      Logger.debug('Removing existing key handler');
       document.removeEventListener('keydown', document._tripleSubmitGlobalHandler, true);
     }
     
@@ -236,6 +240,7 @@ function initKeyListeners(settings) {
     
     // Добавляем только один обработчик на уровне document
     document.addEventListener('keydown', document._tripleSubmitGlobalHandler, true);
+    Logger.info('Added global keydown handler');
     
     // Add handler for settings updates
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -243,13 +248,16 @@ function initKeyListeners(settings) {
       const oldEnabled = domainSettings ? domainSettings.domainEnabled : false;
       
       if (message.action === 'settingsUpdated') {
-        Logger.info('Settings updated:', message);
+        Logger.info('=== Settings Update Received ===');
+        Logger.info('Old settings:', domainSettings);
+        Logger.info('Update message:', message);
         
         // Update settings
         domainSettings = { ...domainSettings, ...message.settings };
         
         // Update domain enable status
         if (message.domainEnabled !== undefined) {
+          Logger.info(`Updating domain enabled status: ${message.domainEnabled}`);
           domainSettings.domainEnabled = message.domainEnabled;
         }
         
@@ -261,157 +269,35 @@ function initKeyListeners(settings) {
         // Log the change for debugging
         Logger.info(`Domain enable status changed from ${oldEnabled} to ${domainSettings.domainEnabled}`);
         
-        // Проверяем флаг принудительной активации
-        if (message.forceActivation) {
-          Logger.info(`Received forceActivation flag with timestamp ${message.timestamp}`);
-          
-          // Если расширение включено для этого домена, немедленно активируем все обработчики
-          if (domainSettings.domainEnabled) {
-            Logger.info('Force activating all handlers for immediate effect');
-            
-            // Принудительно активируем обработчики форм
-            addFormSubmitHandlers();
-            
-            // Принудительно активируем обработчики Shadow DOM
-            addShadowDomHandlers();
-            
-            // Принудительно проверяем все формы на странице
-            const forms = document.querySelectorAll('form');
-            Logger.info(`Found ${forms.length} forms on the page for force activation`);
-            
-            forms.forEach((form, index) => {
-              // Удаляем предыдущий обработчик, если он был
-              if (form.dataset.tripleSubmitHandled) {
-                // Пытаемся удалить старый обработчик, чтобы избежать дублирования
-                try {
-                  const oldHandler = form._tripleSubmitHandler;
-                  if (oldHandler) {
-                    form.removeEventListener('submit', oldHandler, true);
-                  }
-                } catch (e) {
-                  Logger.debug(`Could not remove old handler for form #${index}: ${e.message}`);
-                }
-              }
-              
-              Logger.debug(`Force adding submit handler for form #${index}`);
-              
-              // Создаем новый обработчик
-              const submitHandler = (event) => {
-                // Проверяем, включено ли расширение для этого домена
-                if (domainSettings && domainSettings.domainEnabled) {
-                  // Проверяем, достигнуто ли необходимое количество нажатий
-                  
-                  Logger.info('EnterPressCount in chrome.runtime.onMessage: ' + enterPressCount);
-
-                  if (enterPressCount < domainSettings.pressCount) {
-                    // Если количество нажатий недостаточно, предотвращаем отправку формы
-                    Logger.info(`Preventing form submission: ${enterPressCount} < ${domainSettings.pressCount}`);
-                    event.preventDefault();
-                    event.stopPropagation();
-                    
-                    return false;
-                  } else {
-                    Logger.info(`Form submission allowed after ${enterPressCount} Enter presses (force handler)`);
-                  }
-                }
-                
-                return true;
-              };
-              
-              // Сохраняем ссылку на обработчик для возможного удаления в будущем
-              form._tripleSubmitHandler = submitHandler;
-              
-              // Отмечаем форму как обработанную
-              form.dataset.tripleSubmitHandled = 'true';
-              form.dataset.tripleSubmitForceActivated = 'true';
-              
-              // Добавляем обработчик события submit с высоким приоритетом
-              form.addEventListener('submit', submitHandler, true);
-            });
-            
-            // Добавляем глобальный обработчик клавиш с высоким приоритетом
-            const globalKeyHandler = (event) => {
-              if (event.key === 'Enter' && domainSettings && domainSettings.domainEnabled) {
-                Logger.debug('Global force-activated Enter key handler triggered');
-                
-                // Пропускаем обработку, так как она уже происходит в handleKeyDown
-                return;
-              }
-            };
-            
-            // Удаляем старые обработчики, если они есть
-            if (document._tripleSubmitGlobalHandler) {
-              document.removeEventListener('keydown', document._tripleSubmitGlobalHandler, true);
-            }
-            
-            // Сохраняем ссылку на новый обработчик
-            document._tripleSubmitGlobalHandler = globalKeyHandler;
-            
-            // Добавляем только один глобальный обработчик на уровне document
-            document.addEventListener('keydown', globalKeyHandler, true);
-            
-            // Добавляем обработчики для всех iframe на странице
-            const iframes = document.querySelectorAll('iframe');
-            Logger.info(`Found ${iframes.length} iframes on the page for force activation`);
-            
-            iframes.forEach((iframe, index) => {
-              try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                if (iframeDoc) {
-                  Logger.debug(`Adding force handlers to iframe #${index}`);
-                  iframeDoc.addEventListener('keydown', globalKeyHandler, true);
-                  
-                  // Также добавляем обработчики для форм внутри iframe
-                  const iframeForms = iframeDoc.querySelectorAll('form');
-                  Logger.debug(`Found ${iframeForms.length} forms in iframe #${index}`);
-                  
-                  iframeForms.forEach((form, formIndex) => {
-                    form.addEventListener('submit', submitHandler, true);
-                  });
-                }
-              } catch (e) {
-                // Ошибка доступа к iframe из-за Same-Origin Policy
-                Logger.debug(`Could not access iframe #${index}: ${e.message}`);
-              }
-            });
-          }
-        }
-      }
-      
-      // Если это приоритетное обновление (для активной вкладки)
-      if (message.isPriorityUpdate) {
-        Logger.info('This is a priority update for the active tab');
-        
-        // Если расширение было только что включено, добавляем дополнительную проверку
+        // Force reinitialization when enabling
         if (!oldEnabled && domainSettings.domainEnabled) {
-          Logger.info('Extension was just enabled for this domain, forcing immediate activation');
+          Logger.info('Extension was just enabled, forcing full reinitialization');
           
-          // Принудительно проверяем все формы на странице
-          const forms = document.querySelectorAll('form');
-          Logger.info(`Found ${forms.length} forms on the page`);
+          // Remove all existing handlers
+          if (document._tripleSubmitGlobalHandler) {
+            document.removeEventListener('keydown', document._tripleSubmitGlobalHandler, true);
+          }
           
-          // Добавляем дополнительный обработчик для всех форм
-          forms.forEach((form, index) => {
-            Logger.debug(`Adding special form handler for form #${index}`);
-            
-            // Предотвращаем стандартную отправку формы
-            form.addEventListener('submit', (event) => {
-              Logger.info('EnterPressCount in priority update: ' + enterPressCount);
-
-              if (domainSettings.domainEnabled && enterPressCount < domainSettings.pressCount) {
-                Logger.info(`Preventing form submission: enterPressCount=${enterPressCount}, required=${domainSettings.pressCount}`);
-                event.preventDefault();
-                event.stopPropagation();
-                return false;
-              }
-              return true;
-            }, true);
-          });
+          // Re-add the key handler
+          document._tripleSubmitGlobalHandler = handleKeyDown;
+          document.addEventListener('keydown', document._tripleSubmitGlobalHandler, true);
+          
+          // Re-initialize form handlers
+          addFormSubmitHandlers();
+          
+          // Re-initialize Shadow DOM handlers
+          addShadowDomHandlers();
+          
+          Logger.info('Reinitialization complete');
         }
+        
+        Logger.info('New settings:', domainSettings);
       }
       
       sendResponse({ status: 'ok' });
     });
+    
+    Logger.info('=== Key Listeners Initialization Complete ===');
   } catch (error) {
     Logger.error('Error setting up key listeners:', error);
   }
@@ -487,6 +373,25 @@ function isTextInput(element) {
 
 // Key down handler
 function handleKeyDown(event) {
+  // Enhanced logging for key events
+  if (event.key === 'Enter') {
+    Logger.info('=== Enter Key Press Detected ===');
+    Logger.info('Current state:', {
+      domainSettings: domainSettings ? {
+        enabled: domainSettings.domainEnabled,
+        pressCount: domainSettings.pressCount,
+        mode: domainSettings.mode
+      } : 'null',
+      enterPressCount,
+      lastEnterPressTime,
+      target: {
+        tagName: event.target.tagName,
+        className: event.target.className,
+        isContentEditable: event.target.isContentEditable
+      }
+    });
+  }
+  
   // Log key event for debugging
   logKeyEvent(event, 'keydown');
   
