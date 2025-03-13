@@ -587,6 +587,21 @@ function handleKeyDown(event) {
         }
       }
     } else {
+      // Show final feedback before form submission
+      if (domainSettings.showFeedback) {
+        const feedbackEvent = new CustomEvent('tripleSubmitFeedback', {
+          detail: {
+            currentCount: enterPressCount,
+            requiredCount: domainSettings.pressCount,
+            isComplete: true,
+            isLineBreakInserted: false,
+            remainingCount: 0,
+            messageId: 'pressEnterMoreTimes'
+          }
+        });
+        document.dispatchEvent(feedbackEvent);
+      }
+
       // Enough Enter presses, allow form submission
       Logger.info(`Form submission allowed after ${enterPressCount} Enter presses`);
       
@@ -794,6 +809,9 @@ function insertLineBreak(element) {
 // Специальная обработка для ChatGPT
 function handleChatGPT(element) {
   try {
+    Logger.info('=== ChatGPT Handler Start ===');
+    Logger.info('Initial element:', element.tagName);
+
     // Find the ChatGPT input field
     const chatInput = findChatGPTInput(element);
     if (!chatInput) {
@@ -801,51 +819,50 @@ function handleChatGPT(element) {
       return;
     }
     
-    Logger.info('Found ChatGPT input element, inserting line break');
+    Logger.info('Found ChatGPT input:', {
+      tagName: chatInput.tagName,
+      isContentEditable: chatInput.isContentEditable,
+      role: chatInput.getAttribute('role'),
+      className: chatInput.className
+    });
+
+    // Create and dispatch a new keyboard event simulating Shift+Enter
+    Logger.debug('Simulating Shift+Enter keypress');
     
-    // Insert line break
-    if (chatInput.isContentEditable) {
-      // For contenteditable elements
-      try {
-        // Try to insert a line break using execCommand
-        chatInput.ownerDocument.execCommand('insertLineBreak', false);
-      } catch (e) {
-        Logger.debug('execCommand insertLineBreak failed for ChatGPT, trying alternative method');
-        
-        // Alternative method - insert a single <br> element
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          
-          // Create a single <br> element
-          const br = document.createElement('br');
-          
-          range.deleteContents();
-          range.insertNode(br);
-          
-          // Move cursor after the <br>
-          range.setStartAfter(br);
-          range.setEndAfter(br);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
-      }
-      
-      // Dispatch input event to update UI
-      chatInput.dispatchEvent(new Event('input', { bubbles: true }));
-    } else {
-      // For textarea elements
-      const start = chatInput.selectionStart;
-      const end = chatInput.selectionEnd;
-      
-      // Insert a single line break
-      chatInput.value = chatInput.value.substring(0, start) + '\n' + chatInput.value.substring(end);
-      chatInput.selectionStart = chatInput.selectionEnd = start + 1;
-      
-      // Dispatch input event to update UI
-      chatInput.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    // Create keydown event
+    const keydownEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true
+    });
     
+    // Create keypress event
+    const keypressEvent = new KeyboardEvent('keypress', {
+      key: 'Enter',
+      code: 'Enter',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true
+    });
+    
+    // Create keyup event
+    const keyupEvent = new KeyboardEvent('keyup', {
+      key: 'Enter',
+      code: 'Enter',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true
+    });
+    
+    // Dispatch the events in sequence
+    Logger.debug('Dispatching Shift+Enter events sequence');
+    chatInput.dispatchEvent(keydownEvent);
+    chatInput.dispatchEvent(keypressEvent);
+    chatInput.dispatchEvent(keyupEvent);
+    
+    Logger.info('=== ChatGPT Handler Complete ===');
     return true;
   } catch (error) {
     Logger.error('Error in handleChatGPT:', error);
