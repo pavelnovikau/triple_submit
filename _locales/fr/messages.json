@@ -127,7 +127,7 @@
   },
   "trialEndedLabel": {
     "message": "La période d'essai est terminée",
-    "description": "Text shown when trial period has ended"
+    "description": "Text shown when trial period ends"
   },
   "premium_status": {
     "message": "Premium activé",

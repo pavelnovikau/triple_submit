@@ -309,20 +309,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isPremium) {
       document.getElementById('usage-label').textContent = getLocalizedMessage('premium_status', 'Premium activated');
       document.getElementById('usage-count').style.display = 'none';
-      document.getElementById('days-left-label').style.display = 'none';
     } else {
       const usageLabel = document.getElementById('usage-label');
-      const daysLeftLabel = document.getElementById('days-left-label');
       
       if (isTrialOver) {
         usageLabel.textContent = getLocalizedMessage('trialEndedLabel', 'Trial period is Over');
         usageLabel.style.color = '#f4511e';
         usageLabel.style.fontWeight = 'bold';
-        daysLeftLabel.style.display = 'none';
       } else {
-        usageLabel.textContent = getLocalizedMessage('usageLabel', 'Trial period:');
-        daysLeftLabel.textContent = `${trialDaysLeft} ${getLocalizedMessage('daysLeft', 'days left')}`;
-        daysLeftLabel.style.display = 'inline';
+        const trialText = getLocalizedMessage('usageLabel', 'Trial period: {0} days left').replace('{0}', trialDaysLeft);
+        usageLabel.textContent = trialText;
         usageLabel.style.color = '';
         usageLabel.style.fontWeight = '';
       }

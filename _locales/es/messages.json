@@ -80,7 +80,7 @@
     "description": "Label for slow delay setting"
   },
   "usageLabel": {
-    "message": "Período de prueba: {0} días restantes",
+    "message": "Periodo de prueba: {0} días restantes",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {
@@ -122,8 +122,8 @@
     }
   },
   "trialEndedLabel": {
-    "message": "El período de prueba ha terminado",
-    "description": "Text shown when trial period has ended"
+    "message": "El periodo de prueba ha terminado",
+    "description": "Text shown when trial period ends"
   },
   "premium_status": {
     "message": "Premium activado",

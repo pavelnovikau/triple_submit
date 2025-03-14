@@ -60,7 +60,7 @@
     "description": "Текст для обновления до Premium"
   },
   "usageLabel": {
-    "message": "Пробный период:",
+    "message": "Trial period: {0} days left",
     "description": "Text for trial period status"
   },
   "daysLeft": {

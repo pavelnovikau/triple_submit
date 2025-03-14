@@ -131,7 +131,7 @@
   },
   "trialEndedLabel": {
     "message": "انتهت الفترة التجريبية",
-    "description": "Text shown when trial period has ended"
+    "description": "Text shown when trial period ends"
   },
   "premium_status": {
     "message": "تم تفعيل النسخة المميزة",

@@ -135,6 +135,6 @@
   },
   "trialEndedLabel": {
     "message": "Trial period is Over",
-    "description": "Text shown when trial period has ended"
+    "description": "Text shown when trial period ends"
   }
 } 
