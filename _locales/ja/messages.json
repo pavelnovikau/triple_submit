@@ -84,8 +84,8 @@
     "description": "Label for premium upgrade banner"
   },
   "usageLabel": {
-    "message": "残りの無料送信回数：",
-    "description": "Text for remaining free uses"
+    "message": "試用期間：残り{0}日",
+    "description": "Text for trial period status"
   },
   "limitReachedTitle": {
     "message": "使用制限に達しました",

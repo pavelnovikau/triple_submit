@@ -84,8 +84,8 @@
     "description": "Label for premium upgrade banner"
   },
   "usageLabel": {
-    "message": "عمليات الإرسال المجانية المتبقية:",
-    "description": "Text for remaining free uses"
+    "message": "الفترة التجريبية: متبقي {0} يوم",
+    "description": "Text for trial period status"
   },
   "limitReachedTitle": {
     "message": "تم الوصول إلى حد الاستخدام",

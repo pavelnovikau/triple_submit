@@ -80,8 +80,8 @@
     "description": "Label for slow delay setting"
   },
   "usageLabel": {
-    "message": "Envíos gratuitos restantes:",
-    "description": "Text for remaining free uses"
+    "message": "Período de prueba: {0} días restantes",
+    "description": "Text for trial period status"
   },
   "limitReachedTitle": {
     "message": "Límite de uso alcanzado",

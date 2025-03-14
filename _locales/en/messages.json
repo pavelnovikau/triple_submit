@@ -88,8 +88,8 @@
     "description": "Text for activated Premium status"
   },
   "usageLabel": {
-    "message": "Free submissions left:",
-    "description": "Text for remaining free uses"
+    "message": "Trial period: {0} days left",
+    "description": "Text for trial period status"
   },
   "limitReachedTitle": {
     "message": "Usage Limit Reached",

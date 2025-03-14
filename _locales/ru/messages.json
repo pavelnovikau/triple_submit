@@ -60,8 +60,8 @@
     "description": "Текст для обновления до Premium"
   },
   "usageLabel": {
-    "message": "Осталось бесплатных отправок:",
-    "description": "Текст для оставшихся бесплатных отправок"
+    "message": "Пробный период: {0} дней осталось",
+    "description": "Text for trial period status"
   },
   "limitReachedTitle": {
     "message": "Лимит использования достигнут",

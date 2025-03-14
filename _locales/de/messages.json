@@ -80,5 +80,9 @@
         "example": "2"
       }
     }
+  },
+  "usageLabel": {
+    "message": "Testperiode: noch {0} Tage",
+    "description": "Text for trial period status"
   }
 } 

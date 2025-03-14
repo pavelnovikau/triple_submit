@@ -84,8 +84,8 @@
     "description": "Label for premium upgrade banner"
   },
   "usageLabel": {
-    "message": "Invii gratuiti rimanenti:",
-    "description": "Text for remaining free uses"
+    "message": "Periodo di prova: {0} giorni rimanenti",
+    "description": "Text for trial period status"
   },
   "limitReachedTitle": {
     "message": "Limite di utilizzo raggiunto",

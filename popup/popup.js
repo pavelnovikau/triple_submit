@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Update all text elements with localized strings
       updateElementText('language-label', 'languageLabel', 'Language:');
       updateElementText('premium-label', 'premiumLabel', 'Upgrade to Premium');
-      updateElementText('usage-label', 'usageLabel', 'Free submissions left:');
+      updateElementText('usage-label', 'usageLabel', 'Trial period: {0} days left');
       updateElementText('current-site-label', 'currentSiteLabel', 'Current site:');
       updateElementText('enable-for-site-label', 'enableForSiteLabel', 'Enable for this site');
       updateElementText('enter-presses-label', 'enterPressesLabel', 'Enter presses:');
