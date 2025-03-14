@@ -54,7 +54,8 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   
   let isPremium = false;
-  let usageCount = 20;
+  let trialDaysLeft = 0;
+  let isTrialOver = false;
   
   /**
    * Get current tab domain
@@ -121,11 +122,32 @@ document.addEventListener('DOMContentLoaded', function() {
         languageSelect.value = currentSettings.language;
       }
       
-      // Get Premium status and usage
-      const usageData = await chrome.storage.sync.get(['isPremium', 'usageCount']);
-      if (usageData) {
-        isPremium = usageData.isPremium || false;
-        usageCount = (usageData.usageCount !== undefined) ? usageData.usageCount : 20;
+      // Get Premium status and trial info
+      const trialData = await chrome.storage.sync.get(['isPremium', 'installDate']);
+      if (trialData) {
+        isPremium = trialData.isPremium || false;
+        
+        if (!isPremium) {
+          const installDate = trialData.installDate || Date.now();
+          const daysPassed = Math.floor((Date.now() - installDate) / (1000 * 60 * 60 * 24));
+          trialDaysLeft = Math.max(0, 7 - daysPassed);
+          isTrialOver = trialDaysLeft === 0;
+          
+          // If this is first run, save install date
+          if (!trialData.installDate) {
+            await chrome.storage.sync.set({ installDate: installDate });
+          }
+          
+          // Show modal if trial is over
+          if (isTrialOver) {
+            showPremiumModal();
+            // Remove close button from modal
+            const closeBtn = document.querySelector('.close-modal');
+            if (closeBtn) {
+              closeBtn.style.display = 'none';
+            }
+          }
+        }
       }
       
       // Check domain status
@@ -134,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const domains = domainData.domains || {};
         // Domain is enabled by default unless explicitly disabled
         const isExplicitlyDisabled = domains[currentDomain] === false;
-        currentSettings.domainEnabled = !isExplicitlyDisabled;
+        currentSettings.domainEnabled = !isExplicitlyDisabled && (!isTrialOver || isPremium);
         
         Logger.info(`Domain ${currentDomain} enabled status: ${currentSettings.domainEnabled} (explicitly disabled: ${isExplicitlyDisabled})`);
       }
@@ -227,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateUI() {
     // Update domain toggle
     domainToggle.checked = currentSettings.domainEnabled;
+    domainToggle.disabled = isTrialOver && !isPremium;
     
     // Update press count
     pressCountEl.textContent = currentSettings.pressCount;
@@ -244,10 +267,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     updateDelayLabel(currentSettings.delay);
     
-    // Update usage count
-    usageCountEl.textContent = usageCount;
+    // Update trial/premium status
+    if (isPremium) {
+      document.getElementById('usage-label').textContent = getLocalizedMessage('premium_status', 'Premium activated');
+      document.getElementById('usage-count').style.display = 'none';
+    } else {
+      const usageLabel = document.getElementById('usage-label');
+      if (isTrialOver) {
+        usageLabel.textContent = getLocalizedMessage('trialEndedLabel', 'Trial period is Over');
+        usageLabel.style.color = '#f4511e';
+        usageLabel.style.fontWeight = 'bold';
+      } else {
+        usageLabel.textContent = getLocalizedMessage('usageLabel', 'Trial period: {0} days left').replace('{0}', trialDaysLeft);
+      }
+    }
     
-    // Update UI availability based on domain enabled state
+    // Update UI availability based on domain enabled state and trial status
     updateUIAvailability();
   }
   
@@ -255,8 +290,8 @@ document.addEventListener('DOMContentLoaded', function() {
    * Update UI elements availability
    */
   function updateUIAvailability() {
-    // Update settings availability based on domain enabled
-    const settingsDisabled = !currentSettings.domainEnabled;
+    // Update settings availability based on domain enabled and trial status
+    const settingsDisabled = !currentSettings.domainEnabled || (isTrialOver && !isPremium);
     
     decreaseCountBtn.disabled = settingsDisabled;
     increaseCountBtn.disabled = settingsDisabled;
@@ -432,6 +467,17 @@ document.addEventListener('DOMContentLoaded', function() {
    */
   function showPremiumModal() {
     premiumModal.style.display = 'block';
+    
+    // If trial is over, prevent closing the modal
+    if (isTrialOver && !isPremium) {
+      const closeBtn = document.querySelector('.close-modal');
+      if (closeBtn) {
+        closeBtn.style.display = 'none';
+      }
+      
+      // Prevent clicking outside to close
+      window.removeEventListener('click', handleModalOutsideClick);
+    }
   }
   
   /**
@@ -581,6 +627,16 @@ document.addEventListener('DOMContentLoaded', function() {
       slowLabel.classList.add('active');
     }
   }
+  
+  // Update modal outside click handler
+  function handleModalOutsideClick(event) {
+    if (event.target === premiumModal && (!isTrialOver || isPremium)) {
+      closePremiumModal();
+    }
+  }
+  
+  // Update event listener for outside clicks
+  window.addEventListener('click', handleModalOutsideClick);
   
   // Initialize popup
   initPopup();

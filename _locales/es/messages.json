@@ -120,5 +120,13 @@
         "example": "2"
       }
     }
+  },
+  "trialEndedLabel": {
+    "message": "El período de prueba ha terminado",
+    "description": "Text shown when trial period has ended"
+  },
+  "premium_status": {
+    "message": "Premium activado",
+    "description": "Text shown when premium is activated"
   }
 } 

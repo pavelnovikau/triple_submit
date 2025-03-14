@@ -85,7 +85,7 @@
   },
   "premium_status": {
     "message": "Premium activated",
-    "description": "Text for activated Premium status"
+    "description": "Text shown when premium is activated"
   },
   "usageLabel": {
     "message": "Trial period: {0} days left",
@@ -132,5 +132,9 @@
         "example": "2"
       }
     }
+  },
+  "trialEndedLabel": {
+    "message": "Trial period is Over",
+    "description": "Text shown when trial period has ended"
   }
 } 

@@ -124,5 +124,13 @@
         "example": "2"
       }
     }
+  },
+  "trialEndedLabel": {
+    "message": "試用期間が終了しました",
+    "description": "Text shown when trial period has ended"
+  },
+  "premium_status": {
+    "message": "プレミアム版が有効です",
+    "description": "Text shown when premium is activated"
   }
 } 

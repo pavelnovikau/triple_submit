@@ -96,5 +96,13 @@
         "example": "2"
       }
     }
+  },
+  "trialEndedLabel": {
+    "message": "Пробный период закончился",
+    "description": "Text shown when trial period has ended"
+  },
+  "premium_status": {
+    "message": "Premium активирован",
+    "description": "Text shown when premium is activated"
   }
 } 

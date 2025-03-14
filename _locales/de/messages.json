@@ -84,5 +84,13 @@
   "usageLabel": {
     "message": "Testperiode: noch {0} Tage",
     "description": "Text for trial period status"
+  },
+  "trialEndedLabel": {
+    "message": "Testperiode ist beendet",
+    "description": "Text shown when trial period has ended"
+  },
+  "premium_status": {
+    "message": "Premium aktiviert",
+    "description": "Text shown when premium is activated"
   }
 } 
