@@ -30,16 +30,20 @@ chrome.runtime.onInstalled.addListener((details) => {
       delay: 600           // Default delay between presses (ms) - Normal
     };
     
+    // Set installation date for trial period
+    const installDate = Date.now();
+    
     // Save default settings
     chrome.storage.sync.set({
       settings: defaultSettings,
       domains: {},           // No domains enabled by default
       isPremium: false,      // Default to free version
-      usageCount: 0,         // Initial usage count
+      installDate: installDate, // Save installation date
+      trialEnded: false,     // Trial period status
       language: 'en'         // Default language
     })
     .then(() => {
-      Logger.info('Default settings initialized');
+      Logger.info('Default settings initialized with trial period');
     })
     .catch((error) => {
       Logger.error('Error initializing settings:', error);
@@ -219,15 +223,58 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
+// Check trial period status
+async function checkTrialPeriod() {
+  try {
+    const data = await chrome.storage.sync.get(['installDate', 'trialEnded', 'isPremium']);
+    
+    // If already premium, no need to check trial
+    if (data.isPremium) {
+      return { isActive: true, daysLeft: -1 };
+    }
+    
+    // If trial already ended, return inactive
+    if (data.trialEnded) {
+      return { isActive: false, daysLeft: 0 };
+    }
+    
+    // If no install date (shouldn't happen), set it now
+    if (!data.installDate) {
+      const now = Date.now();
+      await chrome.storage.sync.set({ installDate: now });
+      return { isActive: true, daysLeft: 7 };
+    }
+    
+    // Calculate days left
+    const now = Date.now();
+    const daysPassed = Math.floor((now - data.installDate) / (1000 * 60 * 60 * 24));
+    const daysLeft = Math.max(0, 7 - daysPassed);
+    
+    // If trial period has ended, update storage
+    if (daysLeft === 0 && !data.trialEnded) {
+      await chrome.storage.sync.set({ trialEnded: true });
+      return { isActive: false, daysLeft: 0 };
+    }
+    
+    return { isActive: daysLeft > 0, daysLeft };
+  } catch (error) {
+    Logger.error('Error checking trial period:', error);
+    return { isActive: false, daysLeft: 0 };
+  }
+}
+
 // Handle getSettings request
 function handleGetSettings(sendResponse) {
-  chrome.storage.sync.get(['settings', 'isPremium'], (data) => {
-      if (chrome.runtime.lastError) {
+  chrome.storage.sync.get(['settings', 'isPremium', 'installDate', 'trialEnded'], async (data) => {
+    if (chrome.runtime.lastError) {
       Logger.error('Error getting settings:', chrome.runtime.lastError);
-        sendResponse({ error: chrome.runtime.lastError.message });
-        return;
-      }
-      
+      sendResponse({ error: chrome.runtime.lastError.message });
+      return;
+    }
+    
+    // Check trial period status
+    const trialStatus = await checkTrialPeriod();
+    
     // If settings don't exist yet, use defaults
     const settings = data.settings || {
       domainEnabled: true,  // Enable by default
@@ -237,10 +284,17 @@ function handleGetSettings(sendResponse) {
       mode: 'normal'
     };
     
-    // Add premium status
+    // Add premium and trial status
     settings.isPremium = data.isPremium || false;
+    settings.trialActive = trialStatus.isActive;
+    settings.trialDaysLeft = trialStatus.daysLeft;
     
-    Logger.info('Retrieved settings:', settings);
+    // If trial ended and not premium, disable domain
+    if (!trialStatus.isActive && !settings.isPremium) {
+      settings.domainEnabled = false;
+    }
+    
+    Logger.info('Retrieved settings with trial status:', settings);
     sendResponse({ settings: settings });
   });
 }

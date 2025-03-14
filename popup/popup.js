@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let isPremium = false;
   let trialDaysLeft = 0;
   let isTrialOver = false;
+  let installDate = null;
   
   /**
    * Get current tab domain
@@ -80,10 +81,77 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   /**
+   * Check trial period status
+   */
+  async function checkTrialStatus() {
+    try {
+      const data = await chrome.storage.sync.get(['installDate', 'isPremium']);
+      isPremium = data.isPremium || false;
+      
+      if (!isPremium) {
+        // If no install date, set it now
+        if (!data.installDate) {
+          installDate = Date.now();
+          await chrome.storage.sync.set({ installDate });
+        } else {
+          installDate = data.installDate;
+        }
+        
+        // Calculate remaining trial days
+        const daysPassed = Math.floor((Date.now() - installDate) / (1000 * 60 * 60 * 24));
+        trialDaysLeft = Math.max(0, 7 - daysPassed);
+        isTrialOver = trialDaysLeft === 0;
+        
+        // If trial is over, disable functionality
+        if (isTrialOver) {
+          // Force disable domain toggle
+          currentSettings.domainEnabled = false;
+          domainToggle.checked = false;
+          domainToggle.disabled = true;
+          
+          // Show modal
+          showPremiumModal();
+          
+          // Remove close button from modal
+          const closeBtn = document.querySelector('.close-modal');
+          if (closeBtn) {
+            closeBtn.style.display = 'none';
+          }
+          
+          // Prevent clicking outside to close
+          window.removeEventListener('click', handleModalOutsideClick);
+          
+          // Save disabled state
+          await chrome.storage.sync.set({
+            settings: {
+              ...currentSettings,
+              domainEnabled: false
+            }
+          });
+          
+          // Notify background script to disable functionality
+          chrome.runtime.sendMessage({
+            action: 'trial_ended',
+            timestamp: Date.now()
+          });
+        }
+      }
+      
+      return !isTrialOver || isPremium;
+    } catch (error) {
+      Logger.error('Error checking trial status:', error);
+      return false;
+    }
+  }
+  
+  /**
    * Initialize popup
    */
   async function initPopup() {
     try {
+      // Check trial status first
+      await checkTrialStatus();
+      
       // Get current domain
       await getCurrentTabDomain();
       
@@ -95,7 +163,16 @@ document.addEventListener('DOMContentLoaded', function() {
       // Get general settings
       const data = await chrome.storage.sync.get(['settings', 'language']);
       if (data && data.settings) {
-        currentSettings = { ...currentSettings, ...data.settings };
+        // Only apply enabled state if trial is not over or premium
+        if (!isTrialOver || isPremium) {
+          currentSettings = { ...currentSettings, ...data.settings };
+        } else {
+          // If trial is over, force disable but keep other settings
+          currentSettings = {
+            ...data.settings,
+            domainEnabled: false
+          };
+        }
       }
       
       // Get language setting
@@ -120,45 +197,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Set selected language in dropdown
       if (languageSelect) {
         languageSelect.value = currentSettings.language;
-      }
-      
-      // Get Premium status and trial info
-      const trialData = await chrome.storage.sync.get(['isPremium', 'installDate']);
-      if (trialData) {
-        isPremium = trialData.isPremium || false;
-        
-        if (!isPremium) {
-          const installDate = trialData.installDate || Date.now();
-          const daysPassed = Math.floor((Date.now() - installDate) / (1000 * 60 * 60 * 24));
-          trialDaysLeft = Math.max(0, 7 - daysPassed);
-          isTrialOver = trialDaysLeft === 0;
-          
-          // If this is first run, save install date
-          if (!trialData.installDate) {
-            await chrome.storage.sync.set({ installDate: installDate });
-          }
-          
-          // Show modal if trial is over
-          if (isTrialOver) {
-            showPremiumModal();
-            // Remove close button from modal
-            const closeBtn = document.querySelector('.close-modal');
-            if (closeBtn) {
-              closeBtn.style.display = 'none';
-            }
-          }
-        }
-      }
-      
-      // Check domain status
-      if (currentDomain) {
-        const domainData = await chrome.storage.sync.get(['domains']);
-        const domains = domainData.domains || {};
-        // Domain is enabled by default unless explicitly disabled
-        const isExplicitlyDisabled = domains[currentDomain] === false;
-        currentSettings.domainEnabled = !isExplicitlyDisabled && (!isTrialOver || isPremium);
-        
-        Logger.info(`Domain ${currentDomain} enabled status: ${currentSettings.domainEnabled} (explicitly disabled: ${isExplicitlyDisabled})`);
       }
       
       // Load localized strings first, then update UI
@@ -271,14 +309,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isPremium) {
       document.getElementById('usage-label').textContent = getLocalizedMessage('premium_status', 'Premium activated');
       document.getElementById('usage-count').style.display = 'none';
+      document.getElementById('days-left-label').style.display = 'none';
     } else {
       const usageLabel = document.getElementById('usage-label');
+      const daysLeftLabel = document.getElementById('days-left-label');
+      
       if (isTrialOver) {
         usageLabel.textContent = getLocalizedMessage('trialEndedLabel', 'Trial period is Over');
         usageLabel.style.color = '#f4511e';
         usageLabel.style.fontWeight = 'bold';
+        daysLeftLabel.style.display = 'none';
       } else {
-        usageLabel.textContent = getLocalizedMessage('usageLabel', 'Trial period: {0} days left').replace('{0}', trialDaysLeft);
+        usageLabel.textContent = getLocalizedMessage('usageLabel', 'Trial period:');
+        daysLeftLabel.textContent = `${trialDaysLeft} ${getLocalizedMessage('daysLeft', 'days left')}`;
+        daysLeftLabel.style.display = 'inline';
+        usageLabel.style.color = '';
+        usageLabel.style.fontWeight = '';
       }
     }
     
@@ -340,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Update all text elements with localized strings
       updateElementText('language-label', 'languageLabel', 'Language:');
       updateElementText('premium-label', 'premiumLabel', 'Upgrade to Premium');
-      updateElementText('usage-label', 'usageLabel', 'Trial period: {0} days left');
+      updateElementText('usage-label', 'usageLabel', 'Trial period:');
       updateElementText('current-site-label', 'currentSiteLabel', 'Current site:');
       updateElementText('enable-for-site-label', 'enableForSiteLabel', 'Enable for this site');
       updateElementText('enter-presses-label', 'enterPressesLabel', 'Enter presses:');
@@ -399,6 +445,13 @@ document.addEventListener('DOMContentLoaded', function() {
    */
   async function saveSettings() {
     try {
+      // Check trial status before saving
+      const canSave = await checkTrialStatus();
+      if (!canSave) {
+        Logger.warn('Cannot save settings - trial period ended');
+        return;
+      }
+      
       // Определяем, является ли это переключением домена
       const isDomainToggle = currentDomain && currentSettings.domainEnabled !== undefined;
       
@@ -500,16 +553,20 @@ document.addEventListener('DOMContentLoaded', function() {
    */
     
   // Toggle for enabling/disabling for current domain
-  domainToggle.addEventListener('change', function() {
+  domainToggle.addEventListener('change', async function() {
+    // Check trial status before allowing changes
+    const canChange = await checkTrialStatus();
+    if (!canChange) {
+      this.checked = false;
+      return;
+    }
+    
     const oldValue = currentSettings.domainEnabled;
     currentSettings.domainEnabled = this.checked;
     
     Logger.info(`Domain toggle changed from ${oldValue} to ${currentSettings.domainEnabled} for domain ${currentDomain}`);
     
-    // Обновляем UI
     updateUIAvailability();
-    
-    // Сохраняем настройки с явным указанием, что это переключение домена
     saveSettingsWithDomainToggle();
   });
   

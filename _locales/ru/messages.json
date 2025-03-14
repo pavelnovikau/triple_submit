@@ -60,8 +60,12 @@
     "description": "Текст для обновления до Premium"
   },
   "usageLabel": {
-    "message": "Пробный период: {0} дней осталось",
+    "message": "Пробный период:",
     "description": "Text for trial period status"
+  },
+  "daysLeft": {
+    "message": "дней осталось",
+    "description": "Text for days left"
   },
   "limitReachedTitle": {
     "message": "Лимит использования достигнут",
@@ -99,7 +103,7 @@
   },
   "trialEndedLabel": {
     "message": "Пробный период закончился",
-    "description": "Text shown when trial period has ended"
+    "description": "Text shown when trial period ends"
   },
   "premium_status": {
     "message": "Premium активирован",
