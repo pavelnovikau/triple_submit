@@ -423,20 +423,24 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('usage-count').style.display = 'none';
     } else {
       const usageLabel = document.getElementById('usage-label');
+      const usageCount = document.getElementById('usage-count');
       
       if (isTrialOver) {
         usageLabel.textContent = getLocalizedMessage('trialEndedLabel', 'Trial period is Over');
         usageLabel.style.color = '#f4511e';
         usageLabel.style.fontWeight = 'bold';
+        usageCount.style.display = 'none';
       } else {
         // Use correct message key based on mode
         const messageKey = TEST_MODE ? 'usageLabelMinutes' : 'usageLabel';
-        const defaultText = TEST_MODE ? 'Trial period: {0} minutes left' : 'Trial period: {0} days left';
-        // todo ниже странная строка, нужно поправить
-        const trialText = getLocalizedMessage(messageKey, defaultText).replace('{0}', trialDaysLeft);
-        usageLabel.textContent = trialText;
+        // Show fixed "Trial period:" text
+        usageLabel.textContent = getLocalizedMessage('trialPeriodLabel', 'Trial period:');
         usageLabel.style.color = '';
         usageLabel.style.fontWeight = '';
+        
+        // Update the count display with number and units
+        usageCount.textContent = `${trialDaysLeft} ${getLocalizedMessage(messageKey)}`;
+        usageCount.style.display = 'inline';
       }
     }
     
