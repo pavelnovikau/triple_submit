@@ -23,7 +23,7 @@
     "message": "Activer pour ce site",
     "description": "Label for enabling extension on current site"
   },
-  "mode": {
+  "mode_label": {
     "message": "Mode :",
     "description": "Label for mode selection"
   },
@@ -31,16 +31,16 @@
     "message": "Normal",
     "description": "Label for normal mode"
   },
-  "mode_normal_desc": {
-    "message": "Comportement standard - pressions multiples sur Entrée pour soumettre",
-    "description": "Description for normal mode"
-  },
   "mode_alternative": {
     "message": "Amélioré",
     "description": "Label for alternative mode"
   },
-  "mode_alternative_desc": {
-    "message": "Sauts de ligne avec une seule pression sur Entrée, soumission avec plusieurs pressions",
+  "mode_normal_description": {
+    "message": "Fonctionnalité standard de la touche Entrée sans vérifications supplémentaires.",
+    "description": "Description for normal mode"
+  },
+  "mode_alternative_description": {
+    "message": "Protection contre la soumission accidentelle de formulaire nécessitant plusieurs pressions sur Entrée.",
     "description": "Description for alternative mode"
   },
   "enterPressesLabel": {
@@ -55,13 +55,9 @@
     "message": "Options avancées",
     "description": "Label for advanced options button"
   },
-  "upgrade_premium": {
+  "premiumLabel": {
     "message": "Passer à Premium",
     "description": "Label for premium upgrade banner"
-  },
-  "settings_note": {
-    "message": "* Paramètres supplémentaires disponibles dans les options avancées",
-    "description": "Note about additional settings in advanced options"
   },
   "delayLabel": {
     "message": "Délai :",
@@ -79,12 +75,16 @@
     "message": "Lent",
     "description": "Label for slow delay setting"
   },
-  "premiumLabel": {
-    "message": "Passer à Premium",
-    "description": "Label for premium upgrade banner"
+  "modeLabel": {
+    "message": "Mode :",
+    "description": "Label for mode selection"
+  },
+  "modeNormal": {
+    "message": "Entrée multiple",
+    "description": "Label for normal mode (multiple Enter presses)"
   },
   "usageLabel": {
-    "message": "Trial period:",
+    "message": "Période d'essai :",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {
@@ -110,6 +110,10 @@
   "processing_payment": {
     "message": "Traitement du paiement...",
     "description": "Text during payment processing"
+  },
+  "enableExtension": {
+    "message": "Activer 3x Enter",
+    "description": "Text for the main toggle switch"
   },
   "usageLimitMessage": {
     "message": "Vous avez utilisé la version gratuite de 3x Enter 20 fois.",

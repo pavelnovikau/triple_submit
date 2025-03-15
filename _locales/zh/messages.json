@@ -23,7 +23,7 @@
     "message": "在此站点启用",
     "description": "Label for enabling extension on current site"
   },
-  "mode": {
+  "mode_label": {
     "message": "模式：",
     "description": "Label for mode selection"
   },
@@ -31,16 +31,16 @@
     "message": "正常",
     "description": "Label for normal mode"
   },
-  "mode_normal_desc": {
-    "message": "标准行为 - 多次按回车键提交",
-    "description": "Description for normal mode"
-  },
   "mode_alternative": {
     "message": "增强",
     "description": "Label for alternative mode"
   },
-  "mode_alternative_desc": {
-    "message": "单次回车换行，多次回车提交表单",
+  "mode_normal_description": {
+    "message": "回车键的标准功能，无额外检查。",
+    "description": "Description for normal mode"
+  },
+  "mode_alternative_description": {
+    "message": "防止意外提交表单，需要多次按回车键。",
     "description": "Description for alternative mode"
   },
   "enterPressesLabel": {
@@ -55,13 +55,9 @@
     "message": "高级选项",
     "description": "Label for advanced options button"
   },
-  "upgrade_premium": {
+  "premiumLabel": {
     "message": "升级到高级版",
     "description": "Label for premium upgrade banner"
-  },
-  "settings_note": {
-    "message": "* 高级选项中提供更多设置",
-    "description": "Note about additional settings in advanced options"
   },
   "delayLabel": {
     "message": "延迟：",
@@ -79,12 +75,16 @@
     "message": "慢速",
     "description": "Label for slow delay setting"
   },
-  "premiumLabel": {
-    "message": "升级到高级版",
-    "description": "Label for premium upgrade banner"
+  "modeLabel": {
+    "message": "模式：",
+    "description": "Label for mode selection"
+  },
+  "modeNormal": {
+    "message": "多次回车",
+    "description": "Label for normal mode (multiple Enter presses)"
   },
   "usageLabel": {
-    "message": "Trial period:",
+    "message": "试用期：",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {
@@ -110,6 +110,10 @@
   "processing_payment": {
     "message": "处理付款中...",
     "description": "Text during payment processing"
+  },
+  "enableExtension": {
+    "message": "启用 3x Enter",
+    "description": "Text for the main toggle switch"
   },
   "usageLimitMessage": {
     "message": "您已使用3x Enter免费版20次。",

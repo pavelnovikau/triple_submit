@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Safe Enter AI-helper",
+    "message": "3x Enter AI-helper",
     "description": "Extension name"
   },
   "extDescription": {
@@ -23,7 +23,7 @@
     "message": "Für diese Seite aktivieren",
     "description": "Label for enabling extension on current site"
   },
-  "mode": {
+  "mode_label": {
     "message": "Modus:",
     "description": "Label for mode selection"
   },
@@ -31,16 +31,16 @@
     "message": "Normal",
     "description": "Label for normal mode"
   },
-  "mode_normal_desc": {
-    "message": "Standardverhalten - mehrere Enter-Tastendrücke zum Absenden",
-    "description": "Description for normal mode"
-  },
   "mode_alternative": {
     "message": "Erweitert",
     "description": "Label for alternative mode"
   },
-  "mode_alternative_desc": {
-    "message": "Zeilenumbrüche mit einzelnem Enter, Formularübermittlung mit mehreren Tastendrücken",
+  "mode_normal_description": {
+    "message": "Standardfunktionalität der Eingabetaste ohne zusätzliche Überprüfungen.",
+    "description": "Description for normal mode"
+  },
+  "mode_alternative_description": {
+    "message": "Schutz vor versehentlicher Formularübermittlung, der mehrere Eingabetasten-Drücke erfordert.",
     "description": "Description for alternative mode"
   },
   "enterPressesLabel": {
@@ -55,17 +55,65 @@
     "message": "Erweiterte Optionen",
     "description": "Label for advanced options button"
   },
-  "upgrade_premium": {
+  "premiumLabel": {
     "message": "Auf Premium upgraden",
     "description": "Label for premium upgrade banner"
   },
-  "settings_note": {
-    "message": "* Zusätzliche Einstellungen in den erweiterten Optionen verfügbar",
-    "description": "Note about additional settings in advanced options"
+  "delayLabel": {
+    "message": "Verzögerung:",
+    "description": "Label for delay slider"
   },
-  "extensionName": {
-    "message": "3x Enter",
-    "description": "Name of the extension"
+  "fastLabel": {
+    "message": "Schnell",
+    "description": "Label for fast delay setting"
+  },
+  "normalLabel": {
+    "message": "Normal",
+    "description": "Label for normal delay setting"
+  },
+  "slowLabel": {
+    "message": "Langsam",
+    "description": "Label for slow delay setting"
+  },
+  "modeLabel": {
+    "message": "Modus:",
+    "description": "Label for mode selection"
+  },
+  "modeNormal": {
+    "message": "Mehrfach-Enter",
+    "description": "Label for normal mode (multiple Enter presses)"
+  },
+  "usageLabel": {
+    "message": "Testperiode:",
+    "description": "Text for trial period status"
+  },
+  "limitReachedTitle": {
+    "message": "Nutzungslimit erreicht",
+    "description": "Title for usage limit modal"
+  },
+  "usageLimitText": {
+    "message": "Sie haben die kostenlose Version von Triple Submit 20 Mal verwendet.",
+    "description": "Message about reaching usage limit"
+  },
+  "upgradeText": {
+    "message": "Um die Nutzung fortzusetzen, upgraden Sie bitte auf die Premium-Version.",
+    "description": "Message about need to upgrade"
+  },
+  "perMonth": {
+    "message": "/ Monat",
+    "description": "Payment period"
+  },
+  "payNowButton": {
+    "message": "Jetzt bezahlen",
+    "description": "Text for payment button"
+  },
+  "processing_payment": {
+    "message": "Zahlung wird verarbeitet...",
+    "description": "Text during payment processing"
+  },
+  "enableExtension": {
+    "message": "3x Enter aktivieren",
+    "description": "Text for the main toggle switch"
   },
   "usageLimitMessage": {
     "message": "Sie haben die kostenlose Version von 3x Enter 20 Mal verwendet.",
@@ -80,10 +128,6 @@
         "example": "2"
       }
     }
-  },
-  "usageLabel": {
-    "message": "Trial period:",
-    "description": "Text for trial period status"
   },
   "trialEndedLabel": {
     "message": "Testperiode ist beendet",

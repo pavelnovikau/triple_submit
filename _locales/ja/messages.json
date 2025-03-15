@@ -23,7 +23,7 @@
     "message": "このサイトで有効にする",
     "description": "Label for enabling extension on current site"
   },
-  "mode": {
+  "mode_label": {
     "message": "モード：",
     "description": "Label for mode selection"
   },
@@ -31,16 +31,16 @@
     "message": "通常",
     "description": "Label for normal mode"
   },
-  "mode_normal_desc": {
-    "message": "標準動作 - 複数回のEnterキー押下で送信",
-    "description": "Description for normal mode"
-  },
   "mode_alternative": {
     "message": "拡張",
     "description": "Label for alternative mode"
   },
-  "mode_alternative_desc": {
-    "message": "1回のEnterで改行、複数回のEnterでフォーム送信",
+  "mode_normal_description": {
+    "message": "追加のチェックなしの標準的なEnterキーの機能です。",
+    "description": "Description for normal mode"
+  },
+  "mode_alternative_description": {
+    "message": "フォームの誤送信を防ぐため、複数回のEnterキー押下が必要です。",
     "description": "Description for alternative mode"
   },
   "enterPressesLabel": {
@@ -55,13 +55,9 @@
     "message": "詳細設定",
     "description": "Label for advanced options button"
   },
-  "upgrade_premium": {
+  "premiumLabel": {
     "message": "プレミアムにアップグレード",
     "description": "Label for premium upgrade banner"
-  },
-  "settings_note": {
-    "message": "* 追加設定は詳細設定で利用可能です",
-    "description": "Note about additional settings in advanced options"
   },
   "delayLabel": {
     "message": "遅延：",
@@ -79,12 +75,16 @@
     "message": "遅い",
     "description": "Label for slow delay setting"
   },
-  "premiumLabel": {
-    "message": "プレミアムにアップグレード",
-    "description": "Label for premium upgrade banner"
+  "modeLabel": {
+    "message": "モード：",
+    "description": "Label for mode selection"
+  },
+  "modeNormal": {
+    "message": "複数回Enter",
+    "description": "Label for normal mode (multiple Enter presses)"
   },
   "usageLabel": {
-    "message": "Trial period:",
+    "message": "試用期間：",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {
@@ -110,6 +110,10 @@
   "processing_payment": {
     "message": "支払い処理中...",
     "description": "Text during payment processing"
+  },
+  "enableExtension": {
+    "message": "3x Enterを有効にする",
+    "description": "Text for the main toggle switch"
   },
   "usageLimitMessage": {
     "message": "3x Enterの無料版を20回使用しました。",

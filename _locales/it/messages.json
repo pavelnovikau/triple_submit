@@ -23,7 +23,7 @@
     "message": "Attiva per questo sito",
     "description": "Label for enabling extension on current site"
   },
-  "mode": {
+  "mode_label": {
     "message": "Modalità:",
     "description": "Label for mode selection"
   },
@@ -31,16 +31,16 @@
     "message": "Normale",
     "description": "Label for normal mode"
   },
-  "mode_normal_desc": {
-    "message": "Comportamento standard - più pressioni di Invio per inviare",
-    "description": "Description for normal mode"
-  },
   "mode_alternative": {
     "message": "Avanzata",
     "description": "Label for alternative mode"
   },
-  "mode_alternative_desc": {
-    "message": "Interruzioni di linea con un solo Invio, invio del modulo con più pressioni",
+  "mode_normal_description": {
+    "message": "Funzionalità standard del tasto Invio senza controlli aggiuntivi.",
+    "description": "Description for normal mode"
+  },
+  "mode_alternative_description": {
+    "message": "Protezione contro l'invio accidentale del modulo che richiede più pressioni di Invio.",
     "description": "Description for alternative mode"
   },
   "enterPressesLabel": {
@@ -84,7 +84,7 @@
     "description": "Label for premium upgrade banner"
   },
   "usageLabel": {
-    "message": "Trial period:",
+    "message": "Periodo di prova:",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {
@@ -110,6 +110,10 @@
   "processing_payment": {
     "message": "Elaborazione del pagamento...",
     "description": "Text during payment processing"
+  },
+  "enableExtension": {
+    "message": "Attiva 3x Enter",
+    "description": "Text for the main toggle switch"
   },
   "usageLimitMessage": {
     "message": "Hai utilizzato la versione gratuita di 3x Enter 20 volte.",
