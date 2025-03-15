@@ -16,6 +16,10 @@ const Logger = {
   }
 };
 
+// Test mode configuration
+const TEST_MODE = true; // Set to false for production/release mode
+const TRIAL_PERIOD = TEST_MODE ? 10 : 7; // 10 minutes for test mode, 7 days for release mode
+
 // Custom localization cache
 let localizedStrings = {};
 const defaultLanguage = 'en';
@@ -58,6 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
   let isTrialOver = false;
   let installDate = null;
   
+  let uiUpdateTimer = null; // Add timer variable
+  
   /**
    * Get current tab domain
    */
@@ -85,25 +91,90 @@ document.addEventListener('DOMContentLoaded', function() {
    */
   async function checkTrialStatus() {
     try {
+      Logger.info('=== TRIAL STATUS CHECK START ===');
+      
       const data = await chrome.storage.sync.get(['installDate', 'isPremium']);
       isPremium = data.isPremium || false;
+      
+      Logger.info('Mode and Status:', {
+        mode: TEST_MODE ? 'TEST MODE (minutes)' : 'RELEASE MODE (days)',
+        premium: isPremium ? 'ACTIVE' : 'NOT ACTIVE'
+      });
       
       if (!isPremium) {
         // If no install date, set it now
         if (!data.installDate) {
           installDate = Date.now();
           await chrome.storage.sync.set({ installDate });
+          Logger.info('NEW Install date:', new Date(installDate).toLocaleString());
         } else {
           installDate = data.installDate;
+          Logger.info('Existing install date:', new Date(installDate).toLocaleString());
         }
         
-        // Calculate remaining trial days
-        const daysPassed = Math.floor((Date.now() - installDate) / (1000 * 60 * 60 * 24));
-        trialDaysLeft = Math.max(0, 7 - daysPassed);
-        isTrialOver = trialDaysLeft === 0;
+        // Calculate remaining trial time based on mode
+        const timePassed = Date.now() - installDate;
+        let timeLeft;
+        
+        if (TEST_MODE) {
+          // In test mode: calculate minutes
+          const minutesPassed = Math.floor(timePassed / (1000 * 60));
+          timeLeft = Math.max(0, TRIAL_PERIOD - minutesPassed);
+          trialDaysLeft = timeLeft; // For display purposes
+          
+          const secondsUntilNextMinute = Math.floor((timePassed % (1000 * 60)) / 1000);
+          const totalSecondsLeft = (timeLeft * 60) - secondsUntilNextMinute;
+          
+          Logger.info('=== REMAINING TRIAL TIME ===');
+          Logger.info('Time details:', {
+            minutesLeft: timeLeft,
+            secondsLeft: totalSecondsLeft % 60,
+            totalSecondsLeft: totalSecondsLeft,
+            nextMinuteIn: 60 - secondsUntilNextMinute
+          });
+          
+          Logger.info('Test mode time check:', {
+            totalMinutes: TRIAL_PERIOD,
+            minutesPassed: minutesPassed,
+            minutesLeft: timeLeft,
+            secondsUntilNextMinute: secondsUntilNextMinute
+          });
+          
+        } else {
+          // In release mode: calculate days
+          const daysPassed = Math.floor(timePassed / (1000 * 60 * 60 * 24));
+          timeLeft = Math.max(0, TRIAL_PERIOD - daysPassed);
+          trialDaysLeft = timeLeft;
+          
+          const hoursInDay = Math.floor((timePassed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const totalHoursLeft = (timeLeft * 24) - hoursInDay;
+          
+          Logger.info('=== REMAINING TRIAL TIME ===');
+          Logger.info('Time details:', {
+            daysLeft: timeLeft,
+            hoursLeft: totalHoursLeft % 24,
+            totalHoursLeft: totalHoursLeft,
+            nextDayIn: 24 - hoursInDay
+          });
+          
+          Logger.info('Release mode time check:', {
+            totalDays: TRIAL_PERIOD,
+            daysPassed: daysPassed,
+            daysLeft: timeLeft
+          });
+        }
+        
+        isTrialOver = timeLeft === 0;
+        Logger.info('Trial status:', {
+          timeLeft: timeLeft,
+          isOver: isTrialOver,
+          unit: TEST_MODE ? 'minutes' : 'days',
+          expiresAt: new Date(installDate + (TEST_MODE ? TRIAL_PERIOD * 60 * 1000 : TRIAL_PERIOD * 24 * 60 * 60 * 1000)).toLocaleString()
+        });
         
         // If trial is over, disable functionality
         if (isTrialOver) {
+          Logger.info('!!! TRIAL PERIOD HAS ENDED - DISABLING FUNCTIONALITY !!!');
           // Force disable domain toggle
           currentSettings.domainEnabled = false;
           domainToggle.checked = false;
@@ -145,14 +216,52 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   /**
+   * Start periodic UI updates
+   */
+  function startPeriodicUpdates() {
+    // Clear any existing timer
+    if (uiUpdateTimer) {
+      clearInterval(uiUpdateTimer);
+    }
+    
+    // Update UI immediately
+    checkTrialStatus().then(() => updateUI());
+    
+    // Set update interval based on mode
+    const updateInterval = TEST_MODE ? 1000 : 60000; // 1 second in test mode, 1 minute in release mode
+    
+    uiUpdateTimer = setInterval(async () => {
+      await checkTrialStatus();
+      updateUI();
+    }, updateInterval);
+    
+    Logger.info(`Started periodic UI updates with interval: ${updateInterval}ms`);
+  }
+  
+  /**
+   * Stop periodic UI updates
+   */
+  function stopPeriodicUpdates() {
+    if (uiUpdateTimer) {
+      clearInterval(uiUpdateTimer);
+      uiUpdateTimer = null;
+      Logger.info('Stopped periodic UI updates');
+    }
+  }
+  
+  /**
    * Initialize popup
    */
   async function initPopup() {
     try {
+      Logger.info('=== POPUP INITIALIZATION START ===');
+      
       // Check trial status first
+      Logger.info('Checking trial status...');
       await checkTrialStatus();
       
       // Get current domain
+      Logger.info('Getting current domain...');
       await getCurrentTabDomain();
       
       // Display current domain
@@ -207,6 +316,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Apply language
       updateLanguage(currentSettings.language);
+      
+      // Start periodic updates
+      startPeriodicUpdates();
       
       Logger.info('Popup initialized with settings:', currentSettings);
     } catch (error) {
@@ -550,9 +662,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
   // Toggle for enabling/disabling for current domain
   domainToggle.addEventListener('change', async function() {
+    Logger.info('=== DOMAIN TOGGLE CHANGE START ===');
+    
     // Check trial status before allowing changes
+    Logger.info('Checking trial status before toggle...');
     const canChange = await checkTrialStatus();
+    Logger.info('Trial status check result:', canChange);
+    
     if (!canChange) {
+      Logger.info('Cannot change - trial restrictions');
       this.checked = false;
       return;
     }
@@ -563,7 +681,9 @@ document.addEventListener('DOMContentLoaded', function() {
     Logger.info(`Domain toggle changed from ${oldValue} to ${currentSettings.domainEnabled} for domain ${currentDomain}`);
     
     updateUIAvailability();
-    saveSettingsWithDomainToggle();
+    await saveSettingsWithDomainToggle();
+    
+    Logger.info('=== DOMAIN TOGGLE CHANGE END ===');
   });
   
   // Функция для сохранения настроек с явным указанием, что это переключение домена
@@ -690,6 +810,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Update event listener for outside clicks
   window.addEventListener('click', handleModalOutsideClick);
+  
+  // Clean up when popup is closed
+  window.addEventListener('unload', () => {
+    stopPeriodicUpdates();
+  });
   
   // Initialize popup
   initPopup();
