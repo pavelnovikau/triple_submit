@@ -65,6 +65,13 @@ document.addEventListener('DOMContentLoaded', function() {
   let uiUpdateTimer = null; // Add timer variable
   
   /**
+   * Check if user can interact with UI elements
+   */
+  function canInteractWithUI() {
+    return !isTrialOver || isPremium;
+  }
+  
+  /**
    * Get current tab domain
    */
   async function getCurrentTabDomain() {
@@ -453,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
    */
   function updateUIAvailability() {
     // Update settings availability based on domain enabled and trial status
-    const settingsDisabled = !currentSettings.domainEnabled || (isTrialOver && !isPremium);
+    const settingsDisabled = !currentSettings.domainEnabled || !canInteractWithUI();
     
     decreaseCountBtn.disabled = settingsDisabled;
     increaseCountBtn.disabled = settingsDisabled;
@@ -808,7 +815,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Update modal outside click handler
   function handleModalOutsideClick(event) {
     // Only close if clicking on the modal overlay (background) itself
-    if (event.target === premiumModal && event.target.classList.contains('modal-overlay') && (!isTrialOver || isPremium)) {
+    if (event.target === premiumModal && event.target.classList.contains('modal-overlay') && canInteractWithUI()) {
       closePremiumModal();
     }
   }
