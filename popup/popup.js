@@ -429,7 +429,11 @@ document.addEventListener('DOMContentLoaded', function() {
         usageLabel.style.color = '#f4511e';
         usageLabel.style.fontWeight = 'bold';
       } else {
-        const trialText = getLocalizedMessage('usageLabel', 'Trial period: {0} days left').replace('{0}', trialDaysLeft);
+        // Use correct message key based on mode
+        const messageKey = TEST_MODE ? 'usageLabelMinutes' : 'usageLabel';
+        const defaultText = TEST_MODE ? 'Trial period: {0} minutes left' : 'Trial period: {0} days left';
+        // todo ниже странная строка, нужно поправить
+        const trialText = getLocalizedMessage(messageKey, defaultText).replace('{0}', trialDaysLeft);
         usageLabel.textContent = trialText;
         usageLabel.style.color = '';
         usageLabel.style.fontWeight = '';
