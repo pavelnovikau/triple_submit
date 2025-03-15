@@ -82,7 +82,7 @@
     }
   },
   "usageLabel": {
-    "message": "Testperiode: {0} Tage verbleibend",
+    "message": "Trial period:",
     "description": "Text for trial period status"
   },
   "trialEndedLabel": {

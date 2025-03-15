@@ -84,7 +84,7 @@
     "description": "Label for premium upgrade banner"
   },
   "usageLabel": {
-    "message": "الفترة التجريبية: متبقي {0} يوم",
+    "message": "Trial period:",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {

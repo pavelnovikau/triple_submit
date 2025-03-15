@@ -84,7 +84,7 @@
     "description": "Label for premium upgrade banner"
   },
   "usageLabel": {
-    "message": "試用期間: 残り{0}日",
+    "message": "Trial period:",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {

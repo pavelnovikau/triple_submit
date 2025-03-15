@@ -80,7 +80,7 @@
     "description": "Label for slow delay setting"
   },
   "usageLabel": {
-    "message": "Periodo de prueba: {0} días restantes",
+    "message": "Trial period:",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {
