@@ -94,6 +94,20 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   /**
+   * Configure modal close functionality based on trial status
+   */
+  function configureModalClose(shouldDisableClose) {
+    const closeBtn = document.querySelector('.close-modal');
+    if (closeBtn) {
+      closeBtn.style.display = shouldDisableClose ? 'none' : 'block';
+    }
+    
+    if (shouldDisableClose) {
+      window.removeEventListener('click', handleModalOutsideClick);
+    }
+  }
+  
+  /**
    * Check trial period status
    */
   async function checkTrialStatus() {
@@ -190,14 +204,8 @@ document.addEventListener('DOMContentLoaded', function() {
           // Show modal
           showPremiumModal();
           
-          // Remove close button from modal
-          const closeBtn = document.querySelector('.close-modal');
-          if (closeBtn) {
-            closeBtn.style.display = 'none';
-          }
-          
-          // Prevent clicking outside to close
-          window.removeEventListener('click', handleModalOutsideClick);
+          // Disable modal closing
+          configureModalClose(true);
           
           // Save disabled state
           await chrome.storage.sync.set({
@@ -646,13 +654,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // If trial is over, prevent closing the modal
     if (isTrialOver && !isPremium) {
-      const closeBtn = document.querySelector('.close-modal');
-      if (closeBtn) {
-        closeBtn.style.display = 'none';
-      }
-      
-      // Prevent clicking outside to close
-      window.removeEventListener('click', handleModalOutsideClick);
+      configureModalClose(true);
     }
   }
   
