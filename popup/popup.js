@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (TEST_MODE) {
           // In test mode: calculate minutes
-          const minutesPassed = Math.floor(timePassed / (1000 * 60));
+          const minutesPassed = Math.floor(timePassed / (121 * 60));
           timeLeft = Math.max(0, TRIAL_PERIOD - minutesPassed);
           trialDaysLeft = timeLeft; // For display purposes
           
@@ -780,11 +780,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Close modal when clicking outside content
-  window.addEventListener('click', function(event) {
-    if (event.target === premiumModal) {
-      closePremiumModal();
-    }
-  });
+  window.addEventListener('click', handleModalOutsideClick);
   
   /**
    * Updates the visual indication of which delay label is active
@@ -811,13 +807,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Update modal outside click handler
   function handleModalOutsideClick(event) {
-    if (event.target === premiumModal && (!isTrialOver || isPremium)) {
+    // Only close if clicking on the modal overlay (background) itself
+    if (event.target === premiumModal && event.target.classList.contains('modal-overlay') && (!isTrialOver || isPremium)) {
       closePremiumModal();
     }
   }
-  
-  // Update event listener for outside clicks
-  window.addEventListener('click', handleModalOutsideClick);
   
   // Clean up when popup is closed
   window.addEventListener('unload', () => {
