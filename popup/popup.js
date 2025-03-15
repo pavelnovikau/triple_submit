@@ -409,6 +409,37 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   /**
+   * Update trial/premium status UI elements
+   */
+  function updateTrialStatusUI() {
+    const usageLabel = document.getElementById('usage-label');
+    const usageCount = document.getElementById('usage-count');
+    
+    if (isPremium) {
+      usageLabel.textContent = getLocalizedMessage('premium_status', 'Premium activated');
+      usageCount.style.display = 'none';
+    } else {
+      if (isTrialOver) {
+        usageLabel.textContent = getLocalizedMessage('trialEndedLabel', 'Trial period is Over');
+        usageLabel.style.color = '#f4511e';
+        usageLabel.style.fontWeight = 'bold';
+        usageCount.style.display = 'none';
+      } else {
+        // Use correct message key based on mode
+        const messageKey = TEST_MODE ? 'usageLabelMinutes' : 'usageLabel';
+        // Show fixed "Trial period:" text
+        usageLabel.textContent = getLocalizedMessage('trialPeriodLabel', 'Trial period:');
+        usageLabel.style.color = '';
+        usageLabel.style.fontWeight = '';
+        
+        // Update the count display with number and units
+        usageCount.textContent = `${trialDaysLeft} ${getLocalizedMessage(messageKey)}`;
+        usageCount.style.display = 'inline';
+      }
+    }
+  }
+  
+  /**
    * Update UI with current settings
    */
   function updateUI() {
@@ -433,31 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateDelayLabel(currentSettings.delay);
     
     // Update trial/premium status
-    if (isPremium) {
-      document.getElementById('usage-label').textContent = getLocalizedMessage('premium_status', 'Premium activated');
-      document.getElementById('usage-count').style.display = 'none';
-    } else {
-      const usageLabel = document.getElementById('usage-label');
-      const usageCount = document.getElementById('usage-count');
-      
-      if (isTrialOver) {
-        usageLabel.textContent = getLocalizedMessage('trialEndedLabel', 'Trial period is Over');
-        usageLabel.style.color = '#f4511e';
-        usageLabel.style.fontWeight = 'bold';
-        usageCount.style.display = 'none';
-      } else {
-        // Use correct message key based on mode
-        const messageKey = TEST_MODE ? 'usageLabelMinutes' : 'usageLabel';
-        // Show fixed "Trial period:" text
-        usageLabel.textContent = getLocalizedMessage('trialPeriodLabel', 'Trial period:');
-        usageLabel.style.color = '';
-        usageLabel.style.fontWeight = '';
-        
-        // Update the count display with number and units
-        usageCount.textContent = `${trialDaysLeft} ${getLocalizedMessage(messageKey)}`;
-        usageCount.style.display = 'inline';
-      }
-    }
+    updateTrialStatusUI();
     
     // Update UI availability based on domain enabled state and trial status
     updateUIAvailability();
