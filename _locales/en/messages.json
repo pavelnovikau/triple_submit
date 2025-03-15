@@ -88,7 +88,7 @@
     "description": "Text shown when premium is activated"
   },
   "usageLabel": {
-    "message": "Trial period: {0} days left",
+    "message": "Trial period:",
     "description": "Text for trial period status"
   },
   "limitReachedTitle": {
