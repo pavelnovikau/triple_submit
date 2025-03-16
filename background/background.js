@@ -223,35 +223,45 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-// Check trial period status
+// Проверка статуса триального периода
 async function checkTrialPeriod() {
   try {
     const data = await chrome.storage.sync.get(['installDate', 'trialEnded', 'isPremium']);
     
-    // If already premium, no need to check trial
+    // Если премиум - триал не нужен
     if (data.isPremium) {
       return { isActive: true, daysLeft: -1 };
     }
     
-    // If trial already ended, return inactive
+    // Если триал уже закончился
     if (data.trialEnded) {
+      Logger.info('!!! TRIAL PERIOD HAS ALREADY ENDED !!!');
       return { isActive: false, daysLeft: 0 };
     }
     
-    // If no install date (shouldn't happen), set it now
+    // Если нет даты установки (не должно случиться), устанавливаем её сейчас
     if (!data.installDate) {
       const now = Date.now();
-      await chrome.storage.sync.set({ installDate: now });
+      await chrome.storage.sync.set({ 
+        installDate: now,
+        trialEnded: false
+      });
+      Logger.info('Setting initial install date:', new Date(now).toISOString());
       return { isActive: true, daysLeft: 7 };
     }
     
-    // Calculate days left
+    // Подсчет оставшихся дней
     const now = Date.now();
     const daysPassed = Math.floor((now - data.installDate) / (1000 * 60 * 60 * 24));
     const daysLeft = Math.max(0, 7 - daysPassed);
     
-    // If trial period has ended, update storage
+    // Если триал закончился, обновляем хранилище
     if (daysLeft === 0 && !data.trialEnded) {
+      Logger.info('!!! TRIAL PERIOD HAS ENDED - DISABLING FUNCTIONALITY !!!');
+      Logger.info('Install date was:', new Date(data.installDate).toISOString());
+      Logger.info('Current date is:', new Date(now).toISOString());
+      Logger.info('Days passed:', daysPassed);
+      
       await chrome.storage.sync.set({ trialEnded: true });
       return { isActive: false, daysLeft: 0 };
     }
