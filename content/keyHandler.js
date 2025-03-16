@@ -283,10 +283,10 @@ function initKeyListeners(settings) {
           document.addEventListener('keydown', document._tripleSubmitGlobalHandler, true);
           
           // Re-initialize form handlers
-          addFormSubmitHandlers();
+          //addFormSubmitHandlers();
           
           // Re-initialize Shadow DOM handlers
-          addShadowDomHandlers();
+          //addShadowDomHandlers();
           
           Logger.info('Reinitialization complete');
         }
@@ -1048,7 +1048,7 @@ function addShadowDomHandlers() {
     nestedHosts.forEach(nestedElement => {
       if (nestedElement.shadowRoot) {
         // Рекурсивно добавляем обработчики для вложенного Shadow DOM
-        addShadowDomHandlersRecursive(nestedElement.shadowRoot, `${index}.nested`);
+        //addShadowDomHandlersRecursive(nestedElement.shadowRoot, `${index}.nested`);
       }
     });
   });
@@ -1120,7 +1120,7 @@ function setupShadowDomObserver() {
     // Если были добавлены новые элементы, проверяем наличие Shadow DOM
     if (shouldCheckShadowDom) {
       Logger.debug('DOM changed, checking for new Shadow DOM elements');
-      addShadowDomHandlers();
+      //addShadowDomHandlers();
     }
   });
   
@@ -1162,16 +1162,16 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeWithRetry();
     
     // Добавляем обработчики для форм
-    addFormSubmitHandlers();
+    //addFormSubmitHandlers();
     
     // Настраиваем наблюдатель за изменениями в DOM
     const formObserver = setupFormObserver();
     
     // Добавляем обработчики для Shadow DOM
-    addShadowDomHandlers();
+    //addShadowDomHandlers();
     
     // Настраиваем наблюдатель за Shadow DOM
-    const shadowDomObserver = setupShadowDomObserver();
+    //const shadowDomObserver = setupShadowDomObserver();
     
     // Регистрируем глобального слушателя событий для перехвата всех нажатий Enter
     Logger.info('Adding global document-level event listeners for all Enter key presses');
@@ -1193,16 +1193,16 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
   initializeWithRetry();
   
   // Добавляем обработчики для форм
-  addFormSubmitHandlers();
+  //addFormSubmitHandlers();
   
   // Настраиваем наблюдатель за изменениями в DOM
   const formObserver = setupFormObserver();
   
   // Добавляем обработчики для Shadow DOM
-  addShadowDomHandlers();
+  //addShadowDomHandlers();
   
   // Настраиваем наблюдатель за Shadow DOM
-  const shadowDomObserver = setupShadowDomObserver();
+  //const shadowDomObserver = setupShadowDomObserver();
   
   // Add global listener here too
   document.addEventListener('keydown', (event) => {
