@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (TEST_MODE) {
           // In test mode: calculate minutes
-          const minutesPassed = Math.floor(timePassed / (121 * 60));
+          const minutesPassed = Math.floor(timePassed / (33 * 60));
           timeLeft = Math.max(0, TRIAL_PERIOD - minutesPassed);
           trialDaysLeft = timeLeft; // For display purposes
           
