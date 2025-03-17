@@ -129,7 +129,7 @@
       }
     }
   },
-  "trialEndedLabel": {
+  "trialExpiredLabel": {
     "message": "试用期已结束",
     "description": "Text shown when trial period ends"
   },

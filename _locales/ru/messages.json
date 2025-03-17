@@ -84,7 +84,7 @@
     "description": "Текст для обновления до Premium"
   },
   "premium_status": {
-    "message": "Premium активирован",
+    "message": "Премиум активирован",
     "description": "Text shown when premium is activated"
   },
   "usageLabel": {
@@ -133,7 +133,7 @@
       }
     }
   },
-  "trialEndedLabel": {
+  "trialExpiredLabel": {
     "message": "Пробный период закончился",
     "description": "Text shown when trial period ends"
   }

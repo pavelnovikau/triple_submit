@@ -129,7 +129,7 @@
       }
     }
   },
-  "trialEndedLabel": {
+  "trialExpiredLabel": {
     "message": "Il periodo di prova è terminato",
     "description": "Text shown when trial period ends"
   },

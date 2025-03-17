@@ -87,12 +87,6 @@ function incrementUsage() {
       
       if (response && response.usageData) {
         Logger.info('Usage incremented, count:', response.usageData.count);
-        
-        // If limit is reached and user is not premium
-        if (response.usageData.count >= 20 && 
-            (!domainSettings.isPremium || domainSettings.isPremium === false)) {
-          Logger.info('Usage limit reached, Premium upgrade recommended');
-        }
       }
     });
   } catch (error) {
@@ -122,29 +116,30 @@ function getDomainSettings() {
           domainSettings = response.settings;
           Logger.info('Received settings:', domainSettings);
           
-          // Check if domain is allowed
-          chrome.runtime.sendMessage({ 
-            action: 'checkDomain', 
-            domain: hostname 
-          }, (domainResponse) => {
-            if (chrome.runtime.lastError) {
-              Logger.error('Error checking domain:', chrome.runtime.lastError);
-              resolve(domainSettings); // Use received settings, but without domain check
-              return;
-            }
-            
-            if (domainResponse && domainResponse.isEnabled !== undefined) {
-              // Update domain enable status
-              domainSettings.domainEnabled = domainResponse.isEnabled;
-              Logger.info(`Domain ${hostname} enabled:`, domainSettings.domainEnabled);
+          // If not premium, check trial status
+          if (!domainSettings.isPremium) {
+            chrome.runtime.sendMessage({ 
+              action: 'checkTrialStatus',
+              domain: hostname 
+            }, (trialResponse) => {
+              if (chrome.runtime.lastError) {
+                Logger.error('Error checking trial:', chrome.runtime.lastError);
+                domainSettings.trialExpired = true; // Assume expired on error
+              } else if (!trialResponse || !trialResponse.usageData) {
+                Logger.info('No usage data available');
+                domainSettings.trialExpired = true;
+              } else {
+                Logger.info('Trial is active');
+                domainSettings.trialExpired = false;
+              }
               
-              // By default, domain is disabled (isEnabled will be false)
-              resolve(domainSettings);
-            } else {
-              Logger.error('Invalid domain response:', domainResponse);
-              resolve(domainSettings);
-            }
-          });
+              // Now check if domain is allowed
+              checkDomainAndResolve(hostname, resolve);
+            });
+          } else {
+            // Premium user, just check domain
+            checkDomainAndResolve(hostname, resolve);
+          }
         } else {
           Logger.error('Invalid settings response:', response);
           useDefaultSettings(resolve);
@@ -157,14 +152,38 @@ function getDomainSettings() {
   });
 }
 
+// Helper function to check domain and resolve settings
+function checkDomainAndResolve(hostname, resolve) {
+  chrome.runtime.sendMessage({ 
+    action: 'checkDomain', 
+    domain: hostname 
+  }, (domainResponse) => {
+    if (chrome.runtime.lastError) {
+      Logger.error('Error checking domain:', chrome.runtime.lastError);
+      resolve(domainSettings);
+      return;
+    }
+    
+    if (domainResponse && domainResponse.isEnabled !== undefined) {
+      domainSettings.domainEnabled = domainResponse.isEnabled;
+      Logger.info(`Domain ${hostname} enabled:`, domainSettings.domainEnabled);
+    } else {
+      Logger.error('Invalid domain response:', domainResponse);
+    }
+    
+    resolve(domainSettings);
+  });
+}
+
 // Use default settings
 function useDefaultSettings(resolve) {
   Logger.warn('Using default settings due to error');
   domainSettings = {
-    domainEnabled: true, // Enabled by default
+    domainEnabled: true,
     pressCount: 3,
     showFeedback: true,
     isPremium: false,
+    trialExpired: false,
     delay: 200,
     mode: 'normal'
   };
@@ -380,7 +399,9 @@ function handleKeyDown(event) {
       domainSettings: domainSettings ? {
         enabled: domainSettings.domainEnabled,
         pressCount: domainSettings.pressCount,
-        mode: domainSettings.mode
+        mode: domainSettings.mode,
+        isPremium: domainSettings.isPremium,
+        trialExpired: domainSettings.trialExpired
       } : 'null',
       enterPressCount,
       lastEnterPressTime,
@@ -395,7 +416,7 @@ function handleKeyDown(event) {
   // Log key event for debugging
   logKeyEvent(event, 'keydown');
   
-  // Check if extension is enabled for this domain with more explicit logging
+  // Check if extension is enabled for this domain
   if (!domainSettings) {
     Logger.debug('No domain settings available, ignoring Enter key');
     return;
@@ -404,6 +425,12 @@ function handleKeyDown(event) {
   if (!domainSettings.domainEnabled) {
     Logger.debug('Extension disabled for this domain, ignoring Enter key');
     return;
+  }
+
+  // Check trial status from domain settings
+  if (!domainSettings.isPremium && domainSettings.trialExpired) {
+    Logger.info('Trial has expired, letting Enter work normally');
+    return; // Just return and let Enter work as usual
   }
   
   // Ignore repeat events from key holding

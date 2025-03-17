@@ -39,7 +39,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       domains: {},           // No domains enabled by default
       isPremium: false,      // Default to free version
       installDate: installDate, // Save installation date
-      trialEnded: false,     // Trial period status
+      trialExpired: false,     // Trial period status
       language: 'en'         // Default language
     })
     .then(() => {
@@ -117,6 +117,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         
       case 'saveSettings':
         handleSaveSettings(message.settings, sendResponse);
+        break;
+        
+      case 'checkTrialStatus':
+        handleCheckTrialStatus(sendResponse);
         break;
         
       case 'settings_updated':
@@ -202,10 +206,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         handleCheckDomain(message.domain, sendResponse);
         break;
         
-      case 'incrementUsage':
-        handleIncrementUsage(sendResponse);
-        break;
-        
       case 'setPremium':
         handleSetPremium(message.isPremium, sendResponse);
         break;
@@ -226,7 +226,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Проверка статуса триального периода
 async function checkTrialPeriod() {
   try {
-    const data = await chrome.storage.sync.get(['installDate', 'trialEnded', 'isPremium']);
+    const data = await chrome.storage.sync.get(['installDate', 'trialExpired', 'isPremium']);
     
     // Если премиум - триал не нужен
     if (data.isPremium) {
@@ -234,8 +234,8 @@ async function checkTrialPeriod() {
     }
     
     // Если триал уже закончился
-    if (data.trialEnded) {
-      Logger.info('!!! TRIAL PERIOD HAS ALREADY ENDED !!!');
+    if (data.trialExpired) {
+      Logger.info('!!! TRIAL PERIOD HAS EXPIRED !!!');
       return { isActive: false, daysLeft: 0 };
     }
     
@@ -244,7 +244,7 @@ async function checkTrialPeriod() {
       const now = Date.now();
       await chrome.storage.sync.set({ 
         installDate: now,
-        trialEnded: false
+        trialExpired: false
       });
       Logger.info('Setting initial install date:', new Date(now).toISOString());
       return { isActive: true, daysLeft: 7 };
@@ -256,13 +256,13 @@ async function checkTrialPeriod() {
     const daysLeft = Math.max(0, 7 - daysPassed);
     
     // Если триал закончился, обновляем хранилище
-    if (daysLeft === 0 && !data.trialEnded) {
-      Logger.info('!!! TRIAL PERIOD HAS ENDED - DISABLING FUNCTIONALITY !!!');
+    if (daysLeft === 0 && !data.trialExpired) {
+      Logger.info('!!! TRIAL PERIOD HAS EXPIRED - DISABLING FUNCTIONALITY !!!');
       Logger.info('Install date was:', new Date(data.installDate).toISOString());
       Logger.info('Current date is:', new Date(now).toISOString());
       Logger.info('Days passed:', daysPassed);
       
-      await chrome.storage.sync.set({ trialEnded: true });
+      await chrome.storage.sync.set({ trialExpired: true });
       return { isActive: false, daysLeft: 0 };
     }
     
@@ -275,7 +275,7 @@ async function checkTrialPeriod() {
 
 // Handle getSettings request
 function handleGetSettings(sendResponse) {
-  chrome.storage.sync.get(['settings', 'isPremium', 'installDate', 'trialEnded'], async (data) => {
+  chrome.storage.sync.get(['settings', 'isPremium', 'installDate', 'trialExpired'], async (data) => {
     if (chrome.runtime.lastError) {
       Logger.error('Error getting settings:', chrome.runtime.lastError);
       sendResponse({ error: chrome.runtime.lastError.message });
@@ -298,11 +298,6 @@ function handleGetSettings(sendResponse) {
     settings.isPremium = data.isPremium || false;
     settings.trialActive = trialStatus.isActive;
     settings.trialDaysLeft = trialStatus.daysLeft;
-    
-    // If trial ended and not premium, disable domain
-    if (!trialStatus.isActive && !settings.isPremium) {
-      settings.domainEnabled = false;
-    }
     
     Logger.info('Retrieved settings with trial status:', settings);
     sendResponse({ settings: settings });
@@ -352,45 +347,6 @@ function handleCheckDomain(domain, sendResponse) {
     Logger.info(`Domain ${domain} enabled: ${isEnabled} (explicitly disabled: ${isExplicitlyDisabled})`);
     sendResponse({ isEnabled: isEnabled });
   });
-}
-
-// Handle incrementUsage request
-function handleIncrementUsage(sendResponse) {
-  chrome.storage.sync.get(['usageCount', 'isPremium'], (data) => {
-        if (chrome.runtime.lastError) {
-      Logger.error('Error getting usage count:', chrome.runtime.lastError);
-          sendResponse({ error: chrome.runtime.lastError.message });
-          return;
-        }
-        
-    // Bypass counting for premium users
-    if (data.isPremium) {
-      Logger.info('Premium user, not incrementing usage');
-      sendResponse({ usageData: { count: 0, isPremium: true }});
-      return;
-    }
-    
-    // Increment usage count
-    let count = data.usageCount || 0;
-    count++;
-    
-    Logger.info(`Incrementing usage count to ${count}`);
-    
-    chrome.storage.sync.set({ usageCount: count })
-      .then(() => {
-        Logger.info('Usage count updated successfully');
-        sendResponse({ 
-          usageData: { 
-            count: count, 
-            isPremium: false 
-          }
-        });
-      })
-      .catch((error) => {
-        Logger.error('Error saving usage count:', error);
-        sendResponse({ error: error.message });
-      });
-    });
 }
 
 // Handle setPremium request
@@ -537,4 +493,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       console.error('Error processing tab update:', error);
     }
   }
-}); 
+});
+
+// Handle checkTrialStatus request
+async function handleCheckTrialStatus(sendResponse) {
+  try {
+    const trialStatus = await checkTrialPeriod();
+    Logger.info('Trial status check:', trialStatus);
+    sendResponse({ 
+      trialExpired: !trialStatus.isActive,
+      daysLeft: trialStatus.daysLeft 
+    });
+  } catch (error) {
+    Logger.error('Error checking trial status:', error);
+    sendResponse({ error: error.message });
+  }
+} 

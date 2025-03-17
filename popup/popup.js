@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let isPremium = false;
   let trialDaysLeft = 0;
-  let isTrialOver = false;
+  let trialExpired = false;
   let installDate = null;
   
   let uiUpdateTimer = null; // Add timer variable
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
    * Check if user can interact with UI elements
    */
   function canInteractWithUI() {
-    return !isTrialOver || isPremium;
+    return !trialExpired || isPremium;
   }
   
   /**
@@ -185,17 +185,17 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         }
         
-        isTrialOver = timeLeft === 0;
+        trialExpired = timeLeft === 0;
         Logger.info('Trial status:', {
           timeLeft: timeLeft,
-          isOver: isTrialOver,
+          expired: trialExpired,
           unit: TEST_MODE ? 'minutes' : 'days',
           expiresAt: new Date(installDate + (TEST_MODE ? TRIAL_PERIOD * 60 * 1000 : TRIAL_PERIOD * 24 * 60 * 60 * 1000)).toLocaleString()
         });
         
         // If trial is over, disable functionality
-        if (isTrialOver) {
-          Logger.info('!!! TRIAL PERIOD HAS ENDED - DISABLING FUNCTIONALITY !!!');
+        if (trialExpired) {
+          Logger.info('!!! TRIAL PERIOD HAS EXPIRED - DISABLING FUNCTIONALITY !!!');
           // Force disable domain toggle
           currentSettings.domainEnabled = false;
           domainToggle.checked = false;
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      return !isTrialOver || isPremium;
+      return !trialExpired || isPremium;
     } catch (error) {
       Logger.error('Error checking trial status:', error);
       return false;
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkTrialStatus().then(() => updateUI());
     
     // Set update interval based on mode
-    const updateInterval = TEST_MODE ? 1000 : 60000; // 1 second in test mode, 1 minute in release mode
+    const updateInterval = TEST_MODE ? 6000 : 60000; // 1 second in test mode, 1 minute in release mode
     
     uiUpdateTimer = setInterval(async () => {
       await checkTrialStatus();
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const data = await chrome.storage.sync.get(['settings', 'language']);
       if (data && data.settings) {
         // Only apply enabled state if trial is not over or premium
-        if (!isTrialOver || isPremium) {
+        if (!trialExpired || isPremium) {
           currentSettings = { ...currentSettings, ...data.settings };
         } else {
           // If trial is over, force disable but keep other settings
@@ -419,8 +419,8 @@ document.addEventListener('DOMContentLoaded', function() {
       usageLabel.textContent = getLocalizedMessage('premium_status', 'Premium activated');
       usageCount.style.display = 'none';
     } else {
-      if (isTrialOver) {
-        usageLabel.textContent = getLocalizedMessage('trialEndedLabel', 'Trial period is Over');
+      if (trialExpired) {
+        usageLabel.textContent = getLocalizedMessage('trialExpiredLabel', 'Trial period is Over');
         usageLabel.style.color = '#f4511e';
         usageLabel.style.fontWeight = 'bold';
         usageCount.style.display = 'none';
@@ -445,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateUI() {
     // Update domain toggle
     domainToggle.checked = currentSettings.domainEnabled;
-    domainToggle.disabled = isTrialOver && !isPremium;
+    domainToggle.disabled = trialExpired && !isPremium;
     
     // Update press count
     pressCountEl.textContent = currentSettings.pressCount;
@@ -660,7 +660,7 @@ document.addEventListener('DOMContentLoaded', function() {
     premiumModal.style.display = 'block';
     
     // If trial is over, prevent closing the modal
-    if (isTrialOver && !isPremium) {
+    if (trialExpired && !isPremium) {
       configureModalClose(true);
     }
   }
