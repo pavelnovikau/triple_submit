@@ -1,4 +1,5 @@
 // Background script for Triple Submit Chrome Extension
+import TrialConfig from '../common/trial.js';
 
 // Logger module for better debugging
 const Logger = {
@@ -15,6 +16,10 @@ const Logger = {
     console.error(`[Triple Submit] ERROR: ${message}`, data || '');
   }
 };
+
+// Test mode configuration
+//const TEST_MODE = true; // Синхронизируем с popup.js
+//const TRIAL_PERIOD = TEST_MODE ? 10 : 7; // 10 минут для теста, 7 дней для релиза
 
 // Initialize extension when installed or updated
 chrome.runtime.onInstalled.addListener((details) => {
@@ -106,8 +111,13 @@ function migrateSettings() {
 
 // Message handling from content scripts and popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Log incoming message for debugging
-  Logger.debug('Message received:', message);
+  Logger.info('Received message:', message);
+  
+  if (message.action === 'checkTrialStatus') {
+    // Обрабатываем проверку триал статуса асинхронно
+    handleCheckTrialStatus(sendResponse);
+    return true; // Важно! Указываем Chrome что будет асинхронный ответ
+  }
   
   try {
     switch (message.action) {
@@ -120,10 +130,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
         
       case 'checkTrialStatus':
-        handleCheckTrialStatus(sendResponse);
-        break;
-        
-      case 'settings_updated':
         Logger.info('Received settings update notification from popup', message);
         
         // Если это переключение настроек, сначала обновляем активную вкладку
@@ -223,56 +229,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-// Проверка статуса триального периода
-async function checkTrialPeriod() {
-  try {
-    const data = await chrome.storage.sync.get(['installDate', 'trialExpired', 'isPremium']);
-    
-    // Если премиум - триал не нужен
-    if (data.isPremium) {
-      return { isActive: true, daysLeft: -1 };
-    }
-    
-    // Если триал уже закончился
-    if (data.trialExpired) {
-      Logger.info('!!! TRIAL PERIOD HAS EXPIRED !!!');
-      return { isActive: false, daysLeft: 0 };
-    }
-    
-    // Если нет даты установки (не должно случиться), устанавливаем её сейчас
-    if (!data.installDate) {
-      const now = Date.now();
-      await chrome.storage.sync.set({ 
-        installDate: now,
-        trialExpired: false
-      });
-      Logger.info('Setting initial install date:', new Date(now).toISOString());
-      return { isActive: true, daysLeft: 7 };
-    }
-    
-    // Подсчет оставшихся дней
-    const now = Date.now();
-    const daysPassed = Math.floor((now - data.installDate) / (1000 * 60 * 60 * 24));
-    const daysLeft = Math.max(0, 7 - daysPassed);
-    
-    // Если триал закончился, обновляем хранилище
-    if (daysLeft === 0 && !data.trialExpired) {
-      Logger.info('!!! TRIAL PERIOD HAS EXPIRED - DISABLING FUNCTIONALITY !!!');
-      Logger.info('Install date was:', new Date(data.installDate).toISOString());
-      Logger.info('Current date is:', new Date(now).toISOString());
-      Logger.info('Days passed:', daysPassed);
-      
-      await chrome.storage.sync.set({ trialExpired: true });
-      return { isActive: false, daysLeft: 0 };
-    }
-    
-    return { isActive: daysLeft > 0, daysLeft };
-  } catch (error) {
-    Logger.error('Error checking trial period:', error);
-    return { isActive: false, daysLeft: 0 };
-  }
-}
-
 // Handle getSettings request
 function handleGetSettings(sendResponse) {
   chrome.storage.sync.get(['settings', 'isPremium', 'installDate', 'trialExpired'], async (data) => {
@@ -283,7 +239,7 @@ function handleGetSettings(sendResponse) {
     }
     
     // Check trial period status
-    const trialStatus = await checkTrialPeriod();
+    const trialStatus = await TrialConfig.checkStatus();
     
     // If settings don't exist yet, use defaults
     const settings = data.settings || {
@@ -498,12 +454,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // Handle checkTrialStatus request
 async function handleCheckTrialStatus(sendResponse) {
   try {
-    const trialStatus = await checkTrialPeriod();
-    Logger.info('Trial status check:', trialStatus);
-    sendResponse({ 
+    const trialStatus = await TrialConfig.checkStatus();
+    Logger.info('Trial status check result:', trialStatus);
+    
+    // Отправляем более подробный ответ
+    const response = { 
       trialExpired: !trialStatus.isActive,
-      daysLeft: trialStatus.daysLeft 
-    });
+      daysLeft: trialStatus.daysLeft,
+      isActive: trialStatus.isActive,
+      timeFormatted: TrialConfig.formatTimeLeft(trialStatus.daysLeft)
+    };
+    
+    Logger.info('Sending trial status response:', response);
+    sendResponse(response);
   } catch (error) {
     Logger.error('Error checking trial status:', error);
     sendResponse({ error: error.message });

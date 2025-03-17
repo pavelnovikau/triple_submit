@@ -118,20 +118,43 @@ function getDomainSettings() {
           
           // If not premium, check trial status
           if (!domainSettings.isPremium) {
+            Logger.info('Not a premium user, checking trial status...');
             chrome.runtime.sendMessage({ 
               action: 'checkTrialStatus',
               domain: hostname 
             }, (trialResponse) => {
+              Logger.info('Raw trial status response:', trialResponse);
+              
               if (chrome.runtime.lastError) {
                 Logger.error('Error checking trial:', chrome.runtime.lastError);
                 domainSettings.trialExpired = true; // Assume expired on error
-              } else if (!trialResponse || !trialResponse.usageData) {
-                Logger.info('No usage data available');
+                Logger.error('Set trialExpired to true due to runtime error');
+              } else if (!trialResponse) {
+                Logger.error('No trial response received');
                 domainSettings.trialExpired = true;
+                Logger.error('Set trialExpired to true due to missing response');
               } else {
-                Logger.info('Trial is active');
-                domainSettings.trialExpired = false;
+                Logger.info('Processing trial response:', {
+                  trialExpired: trialResponse.trialExpired,
+                  daysLeft: trialResponse.daysLeft,
+                  isActive: trialResponse.isActive
+                });
+                
+                // Устанавливаем статус триала
+                domainSettings.trialExpired = trialResponse.trialExpired;
+                domainSettings.daysLeft = trialResponse.daysLeft;
+                
+                Logger.info('Updated domain settings with trial status:', {
+                  trialExpired: domainSettings.trialExpired,
+                  daysLeft: domainSettings.daysLeft
+                });
               }
+              
+              Logger.info('Final settings state:', {
+                isPremium: domainSettings.isPremium,
+                trialExpired: domainSettings.trialExpired,
+                daysLeft: domainSettings.daysLeft
+              });
               
               // Now check if domain is allowed
               checkDomainAndResolve(hostname, resolve);

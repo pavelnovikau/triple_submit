@@ -1,5 +1,7 @@
 // Popup.js - main script for managing popup in Triple Submit
 
+import TrialConfig from '../common/trial.js';
+
 // Logger module for better debugging
 const Logger = {
   debug: function(message, data) {
@@ -836,4 +838,42 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initialize popup
   initPopup();
-}); 
+});
+
+// Обновление информации о триале
+async function updateTrialInfo() {
+  try {
+    const trialStatus = await TrialConfig.checkStatus();
+    const timeDetails = trialStatus.installDate ? 
+      TrialConfig.getTimeDetails(trialStatus.installDate) : 
+      null;
+    
+    const trialInfoElement = document.getElementById('trial-info');
+    const trialTimeElement = document.getElementById('trial-time');
+    
+    if (trialStatus.isPremium) {
+      trialInfoElement.textContent = chrome.i18n.getMessage('premiumActive');
+      trialTimeElement.style.display = 'none';
+      return;
+    }
+    
+    if (trialStatus.trialExpired) {
+      trialInfoElement.textContent = chrome.i18n.getMessage('trialExpired');
+      trialTimeElement.style.display = 'none';
+      return;
+    }
+    
+    trialInfoElement.textContent = chrome.i18n.getMessage('trialActive');
+    
+    if (timeDetails) {
+      if (TrialConfig.TEST_MODE) {
+        trialTimeElement.textContent = `${timeDetails.timeLeft} min ${timeDetails.secondsUntilNextMinute} sec`;
+      } else {
+        trialTimeElement.textContent = `${timeDetails.timeLeft} days ${timeDetails.hoursInDay} hours`;
+      }
+      trialTimeElement.style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error updating trial info:', error);
+  }
+} 
