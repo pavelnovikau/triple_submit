@@ -2,7 +2,8 @@
 const TrialConfig = {
   TEST_MODE: true,
   TRIAL_PERIOD: 10, // 10 minutes in test mode, 7 days in release mode
-  TEST_MINUTE_DURATION: 47 * 60, // 47 seconds = 1 minute in test mode
+  SECONDS_IN_TEST_MINUTE: 2000,
+  TEST_MINUTE_DURATION: SECONDS_IN_TEST_MINUTE * 60, // 2000 seconds = 1 test minute
   MS_PER_DAY: 86400000, // 24 * 60 * 60 * 1000 (hours * minutes * seconds * milliseconds)
   
   // UI update intervals
@@ -20,11 +21,36 @@ const TrialConfig = {
     if (this.TEST_MODE) {
       // В тестовом режиме считаем в минутах
       const minutesPassed = Math.floor(timePassed / this.TEST_MINUTE_DURATION);
-      return Math.max(0, this.TRIAL_PERIOD - minutesPassed);
+      const timeLeft = Math.max(0, this.TRIAL_PERIOD - minutesPassed);
+      
+      console.log('Trial time calculation:', {
+        mode: 'TEST',
+        initialPeriod: this.TRIAL_PERIOD,
+        timePassed: Math.round(timePassed / 1000) + 's',
+        minuteDuration: this.TEST_MINUTE_DURATION / 60 + 's',
+        minutesPassed,
+        timeLeft,
+        installDate: new Date(installDate).toISOString(),
+        now: new Date().toISOString()
+      });
+      
+      return timeLeft;
     } else {
       // В релизном режиме считаем в днях
       const daysPassed = Math.floor(timePassed / this.MS_PER_DAY);
-      return Math.max(0, this.TRIAL_PERIOD - daysPassed);
+      const timeLeft = Math.max(0, this.TRIAL_PERIOD - daysPassed);
+      
+      console.log('Trial time calculation:', {
+        mode: 'RELEASE',
+        initialPeriod: this.TRIAL_PERIOD,
+        timePassed: Math.round(timePassed / (1000 * 60 * 60 * 24)) + ' days',
+        daysPassed,
+        timeLeft,
+        installDate: new Date(installDate).toISOString(),
+        now: new Date().toISOString()
+      });
+      
+      return timeLeft;
     }
   },
   
@@ -115,7 +141,7 @@ const TrialConfig = {
         timeLeft,
         minutesPassed,
         secondsUntilNextMinute,
-        totalSecondsLeft: (timeLeft * 60) - secondsUntilNextMinute
+        totalSecondsLeft: (timeLeft * this.SECONDS_IN_TEST_MINUTE) - secondsUntilNextMinute
       };
     } else {
       const daysPassed = Math.floor(timePassed / this.MS_PER_DAY);
