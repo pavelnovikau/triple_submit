@@ -3,11 +3,11 @@ const TrialConfig = {
   TEST_MODE: true,
   TRIAL_PERIOD: 10, // 10 minutes in test mode, 7 days in release mode
   TEST_MINUTE_DURATION: 47 * 60, // 47 seconds = 1 minute in test mode
-  MS_PER_DAY: 24 * 60 * 60 * 1000,
+  MS_PER_DAY: 86400000, // 24 * 60 * 60 * 1000 (hours * minutes * seconds * milliseconds)
   
   // UI update intervals
   UI_UPDATE_INTERVAL: {
-    TEST: 6000,    // 6 seconds in test mode
+    TEST: 600,    // 6 seconds in test mode
     RELEASE: 60000 // 1 minute in release mode
   },
   
@@ -119,7 +119,7 @@ const TrialConfig = {
       };
     } else {
       const daysPassed = Math.floor(timePassed / this.MS_PER_DAY);
-      const hoursInDay = Math.floor((timePassed % this.MS_PER_DAY) / (1000 * 60 * 60));
+      const hoursInDay = Math.floor((timePassed % this.MS_PER_DAY) / 3600000); // 1000 * 60 * 60 (milliseconds * seconds * minutes)
       const timeLeft = Math.max(0, this.TRIAL_PERIOD - daysPassed);
       
       return {
