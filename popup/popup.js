@@ -109,6 +109,104 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  async function handleInstallDate(data) {
+    if (!data.installDate) {
+      installDate = Date.now();
+      await chrome.storage.sync.set({ installDate });
+      Logger.info('NEW Install date:', new Date(installDate).toLocaleString());
+    } else {
+      installDate = data.installDate;
+      Logger.info('Existing install date:', new Date(installDate).toLocaleString());
+    }
+  }
+
+  function calculateTestModeTime(timePassed) {
+    const minutesPassed = Math.floor(timePassed / TrialConfig.TEST_MINUTE_DURATION);
+    const timeLeft = Math.max(0, TrialConfig.TRIAL_PERIOD - minutesPassed);
+    trialDaysLeft = timeLeft;
+    
+    const secondsUntilNextMinute = Math.floor((timePassed % TrialConfig.TEST_MINUTE_DURATION) / 1000);
+    const totalSecondsLeft = (timeLeft * TrialConfig.SECONDS_IN_TEST_MINUTE) - secondsUntilNextMinute;
+    
+    Logger.info('=== REMAINING TRIAL TIME ===');
+    Logger.info('Time details:', {
+      minutesLeft: timeLeft,
+      secondsLeft: totalSecondsLeft % 60,
+      totalSecondsLeft: totalSecondsLeft,
+      nextMinuteIn: 60 - secondsUntilNextMinute
+    });
+    
+    Logger.info('Test mode time check:', {
+      totalMinutes: TrialConfig.TRIAL_PERIOD,
+      minutesPassed: minutesPassed,
+      minutesLeft: timeLeft,
+      secondsUntilNextMinute: secondsUntilNextMinute
+    });
+
+    return timeLeft;
+  }
+
+  function calculateReleaseModeTime(timePassed) {
+    const daysPassed = Math.floor(timePassed / TrialConfig.MS_PER_DAY);
+    const timeLeft = Math.max(0, TrialConfig.TRIAL_PERIOD - daysPassed);
+    trialDaysLeft = timeLeft;
+    
+    const hoursInDay = Math.floor((timePassed % TrialConfig.MS_PER_DAY) / TrialConfig.MS_PER_HOUR);
+    const totalHoursLeft = (timeLeft * 24) - hoursInDay;
+    
+    Logger.info('=== REMAINING TRIAL TIME ===');
+    Logger.info('Time details:', {
+      daysLeft: timeLeft,
+      hoursLeft: totalHoursLeft % 24,
+      totalHoursLeft: totalHoursLeft,
+      nextDayIn: 24 - hoursInDay
+    });
+    
+    Logger.info('Release mode time check:', {
+      totalDays: TrialConfig.TRIAL_PERIOD,
+      daysPassed: daysPassed,
+      daysLeft: timeLeft
+    });
+
+    return timeLeft;
+  }
+
+  async function handleTrialExpired() {
+    Logger.info('!!! TRIAL PERIOD HAS EXPIRED - DISABLING FUNCTIONALITY !!!');
+    currentSettings.domainEnabled = false;
+    domainToggle.checked = false;
+    domainToggle.disabled = true;
+    
+    showPremiumModal();
+    configureModalClose(true);
+    
+    await chrome.storage.sync.set({
+      settings: {
+        ...currentSettings,
+        domainEnabled: false
+      }
+    });
+    
+    chrome.runtime.sendMessage({
+      action: 'trial_ended',
+      timestamp: Date.now()
+    });
+  }
+
+  function handleActiveTrial() {
+    Logger.info('Checking domain status:', {
+      domain: currentDomain,
+      enabled: currentSettings.domainEnabled
+    });
+    
+    chrome.runtime.sendMessage({
+      action: 'domain_status_update',
+      domain: currentDomain,
+      enabled: currentSettings.domainEnabled,
+      timestamp: Date.now()
+    });
+  }
+
   /**
    * Check trial period status
    */
@@ -125,66 +223,15 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       if (!isPremium) {
-        // If no install date, set it now
-        if (!data.installDate) {
-          installDate = Date.now();
-          await chrome.storage.sync.set({ installDate });
-          Logger.info('NEW Install date:', new Date(installDate).toLocaleString());
-        } else {
-          installDate = data.installDate;
-          Logger.info('Existing install date:', new Date(installDate).toLocaleString());
-        }
+        await handleInstallDate(data);
         
-        // Calculate remaining trial time based on mode
         const timePassed = Date.now() - installDate;
         let timeLeft;
         
         if (TEST_MODE) {
-          // In test mode: calculate minutes
-          const minutesPassed = Math.floor(timePassed / TrialConfig.TEST_MINUTE_DURATION);
-          timeLeft = Math.max(0, TrialConfig.TRIAL_PERIOD - minutesPassed);
-          trialDaysLeft = timeLeft; // For display purposes
-          
-          const secondsUntilNextMinute = Math.floor((timePassed % TrialConfig.TEST_MINUTE_DURATION) / 1000);
-          const totalSecondsLeft = (timeLeft * TrialConfig.SECONDS_IN_TEST_MINUTE) - secondsUntilNextMinute;
-          
-          Logger.info('=== REMAINING TRIAL TIME ===');
-          Logger.info('Time details:', {
-            minutesLeft: timeLeft,
-            secondsLeft: totalSecondsLeft % 60,
-            totalSecondsLeft: totalSecondsLeft,
-            nextMinuteIn: 60 - secondsUntilNextMinute
-          });
-          
-          Logger.info('Test mode time check:', {
-            totalMinutes: TrialConfig.TRIAL_PERIOD,
-            minutesPassed: minutesPassed,
-            minutesLeft: timeLeft,
-            secondsUntilNextMinute: secondsUntilNextMinute
-          });
-          
+          timeLeft = calculateTestModeTime(timePassed);
         } else {
-          // In release mode: calculate days
-          const daysPassed = Math.floor(timePassed / TrialConfig.MS_PER_DAY);
-          timeLeft = Math.max(0, TrialConfig.TRIAL_PERIOD - daysPassed);
-          trialDaysLeft = timeLeft;
-          
-          const hoursInDay = Math.floor((timePassed % TrialConfig.MS_PER_DAY) / TrialConfig.MS_PER_HOUR);
-          const totalHoursLeft = (timeLeft * 24) - hoursInDay;
-          
-          Logger.info('=== REMAINING TRIAL TIME ===');
-          Logger.info('Time details:', {
-            daysLeft: timeLeft,
-            hoursLeft: totalHoursLeft % 24,
-            totalHoursLeft: totalHoursLeft,
-            nextDayIn: 24 - hoursInDay
-          });
-          
-          Logger.info('Release mode time check:', {
-            totalDays: TrialConfig.TRIAL_PERIOD,
-            daysPassed: daysPassed,
-            daysLeft: timeLeft
-          });
+          timeLeft = calculateReleaseModeTime(timePassed);
         }
         
         trialExpired = timeLeft === 0;
@@ -192,40 +239,19 @@ document.addEventListener('DOMContentLoaded', function() {
           timeLeft: timeLeft,
           expired: trialExpired,
           unit: TEST_MODE ? 'minutes' : 'days',
-          expiresAt: new Date(installDate + (TEST_MODE ? TRIAL_PERIOD * 60 * 1000 : TRIAL_PERIOD * 24 * 60 * 60 * 1000)).toLocaleString()
+          expiresAt: new Date(installDate + (TEST_MODE ? 
+            TRIAL_PERIOD * TrialConfig.TEST_MINUTE_DURATION : 
+            TRIAL_PERIOD * TrialConfig.MS_PER_DAY)).toLocaleString()
         });
         
-        // If trial is over, disable functionality
         if (trialExpired) {
-          Logger.info('!!! TRIAL PERIOD HAS EXPIRED - DISABLING FUNCTIONALITY !!!');
-          // Force disable domain toggle
-          currentSettings.domainEnabled = false;
-          domainToggle.checked = false;
-          domainToggle.disabled = true;
-          
-          // Show modal
-          showPremiumModal();
-          
-          // Disable modal closing
-          configureModalClose(true);
-          
-          // Save disabled state
-          await chrome.storage.sync.set({
-            settings: {
-              ...currentSettings,
-              domainEnabled: false
-            }
-          });
-          
-          // Notify background script to disable functionality
-          chrome.runtime.sendMessage({
-            action: 'trial_ended',
-            timestamp: Date.now()
-          });
+          await handleTrialExpired();
+        } else {
+          handleActiveTrial();
         }
       }
       
-      return !trialExpired || isPremium;
+      return ((!trialExpired || isPremium) && currentSettings.domainEnabled);
     } catch (error) {
       Logger.error('Error checking trial status:', error);
       return false;
@@ -478,8 +504,14 @@ document.addEventListener('DOMContentLoaded', function() {
    * Update UI elements availability
    */
   function updateUIAvailability() {
-    // Update settings availability based on domain enabled and trial status
-    const settingsDisabled = !currentSettings.domainEnabled || !canInteractWithUI();
+    // Check if we can interact with UI (trial active or premium)
+    const canInteract = !trialExpired || isPremium;
+    
+    // Domain toggle should be enabled if we can interact
+    domainToggle.disabled = !canInteract;
+    
+    // Other settings should be disabled if domain is not enabled OR we can't interact
+    const settingsDisabled = !currentSettings.domainEnabled || !canInteract;
     
     decreaseCountBtn.disabled = settingsDisabled;
     increaseCountBtn.disabled = settingsDisabled;
@@ -493,6 +525,13 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         el.classList.remove('disabled');
       }
+    });
+    
+    // Log current state
+    Logger.info('UI availability updated:', {
+      canInteract,
+      domainEnabled: currentSettings.domainEnabled,
+      settingsDisabled
     });
   }
   
@@ -721,10 +760,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const data = await chrome.storage.sync.get(['domains']);
       const domains = data.domains || {};
       
-      // If domain is enabled (toggle is on), remove it from disabled list
-      // If domain is disabled (toggle is off), add it to disabled list
       if (currentSettings.domainEnabled) {
-        delete domains[currentDomain];
+        domains[currentDomain] = true;
       } else {
         domains[currentDomain] = false; // Explicitly disable domain
       }
@@ -740,7 +777,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Notify background script about settings update
       chrome.runtime.sendMessage({ 
         action: 'settings_updated',
-        isToggle: true
+        isToggle: true,
+        domain: currentDomain,
+        enabled: currentSettings.domainEnabled
       });
       
       Logger.info('Settings saved successfully');
