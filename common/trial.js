@@ -1,14 +1,14 @@
 // Common trial period configuration and logic
 const TrialConfig = {
   TEST_MODE: true,
-  TRIAL_PERIOD: 10, // 10 minutes in test mode, 7 days in release mode
-  SECONDS_IN_TEST_MINUTE: 2000,
-  TEST_MINUTE_DURATION: SECONDS_IN_TEST_MINUTE * 60, // 2000 seconds = 1 test minute
+  TRIAL_PERIOD: 10, // 10 минут в тестовом режиме
+  SECONDS_IN_TEST_MINUTE: 3600, // 1 час = 1 тестовая минута (3600 секунд)
+  TEST_MINUTE_DURATION: 3600 * 1000, // 1 час в миллисекундах
   MS_PER_DAY: 86400000, // 24 * 60 * 60 * 1000 (hours * minutes * seconds * milliseconds)
   
   // UI update intervals
   UI_UPDATE_INTERVAL: {
-    TEST: 600,    // 6 seconds in test mode
+    TEST: 6000,    // 6 seconds in test mode
     RELEASE: 60000 // 1 minute in release mode
   },
   

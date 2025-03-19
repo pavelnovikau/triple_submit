@@ -141,12 +141,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (TEST_MODE) {
           // In test mode: calculate minutes
-          const minutesPassed = Math.floor(timePassed / (47 * 60));
-          timeLeft = Math.max(0, TRIAL_PERIOD - minutesPassed);
+          const minutesPassed = Math.floor(timePassed / TrialConfig.TEST_MINUTE_DURATION);
+          timeLeft = Math.max(0, TrialConfig.TRIAL_PERIOD - minutesPassed);
           trialDaysLeft = timeLeft; // For display purposes
           
-          const secondsUntilNextMinute = Math.floor((timePassed % (1000 * 60)) / 1000);
-          const totalSecondsLeft = (timeLeft * 60) - secondsUntilNextMinute;
+          const secondsUntilNextMinute = Math.floor((timePassed % TrialConfig.TEST_MINUTE_DURATION) / 1000);
+          const totalSecondsLeft = (timeLeft * TrialConfig.SECONDS_IN_TEST_MINUTE) - secondsUntilNextMinute;
           
           Logger.info('=== REMAINING TRIAL TIME ===');
           Logger.info('Time details:', {
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
           });
           
           Logger.info('Test mode time check:', {
-            totalMinutes: TRIAL_PERIOD,
+            totalMinutes: TrialConfig.TRIAL_PERIOD,
             minutesPassed: minutesPassed,
             minutesLeft: timeLeft,
             secondsUntilNextMinute: secondsUntilNextMinute
@@ -165,11 +165,11 @@ document.addEventListener('DOMContentLoaded', function() {
           
         } else {
           // In release mode: calculate days
-          const daysPassed = Math.floor(timePassed / (1000 * 60 * 60 * 24));
-          timeLeft = Math.max(0, TRIAL_PERIOD - daysPassed);
+          const daysPassed = Math.floor(timePassed / TrialConfig.MS_PER_DAY);
+          timeLeft = Math.max(0, TrialConfig.TRIAL_PERIOD - daysPassed);
           trialDaysLeft = timeLeft;
           
-          const hoursInDay = Math.floor((timePassed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const hoursInDay = Math.floor((timePassed % TrialConfig.MS_PER_DAY) / TrialConfig.MS_PER_HOUR);
           const totalHoursLeft = (timeLeft * 24) - hoursInDay;
           
           Logger.info('=== REMAINING TRIAL TIME ===');
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
           });
           
           Logger.info('Release mode time check:', {
-            totalDays: TRIAL_PERIOD,
+            totalDays: TrialConfig.TRIAL_PERIOD,
             daysPassed: daysPassed,
             daysLeft: timeLeft
           });
