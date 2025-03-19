@@ -245,7 +245,9 @@ document.addEventListener('DOMContentLoaded', function() {
     checkTrialStatus().then(() => updateUI());
     
     // Set update interval based on mode
-    const updateInterval = TEST_MODE ? 6000 : 60000; // 1 second in test mode, 1 minute in release mode
+    const updateInterval = TrialConfig.TEST_MODE ? 
+      TrialConfig.UI_UPDATE_INTERVAL.TEST : 
+      TrialConfig.UI_UPDATE_INTERVAL.RELEASE;
     
     uiUpdateTimer = setInterval(async () => {
       await checkTrialStatus();

@@ -5,6 +5,12 @@ const TrialConfig = {
   TEST_MINUTE_DURATION: 47 * 60, // 47 seconds = 1 minute in test mode
   MS_PER_DAY: 24 * 60 * 60 * 1000,
   
+  // UI update intervals
+  UI_UPDATE_INTERVAL: {
+    TEST: 6000,    // 6 seconds in test mode
+    RELEASE: 60000 // 1 minute in release mode
+  },
+  
   // Вычисляет оставшееся время триала
   calculateTimeLeft(installDate) {
     if (!installDate) return 0;
